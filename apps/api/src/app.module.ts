@@ -1,12 +1,15 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config';
-
-// importing different controllers and services
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
-// importing modules
+// importing various module
+import { UsersModule } from './module/users/users.module';
+import { AuthModule } from './module/auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
+
+// importing entities
+import { Users } from './module/users/entities/users.entity';
 
 @Module({
   imports: [
@@ -15,14 +18,16 @@ import { AppService } from './app.service';
       isGlobal: true,
     }),
 
-    // created local db for faster development and testing
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: 'postgresql://vky5:passwd@localhost:5432/blacktree',
-      entities: [],
+      entities: [Users],
       synchronize: true,
       logging: true,
     }),
+
+    UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
