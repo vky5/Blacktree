@@ -13,7 +13,7 @@ function Info() {
       </h1>
 
       {/* Description */}
-      <p className="text-lg text-gray-500">
+      <p className="text-xl text-gray-500">
         BlackTree is the premier marketplace for buying and selling ready-to-use
         backend APIs with automatic scalability and hosting.
       </p>

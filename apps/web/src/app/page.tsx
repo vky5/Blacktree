@@ -1,6 +1,7 @@
 import Header from "@/components/Navbar/Header";
 import Info from "@/components/Home/Info";
 import Codex from "@/components/Home/Codex";
+import Section2 from "@/components/Home/Section2";
 
 export default function Home() {
   return (
@@ -8,7 +9,7 @@ export default function Home() {
       <Header />
 
       {/* Hero Section */}
-      <div className="flex flex-col lg:flex-row items-center justify-between px-6 lg:px-20 py-36 gap-10">
+      <div className="flex flex-col lg:flex-row items-center justify-between px-6 lg:px-20 py-24 gap-10 min-h-screen">
         {/* Left: Text and Buttons */}
         <div className="max-w-xl">
           <Info />
@@ -21,9 +22,9 @@ export default function Home() {
       </div>
 
       {/* For the info section */}
-      <div>
-
-      </div>
+      <section className="bg-[#CBCBCB] py-16 px-6 md:px-12 lg:px-20">
+        <Section2 />          
+      </section>
 
 
     </div>
