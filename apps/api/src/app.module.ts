@@ -4,30 +4,30 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 // importing various module
-import { UsersModule } from './module/users/users.module';
-import { AuthModule } from './module/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 
-// importing entities
-import { Users } from './module/users/entities/users.entity';
+// importing entites
+import { User } from './modules/users/entities/users.entity';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: './config.env',
+      envFilePath: './.env',
       isGlobal: true,
     }),
 
     TypeOrmModule.forRoot({
-      type: 'postgres',
-      url: 'postgresql://vky5:passwd@localhost:5432/blacktree',
-      entities: [Users],
+      type: process.env.DB_TYPE as
+        | 'postgres'
+        | 'mysql'
+        | 'sqlite'
+        | 'mariadb'
+        | 'mongodb',
+      url: process.env.DB_URL,
+      entities: [User],
       synchronize: true,
-      logging: true,
+      // logging: true,
     }),
-
-    UsersModule,
-    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
