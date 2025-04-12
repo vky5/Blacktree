@@ -1,8 +1,9 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { AppModule } from './app/app.module';
 import { ValidationPipe, Logger } from '@nestjs/common';
 
 import * as cookieparser from 'cookie-parser';
+import { AllExceptionsFilter } from './common/filters/allexcetion.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -28,6 +29,8 @@ async function bootstrap() {
       transform: true, // automatically transform object to dto instance
     }),
   );
+
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // seting up default port to listen
   const port = process.env.PORT || 3000;
