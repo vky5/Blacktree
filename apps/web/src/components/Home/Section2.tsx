@@ -9,7 +9,7 @@ const containerVariants = {
   hidden: {},
   visible: {
     transition: {
-      staggerChildren: 0.15, // this controls the delay automatically of the cards to be shown automatically one after another
+      staggerChildren: 0.10, // this controls the delay automatically of the cards to be shown automatically one after another
     },
   },
 };
@@ -30,31 +30,36 @@ function Section2() {
   return (
     <div>
       <div className="text-center mb-12 space-y-4">
-        <h1 className="text-3xl md:text-4xl font-extrabold text-black leading-tight">
-          Why Choose BlackTree?
-        </h1>
-        <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
-          Our platform offers everything you need to monetize your APIs and find
-          the perfect solutions for your projects.
-        </p>
+      <h1 className="text-3xl md:text-4xl font-extrabold text-black leading-tight">
+        Why Choose BlackTree?
+      </h1>
+      <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+        Our platform offers everything you need to monetize your APIs and find
+        the perfect solutions for your projects.
+      </p>
       </div>
 
-      <motion.div // this is for controlling how the div containing all the card components should operate like initially hide it then whileinview make it visible etc
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
-        variants={containerVariants} 
-        initial="hidden" // 
-        whileInView="visible"
-        viewport={{ once: false, amount: 0.2 }}
+      <motion.div
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+      variants={containerVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: false, amount: 0.2 }}
       >
-        {features.map(({ id, icon, heading, explanation }) => (
-          <motion.div key={id} variants={cardVariants}>
-            <CardForContent
-              icon={icon}
-              title={heading}
-              description={explanation}
-            />
-          </motion.div>
-        ))}
+      {features.map(({ id, icon, heading, explanation }) => (
+        <motion.div
+        key={id}
+        variants={cardVariants}
+        whileHover={{ y: -10 }} // Add hover effect to translate slightly upward
+        transition={{ type: "spring", stiffness: 300, damping: 15 }} // Smooth hover transition
+        >
+        <CardForContent
+          icon={icon}
+          title={heading}
+          description={explanation}
+        />
+        </motion.div>
+      ))}
       </motion.div>
     </div>
   );

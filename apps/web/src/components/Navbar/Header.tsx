@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 
 function Header() {
   return (
@@ -22,9 +23,11 @@ function Header() {
 
       {/* Login Button */}
       <div>
-        <button className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-emerald-700 transition">
-          Login
-        </button>
+        <Link href="/auth/login">
+          <button className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-emerald-700 transition">
+            Login
+          </button>
+        </Link>
       </div>
     </header>
   );

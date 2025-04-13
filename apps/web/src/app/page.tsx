@@ -2,6 +2,7 @@ import Header from "@/components/Navbar/Header";
 import Info from "@/components/Home/Info";
 import Codex from "@/components/Home/Codex";
 import Section2 from "@/components/Home/Section2";
+import Section3 from "@/components/Home/Section3";
 
 export default function Home() {
   return (
@@ -24,6 +25,11 @@ export default function Home() {
       {/* For the info section */}
       <section className="bg-[#CBCBCB] py-16 px-6 md:px-12 lg:px-20">
         <Section2 />          
+      </section>
+
+      {/* for documentation section */}
+      <section className="py-16 px-6 md:px-12 lg:px-20">
+        <Section3 />
       </section>
 
 

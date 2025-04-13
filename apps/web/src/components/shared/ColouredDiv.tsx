@@ -1,11 +1,15 @@
-import React from 'react'
+import React from "react";
 
-function ColouredDiv() {
+type ColouredDivProps = {
+  children: React.ReactNode;
+};
+
+function ColouredDiv({ children }: ColouredDivProps) {
   return (
-    <div >
-      
+    <div className="flex gap-4 items-start p-4 border rounded-lg border-emerald">
+      <div className="flex-1">{children}</div>
     </div>
-  )
+  );
 }
 
-export default ColouredDiv
+export default ColouredDiv;
