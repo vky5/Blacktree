@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 
 interface SignInButtonProps {
   label?: string;
-  onClick?: () => void;
+  onClick?: (() => void) | ((e: React.FormEvent) => Promise<void>);
 }
 
 function SignInButton({ label = "Submit", onClick }: SignInButtonProps) {

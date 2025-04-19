@@ -1,4 +1,6 @@
-import React from "react";
+'use client';
+
+import React, { useState } from "react";
 import ColouredDiv from "@/components/shared/ColouredDiv";
 import SubmitButton from "@/components/shared/SubmitButton";
 import HrWithText from "@/components/shared/HrWithText";
@@ -7,8 +9,56 @@ import { FaGithub } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import Logo from "@/components/Auth/Logo";
+import { useSignIn } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 function page() {
+  // defining all hooks 
+  const { isLoaded, signIn, setActive } = useSignIn();
+  const router = useRouter();
+
+  // defining state of form
+  const [formData, setFormData] = useState({
+    email: "",
+    password: ""
+  });
+
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  const handleSigninButton = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isLoaded) return;
+
+    // Start the sign-in process using the email and password provided
+    try {
+      const signInAttempt = await signIn.create({
+        identifier: formData.email,
+        password: formData.password,
+      });
+
+      // If sign-in process is complete, set the created session as active
+      // and redirect the user  
+      if (signInAttempt.status === "complete") {
+        await setActive({ session: signInAttempt.createdSessionId });
+        router.push("/");
+      } else {
+        // If the status is not complete, check why. User may need to
+        // complete further steps.
+        console.error(JSON.stringify(signInAttempt, null, 2));
+      }
+    } catch (err: any) {
+      // See https://clerk.com/docs/custom-flows/error-handling
+      // for more info on error handling
+      console.error(JSON.stringify(err, null, 2));
+    }
+  };
+
   return (
     // Flex container to center the content vertically and horizontally
     <div className="flex items-center justify-center min-h-screen py-10">
@@ -56,14 +106,16 @@ function page() {
                 label="Email"
                 placeholder="example@example.com"
                 type="email"
-                key={1}
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
               {/* Password input */}
               <InputField
                 label="Password"
-                placeholder=""
+                placeholder="Enter your password"
                 type="password"
-                key={2}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               />
               {/* Forgot Password Link */}
               <div className="text-right">
@@ -77,7 +129,7 @@ function page() {
             </div>
             {/* Submit button */}
             <div className="py-5">
-              <SubmitButton label="Sign in" />
+              <SubmitButton label="Sign in" onClick={handleSigninButton} />
             </div>
 
             {/* Sign-up link for new users */}
