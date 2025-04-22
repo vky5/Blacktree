@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useState } from "react";
 import ColouredDiv from "@/components/shared/ColouredDiv";
@@ -12,8 +12,11 @@ import { FaGithub } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { useSignUp } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { useOAuthSignIn } from "@/utils/clerk/oauth";
 
 function page() {
+  const { handleOAuthSignIn } = useOAuthSignIn();
+
   const { isLoaded, signUp, setActive } = useSignUp();
   const router = useRouter();
 
@@ -23,14 +26,15 @@ function page() {
     email: "",
     password: "",
   });
-  
+
   const [verifiying, setVerifying] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
-  
+
   if (!isLoaded) {
     return <>add loading screen please</>;
   }
 
+  // handle submit of email and password
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -40,6 +44,8 @@ function page() {
 
     try {
       await signUp.create({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         emailAddress: formData.email,
         password: formData.password,
       });
@@ -98,11 +104,17 @@ function page() {
 
             {/* Button section for authentication */}
             <div className="flex flex-col space-y-5 py-5">
-              <button className="border border-emerald rounded-lg hover:bg-emerald/50 transition duration-150 py-2 space-x-4 flex items-center justify-center">
+              <button
+                onClick={() => handleOAuthSignIn("oauth_github", "/")}
+                className="border border-emerald rounded-lg hover:bg-emerald/50 transition duration-150 py-2 space-x-4 flex items-center justify-center"
+              >
                 <FaGithub className="text-2xl" />
                 <span>Continue With Github</span>
               </button>
-              <button className="border border-emerald rounded-lg hover:bg-emerald/50 transition duration-150 py-2 space-x-4 flex items-center justify-center">
+              <button
+                className="border border-emerald rounded-lg hover:bg-emerald/50 transition duration-150 py-2 space-x-4 flex items-center justify-center"
+                onClick={() => handleOAuthSignIn("oauth_google", "/")}
+              >
                 <FcGoogle className="text-2xl" />
                 <span>Continue With Google</span>
               </button>
@@ -118,14 +130,18 @@ function page() {
                   placeholder=""
                   type="text"
                   key={3}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, firstName: e.target.value })
+                  }
                 />
                 <InputField
                   label="Last name"
                   placeholder=""
                   type="text"
                   key={4}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, lastName: e.target.value })
+                  }
                 />
               </div>
 
@@ -134,14 +150,18 @@ function page() {
                 placeholder="example@example.com"
                 type="email"
                 key={1}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
               />
               <InputField
                 label="Password"
                 placeholder=""
                 type="password"
                 key={2}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
               />
             </div>
 

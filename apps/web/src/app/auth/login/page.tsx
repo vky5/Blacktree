@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useState } from "react";
 import ColouredDiv from "@/components/shared/ColouredDiv";
@@ -11,16 +11,19 @@ import Link from "next/link";
 import Logo from "@/components/Auth/Logo";
 import { useSignIn } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { useOAuthSignIn } from "@/utils/clerk/oauth";
 
 function page() {
-  // defining all hooks 
+  // defining all hooks
   const { isLoaded, signIn, setActive } = useSignIn();
   const router = useRouter();
+
+  const { handleOAuthSignIn } = useOAuthSignIn();
 
   // defining state of form
   const [formData, setFormData] = useState({
     email: "",
-    password: ""
+    password: "",
   });
 
   if (!isLoaded) {
@@ -43,7 +46,7 @@ function page() {
       });
 
       // If sign-in process is complete, set the created session as active
-      // and redirect the user  
+      // and redirect the user
       if (signInAttempt.status === "complete") {
         await setActive({ session: signInAttempt.createdSessionId });
         router.push("/");
@@ -85,12 +88,18 @@ function page() {
             {/* Button section for authentication */}
             <div className="flex flex-col space-y-5 py-5">
               {/* Github login button */}
-              <button className="border border-emerald rounded-lg hover:bg-emerald/50 transition duration-150 py-2 space-x-4 flex items-center justify-center">
+              <button
+                className="border border-emerald rounded-lg hover:bg-emerald/50 transition duration-150 py-2 space-x-4 flex items-center justify-center"
+                onClick={() => handleOAuthSignIn("oauth_github", "/")}
+              >
                 <FaGithub className="text-2xl" />
                 <span>Continue With Github</span>
               </button>
               {/* Google login button */}
-              <button className="border border-emerald rounded-lg hover:bg-emerald/50 transition duration-150 py-2 space-x-4 flex items-center justify-center">
+              <button
+                className="border border-emerald rounded-lg hover:bg-emerald/50 transition duration-150 py-2 space-x-4 flex items-center justify-center"
+                onClick={() => handleOAuthSignIn("oauth_google", "/")}
+              >
                 <FcGoogle className="text-2xl" />
                 <span>Continue With Google</span>
               </button>
@@ -107,7 +116,9 @@ function page() {
                 placeholder="example@example.com"
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
               />
               {/* Password input */}
               <InputField
@@ -115,7 +126,9 @@ function page() {
                 placeholder="Enter your password"
                 type="password"
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
               />
               {/* Forgot Password Link */}
               <div className="text-right">
@@ -152,3 +165,7 @@ function page() {
 }
 
 export default page;
+
+// TODO implement good error handling
+
+// https://leading-gnu-88.clerk.accounts.dev/v1/oauth_callback
