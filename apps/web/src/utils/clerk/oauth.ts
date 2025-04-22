@@ -27,8 +27,7 @@ export function useOAuthSignIn() {
       // Start the OAuth flow
       const result = await signIn?.authenticateWithRedirect({
         strategy,
-        redirectUrl: "/sso-callback", // TODO make sure when in production, update the authorization callback url in their dashboards
-        
+        redirectUrl: "/sso-callback",
         redirectUrlComplete: redirectPath,
       });
 

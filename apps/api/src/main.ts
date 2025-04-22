@@ -15,6 +15,7 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, //credentials option is used to allow cookies, authorization headers, or TLS client certificates to be included in cross-origin HTTP requests.
   });
+
   // when sending cookie express is enough but when reading cookie we do need cookie parser and for next application we need new Cookies to setup cookies
   app.use(cookieparser());
 

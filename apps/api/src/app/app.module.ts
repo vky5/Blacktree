@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 
 // importing entites
 import { User } from 'src/modules/users/entities/users.entity';
+import { UsersModule } from 'src/modules/users/users.module';
 
 @Module({
   imports: [
@@ -26,8 +27,10 @@ import { User } from 'src/modules/users/entities/users.entity';
       url: process.env.DB_URL,
       entities: [User],
       synchronize: true,
-      // logging: true,
     }),
+
+    // importing different modules
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
