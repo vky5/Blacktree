@@ -12,6 +12,7 @@ import Logo from "@/components/Auth/Logo";
 import { useSignIn } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useOAuthSignIn } from "@/utils/clerk/oauth";
+import axios from "axios";
 
 function page() {
   // defining all hooks
@@ -34,9 +35,18 @@ function page() {
     );
   }
 
+
+  // function to handle Signin button click
+  // Workflow:
+  // 1. Check if the signIn object is loaded.
+  // 2. Call the signIn.create method with the email and password.
+  // 3. If the signInAttempt.status is "complete":
+  //    a. Set the created session as active.
+  //    b. Call the /api/auth/set-token route to set the token in the httpOnly cookie.
+  //    c. Redirect to the home page.
   const handleSigninButton = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLoaded) return;
+    if (!isLoaded) return; // Check if the sign-in object is loaded
 
     // Start the sign-in process using the email and password provided
     try {
@@ -49,6 +59,14 @@ function page() {
       // and redirect the user
       if (signInAttempt.status === "complete") {
         await setActive({ session: signInAttempt.createdSessionId });
+        // call the /api/set-token route to set the token in the httpOnly cookie
+        const response = await axios.get(process.env.NEXT_PUBLIC_API_URL + "/auth/set-token");
+
+        if (response.status !== 200) {
+          console.error("Error setting token in cookie");
+        }
+
+        // Redirect to the home page after successful sign-in
         router.push("/");
       } else {
         // If the status is not complete, check why. User may need to

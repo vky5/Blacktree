@@ -13,6 +13,7 @@ import { FcGoogle } from "react-icons/fc";
 import { useSignUp } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useOAuthSignIn } from "@/utils/clerk/oauth";
+import axios from "axios";
 
 function page() {
   const { handleOAuthSignIn } = useOAuthSignIn();
@@ -38,7 +39,7 @@ function page() {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isLoaded) {
+    if (!isLoaded) { // Check if the sign-up object is loaded
       return;
     }
 
@@ -73,7 +74,13 @@ function page() {
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        router.push("/dashboard"); // Redirect to dashboard after successful verification
+
+        const response = await axios.get(process.env.NEXT_PUBLIC_API_URL + "/auth/set-token");
+        if (response.status !== 200) {
+          console.error("Error setting token in cookie");
+        }
+
+        router.push("/"); // redirect to home page
       } else {
         console.error("Verification failed");
       }
