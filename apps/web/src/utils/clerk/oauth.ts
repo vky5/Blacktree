@@ -52,6 +52,4 @@ redirects to → /sso-callback (your `redirectUrl`)
 Clerk finalizes login, creates session
      ↓
 redirects to → /dashboard (your `redirectUrlComplete`)
-
-
 */
