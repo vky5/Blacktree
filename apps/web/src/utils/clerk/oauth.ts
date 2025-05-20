@@ -19,6 +19,7 @@ export function useOAuthSignIn() {
       // Remove the redirectUrl parameter completely
       const result = await signIn.authenticateWithRedirect({
         strategy,
+        redirectUrl: "/sso-callback",
         redirectUrlComplete: redirectPath,
       });
 
