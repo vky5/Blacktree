@@ -8,7 +8,11 @@ import { ConfigModule } from '@nestjs/config';
 
 // importing entites
 import { User } from 'src/modules/users/entities/users.entity';
+import { Deployment } from 'src/modules/deployment/entities/deployment.entity';
+
+// importing modules
 import { UsersModule } from 'src/modules/users/users.module';
+import { DeploymentModule } from 'src/modules/deployment/deployment.module';
 
 @Module({
   imports: [
@@ -25,12 +29,13 @@ import { UsersModule } from 'src/modules/users/users.module';
         | 'mariadb'
         | 'mongodb',
       url: process.env.DB_URL,
-      entities: [User],
+      entities: [User, Deployment],
       synchronize: true,
     }),
 
     // importing different modules
     UsersModule,
+    DeploymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

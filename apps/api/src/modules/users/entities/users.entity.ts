@@ -4,9 +4,11 @@ import {
   Entity,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 
 import { UserRole } from 'src/utils/enums/user-role.enum';
+import { Deployment } from 'src/modules/deployment/entities/deployment.entity';
 
 @Entity('User')
 export class User {
@@ -25,8 +27,11 @@ export class User {
   @Column({ type: 'varchar', nullable: true })
   imageUrl: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true, select: false })
   clerkUserId: string;
+
+  @OneToMany(() => Deployment, (deployment) => deployment.user)
+  deployments: Deployment[];
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role: string;
