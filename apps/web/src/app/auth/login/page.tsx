@@ -108,7 +108,7 @@ function page() {
               {/* Github login button */}
               <button
                 className="border border-emerald rounded-lg hover:bg-emerald/50 transition duration-150 py-2 space-x-4 flex items-center justify-center"
-                onClick={() => handleOAuthSignIn("oauth_github", "/")}
+                onClick={() => handleOAuthSignIn("oauth_github", "/dashboard")}
               >
                 <FaGithub className="text-2xl" />
                 <span>Continue With Github</span>
@@ -116,7 +116,7 @@ function page() {
               {/* Google login button */}
               <button
                 className="border border-emerald rounded-lg hover:bg-emerald/50 transition duration-150 py-2 space-x-4 flex items-center justify-center"
-                onClick={() => handleOAuthSignIn("oauth_google", "/")}
+                onClick={() => handleOAuthSignIn("oauth_google", "/dashboard")}
               >
                 <FcGoogle className="text-2xl" />
                 <span>Continue With Google</span>

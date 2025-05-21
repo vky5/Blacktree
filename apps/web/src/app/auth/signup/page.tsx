@@ -112,7 +112,7 @@ function page() {
             {/* Button section for authentication */}
             <div className="flex flex-col space-y-5 py-5">
               <button
-                onClick={() => handleOAuthSignIn("oauth_github", "/")}
+                onClick={() => handleOAuthSignIn("oauth_github", "/dashboard")}
                 className="border border-emerald rounded-lg hover:bg-emerald/50 transition duration-150 py-2 space-x-4 flex items-center justify-center"
               >
                 <FaGithub className="text-2xl" />
@@ -120,7 +120,7 @@ function page() {
               </button>
               <button
                 className="border border-emerald rounded-lg hover:bg-emerald/50 transition duration-150 py-2 space-x-4 flex items-center justify-center"
-                onClick={() => handleOAuthSignIn("oauth_google", "/")}
+                onClick={() => handleOAuthSignIn("oauth_google", "/dashboard")}
               >
                 <FcGoogle className="text-2xl" />
                 <span>Continue With Google</span>
