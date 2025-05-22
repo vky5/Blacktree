@@ -9,7 +9,17 @@ export const useSyncUser = () => {
   useEffect(() => {
     const sync = async () => {
       if (!user) return;
-      const dbObj  = {
+
+      // defining the type of db user
+      type DbUser = {
+        email: string;
+        firstName: string | null;
+        lastName: string | null;
+        clerkId: string;
+        imgUrl?: string;
+      };
+
+      const dbObj: DbUser = {
         email: user.emailAddresses[0].emailAddress,
         firstName: user.firstName,
         lastName: user.lastName,
