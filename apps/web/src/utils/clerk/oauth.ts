@@ -31,3 +31,15 @@ export function useOAuthSignIn() {
 
   return { handleOAuthSignIn };
 }
+
+/*
+User clicks "Continue with Google"
+     ↓
+Google Auth Page
+     ↓
+redirects to → /sso-callback (your `redirectUrl`)
+     ↓
+Clerk finalizes login, creates session
+     ↓
+redirects to → /dashboard (your `redirectUrlComplete`)
+*/
