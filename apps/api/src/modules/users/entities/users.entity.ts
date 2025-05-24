@@ -33,6 +33,9 @@ export class User {
   @OneToMany(() => Deployment, (deployment) => deployment.user)
   deployments: Deployment[];
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  token: string;
+
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role: string;
 

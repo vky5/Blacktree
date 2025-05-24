@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 
 import Steps from '@/components/Developers/Steps'
-import IntegrationStep1 from '@/components/Developers/IntegrationStep1';
+import IntegrationStep1 from '@/components/Developers/IntegrationStep1.1';
 
 
 function HostAPI() {

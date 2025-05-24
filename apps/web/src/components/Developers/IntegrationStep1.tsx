@@ -1,6 +1,44 @@
+'use client';
+
+import React, { useEffect, useState } from "react";
 import { FaGithub } from "react-icons/fa";
+import getBranches from "@/utils/github/getBranches";
 
 function IntegrationStep1() {
+
+  //defining states
+  const [validateRepo, setValidateRepo] = useState(false);
+  const [formData, setFormData] = useState({
+    repoUrl: "",
+    dockerfileUrl: "",
+    branch: "main"
+    });
+
+  const [branches, setBranches] = useState<string[]>([]);
+
+
+  // creating a use state which runs when the repoUrl changes
+  const [repoError, setRepoError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchBranches = async () => {
+      if (validateRepo) {
+        try {
+          setRepoError(null);
+          const repoUrl = formData.repoUrl;
+          const branches = await getBranches(repoUrl);
+          setBranches(branches);
+        } catch (error) {
+          setRepoError("Error fetching branches. Please check the repository URL.");
+          setBranches([]);
+        }
+      }
+    };
+
+    fetchBranches();
+  }, [formData.repoUrl, validateRepo]);
+
+
   return (
     <div className="mx-10 my-7 px-6 py-5 bg-[#111] rounded-lg">
       {/* heading */}
@@ -21,7 +59,35 @@ function IntegrationStep1() {
           type="text"
           placeholder="https://github.com/username/repo"
           className="w-full pl-10 py-2 rounded text-[0.9rem] bg-zinc-900 text-white outline-none"
+          onChange={(e) =>
+            setFormData((prev) => ({
+              ...prev,
+              repoUrl: e.target.value,
+            }))
+          }
+          value={formData.repoUrl}
+          onBlur={() => setValidateRepo(true)}
+          autoFocus
+          autoComplete="off"
+          spellCheck="false"
+          pattern="https://github\.com/[\w-]+/[\w-]+"
         />
+        {repoError && formData.repoUrl && validateRepo && (
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+            {/* Red circle with cross icon */}
+            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-red-100 border border-red-400">
+              <svg width={18} height={18} viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="9" stroke="#ef4444" strokeWidth="2" fill="#fee2e2" />
+          <path
+            fillRule="evenodd"
+            d="M10 8.586l4.95-4.95a1 1 0 111.414 1.414L11.414 10l4.95 4.95a1 1 0 01-1.414 1.414L10 11.414l-4.95 4.95a1 1 0 01-1.414-1.414l4.95-4.95-4.95-4.95A1 1 0 015.05 3.636l4.95 4.95z"
+            clipRule="evenodd"
+            fill="#ef4444"
+          />
+              </svg>
+            </span>
+          </span>
+        )}
       </div>
       <div className="mt-5 text-white text-[0.9rem]">Dockerfile URL</div>
       <div className="relative mt-2 group px-1.5 py-2 rounded-xl focus-within:border-emerald-600 focus-within:ring-1 focus-within:ring-emerald-800 border border-zinc-700 transition">
@@ -66,9 +132,15 @@ function IntegrationStep1() {
           className="appearance-none w-full pl-10 pr-8 py-2 rounded-xl text-[0.9rem] bg-zinc-900 text-white outline-none border-none focus:ring-0 transition"
           style={{ WebkitAppearance: "none", MozAppearance: "none" }}
         >
-          <option value="main">main</option>
-          <option value="dev">dev</option>
-          <option value="feature">feature</option>
+          {branches.length > 0 ? (
+            branches.map((branch) => (
+              <option key={branch} value={branch}>
+                {branch}
+              </option>
+            ))
+          ) : (
+            <option value="main">main</option>
+          )}
         </select>
         <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
           {/* Chevron down icon */}
@@ -83,6 +155,17 @@ function IntegrationStep1() {
           </svg>
         </span>
       </div>
+
+      {/* for validation of repositiory */}
+      <button
+          type="button"
+          className="hover:cursor-pointer flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-semibold transition-colors duration-200 shadow-sm mt-8 w-full"
+
+          onClick={() => setValidateRepo(true)}
+        >
+          &lt;/&gt; Validate Repository
+          
+        </button>
 
       <div className="flex justify-between mt-8 gap-3 w-full ">
         <button

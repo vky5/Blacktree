@@ -5,13 +5,16 @@ import {
   HttpCode,
   HttpStatus,
   Get,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dtos/create-user.dto';
 
 import { JWTClerkGuard } from 'src/guards/jwt-clerk.guard';
-
+import { AccessTokenDto } from './dtos/access-token.dto';
+import { UserRole } from 'src/utils/enums/user-role.enum';
+import { RequestWithUser } from 'src/utils/types/RequestWithUser.interface';
 @Controller('users')
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
@@ -22,6 +25,23 @@ export class UsersController {
   hello() {
     return {
       message: 'Hello from the backend',
+    };
+  }
+
+  @Post('/project-access')
+  @UseGuards(JWTClerkGuard)
+  @HttpCode(HttpStatus.OK)
+  async grantProjectAccess(
+    @Body() body: AccessTokenDto,
+    @Req() req: RequestWithUser,
+  ) {
+    await this.userService.updateUser(req.user.id, {
+      token: body.token,
+      role: UserRole.DEV,
+    });
+
+    return {
+      message: 'Project access granted successfully',
     };
   }
 

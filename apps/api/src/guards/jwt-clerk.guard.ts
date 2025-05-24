@@ -9,13 +9,14 @@ import {
 import { Request } from 'express';
 import * as jwt from 'jsonwebtoken';
 import { JwksClient } from 'jwks-rsa';
+import { UsersService } from 'src/modules/users/users.service';
 
 @Injectable()
 export class JWTClerkGuard implements CanActivate {
   // JWKS client used to fetch public keys from Clerk's JWKS endpoint
   private jwksClient: JwksClient;
 
-  constructor() {
+  constructor(private readonly userService: UsersService) {
     // Initialize the JWKS client with the Clerk-provided endpoint
     this.jwksClient = new JwksClient({
       jwksUri: process.env.JWKS_URI!, // make sure this is defined in your .env
@@ -38,11 +39,12 @@ export class JWTClerkGuard implements CanActivate {
 
       // Verify the token signature and claims
       const decodedToken: DecodedToken = await this.verifyToken(token);
+      if (!decodedToken.email) {
+        throw new UnauthorizedException('Invalid token');
+      }
+      const user = await this.userService.findOneByEmail(decodedToken.email);
 
-      req['user'] = {
-        user_id: decodedToken.sub, // Clerk's user id in 'sub' claim
-        user_email: decodedToken.email, // User email in 'email' claim
-      };
+      req['user'] = user; // Attach user to request object
 
       return true; // Allow request to proceed
     } catch (error) {
