@@ -33,6 +33,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     };
 
     // Log the exception (stack trace in development)
+    // TODO close it in production
     this.logger.error(exception instanceof Error ? exception.stack : message);
 
     // If in development mode, add the stack trace for debugging

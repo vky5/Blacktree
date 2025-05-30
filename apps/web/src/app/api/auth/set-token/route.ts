@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 
 export async function GET() {
@@ -15,24 +14,28 @@ export async function GET() {
     return NextResponse.json({ error: "Template not found" }, { status: 500 });
   }
 
+  // Await to get ClerkClient instance
   const client = await clerkClient();
-
   const token = await client.sessions.getToken(sessionId, template);
 
   if (!token) {
     return NextResponse.json({ error: "Token not found" }, { status: 500 });
   }
 
-  console.log(token);
+  const response = NextResponse.json({ message: "Token set" }, { status: 200 });
+  const jwtToken = typeof token === "string" ? token : token.jwt;
 
-  const cookieStore = await cookies();
+  console.log("token string is :", jwtToken);
 
-  cookieStore.set({
-    name: "clerk_token",
-    value: String(token) || "",
+  response.cookies.set({
+    name: "jwt",
+    value: jwtToken,
     httpOnly: true,
-    secure: false, // TODO set to true in production
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 90,
   });
 
-  return NextResponse.json({ message: "Token set" }, { status: 200 });
+  return response;
 }

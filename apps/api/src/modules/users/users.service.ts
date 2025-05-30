@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/users.entity';
-import { CreateUserDto } from './dtos/create-user.dto';
+import { UserDto } from './dtos/user.dto';
 
 @Injectable()
 export class UsersService {
@@ -18,7 +18,7 @@ export class UsersService {
     imgUrl,
     clerkUserid,
     // fixed naming for consistency
-  }: CreateUserDto) {
+  }: UserDto) {
     // Optional: Prevent duplicate users by email
     // const existing = await this.repo.findOneBy({ email });
     // if (existing) return existing;

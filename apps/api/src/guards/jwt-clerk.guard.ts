@@ -33,19 +33,21 @@ export class JWTClerkGuard implements CanActivate {
       // Attach user info to request based on your JWT template
       interface DecodedToken {
         sub: string;
-        email?: string;
+        user_email?: string;
         [key: string]: unknown;
       }
 
       // Verify the token signature and claims
       const decodedToken: DecodedToken = await this.verifyToken(token);
-      if (!decodedToken.email) {
+      if (!decodedToken.user_email) {
         throw new UnauthorizedException('Invalid token');
       }
-      const user = await this.userService.findOneByEmail(decodedToken.email);
+
+      const user = await this.userService.findOneByEmail(
+        decodedToken.user_email,
+      );
 
       req['user'] = user; // Attach user to request object
-
       return true; // Allow request to proceed
     } catch (error) {
       console.error('JWT verification error:', error);

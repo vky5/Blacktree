@@ -1,7 +1,7 @@
-// /app/api/github/exchange/route.ts in App Router)
-import { NextRequest, NextResponse } from "next/server";
+// /app/api/github/exchange/route.ts
 
-export const runtime = "edge";
+import axios from "axios";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   const { code } = await req.json();
@@ -22,21 +22,27 @@ export async function POST(req: NextRequest) {
 
   const tokenData = await tokenRes.json();
 
-  console.log("Token data", tokenData);
+  console.log("GitHub tokenData", tokenData);
 
   if (!tokenData.access_token) {
     return NextResponse.json({ error: "Failed to get token" }, { status: 400 });
   }
 
-  // Now forward it to your main backend
-//   await fetch("https://your-backend.com/api/store-github-token", {
-//     method: "POST",
-//     headers: {
-//       Authorization: `Bearer ${yourClerkOrSessionToken}`,
-//       "Content-Type": "application/json",
-//     },
-//     body: JSON.stringify({ token: tokenData.access_token }),
-//   });
+  try {
+    // Forward token to your NestJS backend, which will verify it and set cookies
+    const backendRes = await axios.post(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/project-access`,
+      { token: tokenData.access_token },
+      {
+        withCredentials: true,
+      }
+    );
 
-  return NextResponse.json({ success: true });
+    // Check if cookies are being forwarded
+    const success = backendRes.status === 200;
+    return NextResponse.json({ success });
+  } catch (error) {
+    console.error("Backend token forwarding failed", error);
+    return NextResponse.json({ success: false }, { status: 500 });
+  }
 }

@@ -31,7 +31,6 @@ export const useSyncUser = () => {
         dbObj.imgUrl = user.imageUrl;
       }
 
-      
       await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/clerk-sync`,
         dbObj,
@@ -41,6 +40,8 @@ export const useSyncUser = () => {
           },
         }
       );
+
+      await axios.get("/api/auth/set-token");
     };
     if (isSignedIn) {
       sync();

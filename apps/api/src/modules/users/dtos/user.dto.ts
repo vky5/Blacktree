@@ -1,3 +1,4 @@
+import { Expose } from 'class-transformer';
 import {
   IsString,
   IsEmail,
@@ -7,20 +8,24 @@ import {
   MinLength,
 } from 'class-validator';
 
-export class CreateUserDto {
+export class UserDto {
+  @Expose()
   @IsString()
   @IsNotEmpty()
   @MinLength(1, { message: 'First name must be at least 1 character long.' })
   firstName: string;
 
+  @Expose()
   @IsString()
   @IsNotEmpty()
   lastName: string;
 
+  @Expose()
   @IsEmail({}, { message: 'Email is not valid.' })
   @IsNotEmpty()
   email: string;
 
+  @Expose()
   @IsUrl({}, { each: false })
   @IsOptional()
   imgUrl: string;

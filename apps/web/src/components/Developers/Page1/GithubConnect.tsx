@@ -1,19 +1,22 @@
-import React from "react";
+'use Client';
+
+import React, {useState} from "react";
 import { LuGithub } from "react-icons/lu";
 
-function GithubConnect() {
-
-    // importing environment variables
+function GithubConnect(){
+  // 
+  const [repoVerified, setRepoVerified] = useState(false);
+  
+  // importing environment variables
   const GITHUB_CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID!;
   const REDIRECT_URI = process.env.NEXT_PUBLIC_GITHUB_REDIRECT_URI!;
 
-  // Function to handle GitHub authentication
+  // Function to handle GitHub authentication 
   const connectToGithub = () => {
     const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=repo%20read:user`;
     window.location.href = githubAuthUrl;
   };
 
-  
   return (
     <div className="flex items-center justify-between rounded-xl p-5 bg-[#111111]/80 border border-[#8C35EB]/20 shadow-[0_0_0_1px_rgba(140,53,235,0.05),0_0_30px_rgba(140,53,235,0.1)] backdrop-blur-sm">
       {/* Left Section */}
