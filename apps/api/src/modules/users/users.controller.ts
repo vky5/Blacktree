@@ -6,12 +6,14 @@ import {
   HttpStatus,
   Get,
   Req,
+  Res,
   UnauthorizedException,
   InternalServerErrorException,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserDto } from './dtos/user.dto';
+import { Response } from 'express';
 
 import { JWTClerkGuard } from 'src/guards/jwt-clerk.guard';
 import { AccessTokenDto } from './dtos/access-token.dto';
@@ -19,6 +21,7 @@ import { RequestWithUser } from 'src/utils/types/RequestWithUser.interface';
 import { AuthService } from './auth.service';
 import { UserRole } from 'src/utils/enums/user-role.enum';
 import { Serialize } from 'src/interceptors/serialize-interceptor';
+import { plainToInstance } from 'class-transformer';
 
 @Controller('users')
 export class UsersController {
@@ -92,23 +95,29 @@ export class UsersController {
 
   // This endpoint is used to sync a user from Clerk to the local database.
   @Post('/clerk-sync')
-  @HttpCode(HttpStatus.OK)
-  async syncUser(@Body() body: UserDto) {
+  async syncUser(@Body() body: UserDto, @Res() res: Response) {
     const user = await this.userService.findOneByEmail(body.email);
 
+    const safeUser = plainToInstance(UserDto, user, {
+      excludeExtraneousValues: true,
+    });
+
     if (user) {
-      return {
-        status: 'existing',
+      return res.status(200).json({
         message: 'User already exists.',
-        user,
-      };
+        user: safeUser,
+      });
     }
 
     const newUser = await this.userService.createFromClerk(body);
-    return {
-      status: 'created',
+
+    const safeNewUser = plainToInstance(UserDto, newUser, {
+      excludeExtraneousValues: true,
+    });
+
+    return res.status(201).json({
       message: 'User successfully synced.',
-      user: newUser,
-    };
+      user: safeNewUser,
+    });
   }
 }

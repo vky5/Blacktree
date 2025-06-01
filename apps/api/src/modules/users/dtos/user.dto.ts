@@ -1,4 +1,4 @@
-import { Expose } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
 import {
   IsString,
   IsEmail,
@@ -33,4 +33,8 @@ export class UserDto {
   @IsString()
   @IsOptional()
   clerkUserid: string;
+
+  @Expose()
+  @Transform(({ obj }: { obj: { token?: string } }) => !!obj.token) // runs at the end of the transformation
+  github_connect: boolean;
 }

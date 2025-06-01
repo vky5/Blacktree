@@ -1,16 +1,16 @@
 import { useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import axios from "axios";
+import { useAuth } from "@/context/AuthContext";
 
 export const useSyncUser = () => {
   const { user, isSignedIn } = useUser();
+  const { fetchUser, userData } = useAuth();
 
-  // this useEffect is to sync the data that we get from clerk to our own DB
   useEffect(() => {
     const sync = async () => {
       if (!user) return;
 
-      // defining the type of db user
       type DbUser = {
         email: string;
         firstName: string | null;
@@ -26,23 +26,37 @@ export const useSyncUser = () => {
         clerkId: user.id,
       };
 
-      console.log(user);
-      if (user.hasImage === true) {
+      if (user.hasImage) {
         dbObj.imgUrl = user.imageUrl;
       }
 
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/clerk-sync`,
-        dbObj,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      try {
+        const res = await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/clerk-sync`,
+          dbObj,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            withCredentials: true, // send cookies
+          }
+        );
 
-      await axios.get("/api/auth/set-token");
+        // Optional: log response for debugging
+        console.log("User sync response:", res.data);
+
+        // Trigger your backend to set HttpOnly cookies (e.g., JWT)
+        await axios.get("/api/auth/set-token");
+
+        // Fetch the synced user from your backend and store in context
+        await fetchUser();
+
+        console.log("saved state : " + userData)
+      } catch (err) {
+        console.error("Error syncing user:", err);
+      }
     };
+
     if (isSignedIn) {
       sync();
     }
