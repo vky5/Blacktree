@@ -31,9 +31,6 @@ export class Endpoint {
   @Column({ type: 'varchar', length: 500, nullable: true })
   description: string; // A brief description of the endpoint
 
-  @Column({ type: 'uuid' })
-  deploymentId: string; // Foreign key to the deployment this endpoint belongs to
-
   @ManyToOne(() => Deployment, (deployment) => deployment.endpoints, {
     onDelete: 'CASCADE',
   })
