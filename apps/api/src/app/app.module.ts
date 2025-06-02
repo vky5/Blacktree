@@ -13,6 +13,7 @@ import { Deployment } from 'src/modules/deployment/entities/deployment.entity';
 // importing modules
 import { UsersModule } from 'src/modules/users/users.module';
 import { DeploymentModule } from 'src/modules/deployment/deployment.module';
+import { Endpoint } from 'src/modules/deployment/entities/endpoint.entity';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { DeploymentModule } from 'src/modules/deployment/deployment.module';
         | 'mariadb'
         | 'mongodb',
       url: process.env.DB_URL,
-      entities: [User, Deployment],
+      entities: [User, Deployment, Endpoint],
       synchronize: true,
     }),
 

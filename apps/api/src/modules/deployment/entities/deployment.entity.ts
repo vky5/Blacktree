@@ -6,10 +6,12 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 
 import { DeploymentStatus } from 'src/utils/enums/deployment-status.enum';
 import { User } from 'src/modules/users/entities/users.entity';
+import { Endpoint } from './endpoint.entity';
 
 @Entity('deployment')
 export class Deployment {
@@ -33,11 +35,14 @@ export class Deployment {
     enum: DeploymentStatus,
     default: DeploymentStatus.PENDING,
   })
-  deploymentStatus: string;
+  deploymentStatus: DeploymentStatus;
 
   @ManyToOne(() => User, (user) => user.deployments, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({ name: 'userId' }) // by default @primarygeneratedcolumn will be use as foreign key but referencedColumnName can be passed
   user: User;
+
+  @OneToMany(() => Endpoint, (endpoint) => endpoint.deployment)
+  endpoints: Endpoint[];
 
   @CreateDateColumn()
   createdAt: Date;
