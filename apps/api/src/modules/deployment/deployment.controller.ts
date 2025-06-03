@@ -14,6 +14,7 @@ import { DeploymentService } from './deployment.service';
 import { CreateDeploymentDTO } from './dto/deployment.dto';
 import { FakeGuard } from 'src/guards/fake.guard';
 import { RequestWithUser } from 'src/utils/types/RequestWithUser.interface';
+import { DeploymentOwnershipGuard } from './guards/deployment-ownership.guard';
 
 // @UseGuards(JWTClerkGuard) // for restricting all routes guard access to authenticated users
 @UseGuards(FakeGuard) //TODO remove this guard in production
@@ -52,12 +53,21 @@ export class DeploymentController {
   deleteDeployment(@Param('deploymentId') deploymentId: string) {
     return this.deploymentService.deleteDeployment(deploymentId);
   }
+
+  // trigger deployment by id
+  @UseGuards(DeploymentOwnershipGuard)
+  @Post('/trigger/:deploymentId')
+  @HttpCode(HttpStatus.OK)
+  triggerDeployment(@Param('deploymentId') deploymentId: string) {
+    return this.deploymentService.triggerDeployment(deploymentId);
+  }
 }
 
 /*
 - [x] Route to create a new deployment
 - [x] route to add endpoints 
-- [ ] route to update endpoints
-- [ ] route to delete endpoints 
+- [x] route to update endpoints
+- [x] route to delete endpoints 
 - [x] route to update deployment fields
+
 */

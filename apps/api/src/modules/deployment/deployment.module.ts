@@ -7,9 +7,14 @@ import { Endpoint } from './entities/endpoint.entity';
 import { EndpointService } from './endpoint.service';
 import { DeploymentOwnershipGuard } from './guards/deployment-ownership.guard';
 import { UsersModule } from '../users/users.module';
+import { MessagingQueueModule } from '../messaging-queue/messaging-queue.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Deployment, Endpoint]), UsersModule],
+  imports: [
+    TypeOrmModule.forFeature([Deployment, Endpoint]),
+    UsersModule,
+    MessagingQueueModule,
+  ],
   controllers: [DeploymentController],
   providers: [DeploymentService, EndpointService, DeploymentOwnershipGuard],
 })
