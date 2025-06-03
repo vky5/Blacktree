@@ -61,4 +61,14 @@ export class EndpointService {
       },
     });
   }
+
+  // for finding the endpoint by its ID with deployment and user relations
+  async findByIdWithDeploymentAndUser(
+    endpointId: string,
+  ): Promise<Endpoint | null> {
+    return this.repo.findOne({
+      where: { id: endpointId },
+      relations: ['deployment', 'deployment.user'],
+    });
+  }
 }

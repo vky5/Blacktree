@@ -23,6 +23,7 @@ export class DeploymentService {
       repositoryUrl: deploymentData.repositoryUrl,
       dockerFilePath: deploymentData.dockerFilePath,
       deploymentStatus: DeploymentStatus.PENDING, // Default status
+      branch: deploymentData.branch,
       user: { id: userId },
     });
 
@@ -54,5 +55,15 @@ export class DeploymentService {
       console.error('Error deleting deployment:', error);
       throw new InternalServerErrorException('Failed to delete deployment');
     }
+  }
+
+  findByIdWithUser(deploymentId: string): Promise<Deployment | null> {
+    return this.deploymentRepo.findOne({
+      where: { id: deploymentId },
+      relations: ['user'], // Include user relation
+      select: {
+        id: true,
+      },
+    });
   }
 }

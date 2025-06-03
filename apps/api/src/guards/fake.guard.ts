@@ -12,7 +12,7 @@ export class FakeGuard implements CanActivate {
     const user = await this.userService.findOneByEmail('vky0579@gmail.com');
 
     if (!user) {
-      throw new Error('Fake user not found in database'); // Optional: fail fast in dev
+      throw new Error('Fake user not found in database');
     }
 
     (request as RequestWithUser).user = user;
