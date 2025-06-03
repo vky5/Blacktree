@@ -13,6 +13,7 @@ import { Deployment } from 'src/modules/deployment/entities/deployment.entity';
 // importing modules
 import { UsersModule } from 'src/modules/users/users.module';
 import { DeploymentModule } from 'src/modules/deployment/deployment.module';
+import { MessagingQueueModule } from 'src/modules/messaging-queue/messaging-queue.module';
 import { Endpoint } from 'src/modules/deployment/entities/endpoint.entity';
 
 @Module({
@@ -37,6 +38,7 @@ import { Endpoint } from 'src/modules/deployment/entities/endpoint.entity';
     // importing different modules
     UsersModule,
     DeploymentModule,
+    MessagingQueueModule,
   ],
   controllers: [AppController],
   providers: [AppService],

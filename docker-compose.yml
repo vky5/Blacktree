@@ -1,0 +1,33 @@
+version: '3.9'
+
+services:
+  blt-rabbitmq:
+    # image: postgres:15
+    # environment:
+    #   POSTGRES_USER: vky5
+    #   POSTGRES_PASSWORD: passwd
+    #   POSTGRES_DB: blacktree
+
+    # ports:
+    #   - "5432:5432"
+
+    # volumes:
+    #   - pgdata:/var/lib/postgresql/data
+
+    # restart:
+    #   - unless-stopped
+
+
+    image: rabbitmq:4-management
+    ports:
+      - "5672:5672" # RabbitMQ default port
+      - "15672:15672" # RabbitMQ management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  rabbitmq_data:
+
+    # networks:

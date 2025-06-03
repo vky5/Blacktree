@@ -1,15 +1,21 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Deployment } from './entities/deployment.entity';
 import { CreateDeploymentDTO } from './dto/deployment.dto';
 import { DeploymentStatus } from 'src/utils/enums/deployment-status.enum';
+import { MessagingQueueService } from '../messaging-queue/messaging-queue.service';
 
 @Injectable()
 export class DeploymentService {
   constructor(
     @InjectRepository(Deployment)
     private deploymentRepo: Repository<Deployment>,
+    private readonly messageingQueueService: MessagingQueueService,
   ) {}
 
   // for creating a new deployment
@@ -65,5 +71,35 @@ export class DeploymentService {
         id: true,
       },
     });
+  }
+
+  // creating a mq
+  async triggerDeployment(deploymentId: string) {
+    const deployment = await this.deploymentRepo.findOne({
+      where: { id: deploymentId },
+      relations: ['user'], // Include user relation
+      select: {
+        id: true,
+        repositoryUrl: true,
+        branch: true,
+        user: {
+          id: true,
+        },
+      },
+    });
+
+    if (!deployment) {
+      throw new BadRequestException('Deployment not found');
+    }
+
+    const message = {
+      deploymentId: deployment.id,
+      userId: deployment.user.id,
+      repoUrl: deployment.repositoryUrl,
+      branch: deployment.branch,
+      createdAt: new Date().toISOString(),
+    };
+
+    this.messageingQueueService.publishMessage('blacktree.routingKey', message);
   }
 }
