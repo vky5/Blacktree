@@ -5,10 +5,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Deployment } from './entities/deployment.entity';
 import { Endpoint } from './entities/endpoint.entity';
 import { EndpointService } from './endpoint.service';
+import { DeploymentOwnershipGuard } from './guards/deployment-ownership.guard';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Deployment, Endpoint])],
+  imports: [TypeOrmModule.forFeature([Deployment, Endpoint]), UsersModule],
   controllers: [DeploymentController],
-  providers: [DeploymentService, EndpointService],
+  providers: [DeploymentService, EndpointService, DeploymentOwnershipGuard],
 })
 export class DeploymentModule {}

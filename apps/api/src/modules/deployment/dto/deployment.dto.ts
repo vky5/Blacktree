@@ -19,4 +19,9 @@ export class CreateDeploymentDTO {
   @IsUrl()
   @Expose()
   dockerFilePath: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @Expose()
+  branch: string;
 }

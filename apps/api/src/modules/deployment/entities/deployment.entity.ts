@@ -27,6 +27,9 @@ export class Deployment {
   @Column({ type: 'varchar' })
   dockerFilePath: string;
 
+  @Column({ type: 'varchar' })
+  branch: string;
+
   @Column({ type: 'varchar', length: 255, nullable: true })
   deployedUrl: string;
 
