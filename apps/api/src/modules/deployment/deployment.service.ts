@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -19,14 +20,26 @@ export class DeploymentService {
   ) {}
 
   // for creating a new deployment
-
-  createDeployment(
+  async createDeployment(
     deploymentData: CreateDeploymentDTO,
     userId: string,
   ): Promise<Deployment> {
+    const res = await this.deploymentRepo.findOne({
+      where: {
+        branch: deploymentData.branch,
+        repository: deploymentData.repository,
+      },
+    });
+
+    if (res) {
+      throw new BadRequestException(
+        'Deployment of similar data already exists',
+      );
+    }
+
     const newDeployment = this.deploymentRepo.create({
       name: deploymentData.name,
-      repositoryUrl: deploymentData.repositoryUrl,
+      repository: deploymentData.repository,
       dockerFilePath: deploymentData.dockerFilePath,
       deploymentStatus: DeploymentStatus.PENDING, // Default status
       branch: deploymentData.branch,
@@ -80,7 +93,7 @@ export class DeploymentService {
       relations: ['user'], // Include user relation
       select: {
         id: true,
-        repositoryUrl: true,
+        repository: true,
         branch: true,
         user: {
           id: true,
@@ -95,11 +108,22 @@ export class DeploymentService {
     const message = {
       deploymentId: deployment.id,
       userId: deployment.user.id,
-      repoUrl: deployment.repositoryUrl,
+      repository: deployment.repository,
       branch: deployment.branch,
       createdAt: new Date().toISOString(),
     };
 
     this.messageingQueueService.publishMessage('blacktree.routingKey', message);
+  }
+
+  // getting a deployment info
+  async deploymentInfo(id: string) {
+    const deployment = await this.deploymentRepo.findOneBy({ id });
+
+    if (!deployment) {
+      throw new NotFoundException('No deployment of this id found');
+    }
+
+    return deployment;
   }
 }

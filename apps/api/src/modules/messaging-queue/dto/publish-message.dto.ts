@@ -1,4 +1,4 @@
-import { IsISO8601, IsString, IsUrl, IsUUID } from 'class-validator';
+import { IsISO8601, IsString, IsUUID } from 'class-validator';
 
 export class PublishDeploymentMessageDto {
   @IsUUID()
@@ -7,8 +7,8 @@ export class PublishDeploymentMessageDto {
   @IsUUID()
   userId: string;
 
-  @IsUrl()
-  repoUrl: string;
+  @IsString()
+  repository: string;
 
   @IsString()
   branch: string;
