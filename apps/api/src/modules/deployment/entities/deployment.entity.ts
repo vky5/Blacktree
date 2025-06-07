@@ -22,7 +22,7 @@ export class Deployment {
   name: string;
 
   @Column({ type: 'varchar', length: 255 })
-  repositoryUrl: string;
+  repository: string;
 
   @Column({ type: 'varchar' })
   dockerFilePath: string;

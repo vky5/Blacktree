@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { IsNotEmpty, IsString, IsUrl, MinLength } from 'class-validator';
+import { IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 export class CreateDeploymentDTO {
   @IsString()
@@ -10,13 +10,11 @@ export class CreateDeploymentDTO {
 
   @IsString()
   @IsNotEmpty()
-  @IsUrl()
   @Expose()
-  repositoryUrl: string;
+  repository: string;
 
   @IsString()
   @IsNotEmpty()
-  @IsUrl()
   @Expose()
   dockerFilePath: string;
 
