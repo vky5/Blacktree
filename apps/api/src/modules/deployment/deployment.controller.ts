@@ -4,10 +4,12 @@ import {
   Req,
   Body,
   Post,
+  Get,
   UseGuards,
   HttpCode,
   Delete,
   Param,
+  Patch,
 } from '@nestjs/common';
 import { DeploymentService } from './deployment.service';
 // import { JWTClerkGuard } from 'src/guards/jwt-clerk.guard';
@@ -36,8 +38,16 @@ export class DeploymentController {
     return this.deploymentService.createDeployment(deployedBody, userId);
   }
 
+  // getting the deployment data from the db using id
+  // @UseGuards(DeploymentOwnershipGuard)
+  @Get(':deploymetId')
+  @HttpCode(HttpStatus.OK)
+  getDeployment(@Param('deploymetId') deploymentId: string) {
+    return this.deploymentService.deploymentInfo(deploymentId);
+  }
+
   // route to update an existing deployment (handle status through service layer)
-  @Post(':deploymentId')
+  @Patch(':deploymentId')
   @HttpCode(HttpStatus.OK)
   updateDeployment(
     @Param('deploymentId') deploymentId: string,

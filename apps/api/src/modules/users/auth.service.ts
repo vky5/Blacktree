@@ -54,6 +54,8 @@ export class AuthService {
       },
     });
 
+    console.log(res);
+
     if (res.status !== 200) {
       throw new BadRequestException(
         'Failed to retrieve repositories from GitHub',

@@ -7,8 +7,6 @@ import {
   Get,
   Req,
   Res,
-  UnauthorizedException,
-  InternalServerErrorException,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
@@ -22,6 +20,7 @@ import { AuthService } from './auth.service';
 import { UserRole } from 'src/utils/enums/user-role.enum';
 import { Serialize } from 'src/interceptors/serialize-interceptor';
 import { plainToInstance } from 'class-transformer';
+import { FakeGuard } from 'src/guards/fake.guard';
 
 @Controller('users')
 export class UsersController {
@@ -33,7 +32,7 @@ export class UsersController {
   // Me Route
   @Serialize(UserDto)
   @Get('me')
-  @UseGuards(JWTClerkGuard)
+  @UseGuards(FakeGuard)
   me(@Req() req: RequestWithUser) {
     // Return the user object from the request
     console.log('User from request:', req.user.id);
@@ -60,37 +59,19 @@ export class UsersController {
     };
   }
 
-  // src/auth/auth.controller.ts
-
-  // TODO re implement this endpoint
+  // get the repo from the access token of the users
   @Get('/repos')
-  @UseGuards(JWTClerkGuard)
+  @UseGuards(FakeGuard)
   @HttpCode(HttpStatus.OK)
   async getRepos(@Req() req: RequestWithUser) {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        throw new UnauthorizedException('User not authenticated');
-      }
+    const token = typeof req.user.token === 'string' ? req.user.token : '';
+    const repos = await this.authService.getGithubRepositories(token);
 
-      const userFromDb = await this.userService.findOneById(userId);
-
-      if (!userFromDb || !userFromDb.token) {
-        throw new UnauthorizedException('GitHub access token missing');
-      }
-
-      const repos = await this.authService.getGithubRepositories(
-        userFromDb.token,
-      );
-
-      return {
-        message: 'Repositories retrieved successfully',
-        repos,
-      };
-    } catch (error) {
-      console.error('Error fetching GitHub repos:', error);
-      throw new InternalServerErrorException('Failed to retrieve repositories');
-    }
+    return {
+      message: 'Repositories retrieved successfully',
+      length: repos.length,
+      repos,
+    };
   }
 
   // This endpoint is used to sync a user from Clerk to the local database.
