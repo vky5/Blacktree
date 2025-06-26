@@ -23,3 +23,5 @@ export class CreateDeploymentDTO {
   @Expose()
   branch: string;
 }
+
+// this is the data that is stored in the database
