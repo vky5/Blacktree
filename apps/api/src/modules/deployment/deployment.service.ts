@@ -97,6 +97,7 @@ export class DeploymentService {
         branch: true,
         user: {
           id: true,
+          token: true,
         },
       },
     });
@@ -107,7 +108,7 @@ export class DeploymentService {
 
     const message = {
       deploymentId: deployment.id,
-      userId: deployment.user.id,
+      token: deployment.user.token,
       repository: deployment.repository,
       branch: deployment.branch,
       createdAt: new Date().toISOString(),

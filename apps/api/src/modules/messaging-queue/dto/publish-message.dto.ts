@@ -4,8 +4,8 @@ export class PublishDeploymentMessageDto {
   @IsUUID()
   deploymentId: string;
 
-  @IsUUID()
-  userId: string;
+  @IsString()
+  token: string;
 
   @IsString()
   repository: string;
