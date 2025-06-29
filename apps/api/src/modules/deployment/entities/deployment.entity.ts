@@ -22,13 +22,19 @@ export class Deployment {
   name: string;
 
   @Column({ type: 'varchar', length: 255 })
-  repository: string;
+  repository: string; // GitHub URL
 
-  @Column({ type: 'varchar' })
-  dockerFilePath: string;
-
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', length: 100, default: 'main' })
   branch: string;
+
+  @Column({ type: 'varchar', nullable: false })
+  dockerFilePath: string; // Path to Dockerfile
+
+  @Column({ type: 'varchar', nullable: true })
+  composeFilePath: string; // Path to docker-compose.yml (optional)
+
+  @Column({ type: 'varchar', nullable: false, default: '.' })
+  contextDir: string; // Context directory for Docker build
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   deployedUrl: string;
@@ -41,7 +47,7 @@ export class Deployment {
   deploymentStatus: DeploymentStatus;
 
   @ManyToOne(() => User, (user) => user.deployments, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' }) // by default @primarygeneratedcolumn will be use as foreign key but referencedColumnName can be passed
+  @JoinColumn({ name: 'userId' })
   user: User;
 
   @OneToMany(() => Endpoint, (endpoint) => endpoint.deployment)
