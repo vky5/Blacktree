@@ -21,6 +21,15 @@ export class CreateDeploymentDTO {
   @IsString()
   @IsNotEmpty()
   @Expose()
+  contextDir: string;
+
+  @IsString()
+  @Expose()
+  composeFilePath?: string; // Optional field for docker-compose.yml path
+
+  @IsString()
+  @IsNotEmpty()
+  @Expose()
   branch: string;
 }
 

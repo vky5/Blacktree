@@ -1,4 +1,4 @@
-import { IsISO8601, IsString, IsUUID } from 'class-validator';
+import { IsISO8601, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class PublishDeploymentMessageDto {
   @IsUUID()
@@ -12,6 +12,16 @@ export class PublishDeploymentMessageDto {
 
   @IsString()
   branch: string;
+
+  @IsString()
+  dockerFilePath: string;
+
+  @IsOptional()
+  @IsString()
+  composeFilePath?: string;
+
+  @IsString()
+  contextDir: string;
 
   @IsISO8601()
   createdAt: string;

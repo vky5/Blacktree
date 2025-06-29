@@ -95,6 +95,9 @@ export class DeploymentService {
         id: true,
         repository: true,
         branch: true,
+        dockerFilePath: true,
+        contextDir: true,
+        composeFilePath: true,
         user: {
           id: true,
           token: true,
@@ -111,6 +114,9 @@ export class DeploymentService {
       token: deployment.user.token,
       repository: deployment.repository,
       branch: deployment.branch,
+      dockerFilePath: deployment.dockerFilePath,
+      composeFilePath: deployment.composeFilePath || '',
+      contextDir: deployment.contextDir,
       createdAt: new Date().toISOString(),
     };
 
