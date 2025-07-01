@@ -14,3 +14,4 @@ docker run -d \
   --name "$CONTAINER_NAME" \
   -p "$HOST_PORT:$CONTAINER_PORT" \
   "$IMAGE_NAME"
+ww

@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"time"
 )
 
 var mu sync.Mutex // Mutex to ensure thread safety (safe concurrent access to file)
@@ -14,16 +13,17 @@ var mu sync.Mutex // Mutex to ensure thread safety (safe concurrent access to fi
 const trackerFilePath = "./repos.json" // the location of the tracker file
 
 type RepoEntry struct {
-	Path      string `json:"path"`      // JSON tag: field becomes "path" in JSON (not "Path")
-	Repo      string `json:"repo"`      // used to store the repo name
-	Status    string `json:"status"`    // e.g. "cloned", "built"
-	CreatedAt int64  `json:"createdAt"` // Unix timestamp for sorting/cleanup
+	DeploymentID string `json:"deploymentId"` // Unique ID for the deployment
+	Path         string `json:"path"`         // JSON tag: field becomes "path" in JSON (not "Path")
+	Repo         string `json:"repo"`         // used to store the repo name
+	Status       string `json:"status"`       // e.g. "cloned", "built"
+	CreatedAt    int64  `json:"createdAt"`    // Unix timestamp for sorting/cleanup
 }
 
 // SaveEntry adds a new entry to the tracker file
 func SaveEntry(entry RepoEntry) error {
-	mu.Lock()             // Ensure thread safety
-	defer mu.Unlock()     // Unlock after saving
+	mu.Lock()         // Ensure thread safety
+	defer mu.Unlock() // Unlock after saving
 
 	entries, _ := LoadAllEntries() // Load existing entries (ignore error intentionally)
 
@@ -37,18 +37,17 @@ func SaveEntry(entry RepoEntry) error {
 
 	file, err := os.Create(trackerFilePath) // Overwrites existing file or creates new
 
-
 	if err != nil {
 		return fmt.Errorf("failed to create tracker file: %w", err)
 	}
 	defer file.Close()
 
-	enc := json.NewEncoder(file)  // Encoder writes JSON to file
-	enc.SetIndent("", "  ")       // Pretty print JSON for readability
-	return enc.Encode(entries)    // Serialize all entries back to file
+	enc := json.NewEncoder(file) // Encoder writes JSON to file
+	enc.SetIndent("", "  ")      // Pretty print JSON for readability
+	return enc.Encode(entries)   // Serialize all entries back to file
 }
 
-// LoadAllEntries reads all tracked repo entries 
+// LoadAllEntries reads all tracked repo entries
 func LoadAllEntries() ([]RepoEntry, error) {
 	file, err := os.Open(trackerFilePath) // Open file for reading
 	if err != nil {
@@ -66,45 +65,45 @@ func LoadAllEntries() ([]RepoEntry, error) {
 	return entries, nil
 }
 
-// MarkAsBuilt updates the status of a repo entry to "built"
-func MarkAsBuilt(repoPath string) error {
-	mu.Lock()         // Ensure thread safety
-	defer mu.Unlock() // Unlock after updating
+// DeleteEntry removes an entry from the tracker file by DeploymentID
+func DeleteEntry(deploymentID string) error {
+	mu.Lock()		 // Ensure thread safety
+	defer mu.Unlock() // Unlock after deleting
 
-	entries, err := LoadAllEntries()
+	entries, err := LoadAllEntries() // Load existing entries
 	if err != nil {
-		return fmt.Errorf("failed to load entries: %w", err)
+		return fmt.Errorf("failed to load tracker entries: %w", err)
 	}
 
-	updated := false
-
-	for i, entry := range entries {
-		if entry.Path == repoPath {
-			entries[i].Status = "built"
-			entries[i].CreatedAt = time.Now().Unix() // Update timestamp
-			updated = true
-			break
+	// Filter out the entry with the given DeploymentID
+	var updatedEntries []RepoEntry
+	for _, entry := range entries {
+		if entry.DeploymentID != deploymentID {
+			updatedEntries = append(updatedEntries, entry)
 		}
 	}
 
-	if !updated {
-		return fmt.Errorf("repo not found in tracker: %s", repoPath)
+	if len(updatedEntries) == len(entries) {
+		return fmt.Errorf("no entry found with DeploymentID: %s", deploymentID)
 	}
 
-	// Write updated entries back to the tracker file
-	file, err := os.Create(trackerFilePath) // Rewrites full list (safe since file is small)
+	if err := ensureTrackerDir(); err != nil {
+		return fmt.Errorf("failed to ensure tracker directory: %w", err)
+	}
+
+	file, err := os.Create(trackerFilePath) // Overwrites existing file or creates new
 	if err != nil {
 		return fmt.Errorf("failed to create tracker file: %w", err)
 	}
 	defer file.Close()
 
-	enc := json.NewEncoder(file)
-	enc.SetIndent("", "  ") // Pretty print JSON
-	return enc.Encode(entries)
+	enc := json.NewEncoder(file) // Encoder writes JSON to file
+	enc.SetIndent("", "  ")      // Pretty print JSON for readability
+	return enc.Encode(updatedEntries) // Serialize updated entries back to file
 }
 
 // ensureTrackerDir creates the directory for the tracker file if it doesn't exist
 func ensureTrackerDir() error {
-	dir := filepath.Dir(trackerFilePath)    // Get directory path from full file path
-	return os.MkdirAll(dir, 0755)           // Create dir and parents if missing
+	dir := filepath.Dir(trackerFilePath) // Get directory path from full file path
+	return os.MkdirAll(dir, 0755)        // Create dir and parents if missing
 }

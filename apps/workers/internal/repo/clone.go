@@ -29,7 +29,6 @@ func CloneRepo(opt CloneRepoInput) error {
 	// Extract repo name
 	repoName := utils.GetRepoName(opt.RepoURL)
 
-
 	// Create timestamped folder
 	timestamp := time.Now().Unix()
 	var folderName string = fmt.Sprint(repoName, "-", timestamp)
@@ -52,10 +51,11 @@ func CloneRepo(opt CloneRepoInput) error {
 
 	// storing the entry in tracker
 	tracker.SaveEntry(tracker.RepoEntry{
-		Path: folderName,
-		Repo: repoName,
-		Status: "cloned",
-		CreatedAt: timestamp,
+		DeploymentID: fmt.Sprintf("%s-%d", repoName, timestamp), // Unique ID based on repo name and timestamp // TODO take this from the mq message
+		Path:         folderName,
+		Repo:         repoName,
+		Status:       "cloned",
+		CreatedAt:    timestamp,
 	})
 
 	fmt.Println("✅ Repository cloned successfully")
