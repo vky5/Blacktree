@@ -46,6 +46,7 @@ func man() {
 		false,
 		nil,
 	)
+
 	failOnError(err, "Failed to declare queue")
 
 	// Bind queue to exchange with routing key
