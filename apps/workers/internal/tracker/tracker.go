@@ -67,7 +67,7 @@ func LoadAllEntries() ([]RepoEntry, error) {
 
 // DeleteEntry removes an entry from the tracker file by DeploymentID
 func DeleteEntry(deploymentID string) error {
-	mu.Lock()		 // Ensure thread safety
+	mu.Lock()         // Ensure thread safety
 	defer mu.Unlock() // Unlock after deleting
 
 	entries, err := LoadAllEntries() // Load existing entries
@@ -76,14 +76,20 @@ func DeleteEntry(deploymentID string) error {
 	}
 
 	// Filter out the entry with the given DeploymentID
+
+	// store entry
+
+	var toDeleteEntry *RepoEntry
 	var updatedEntries []RepoEntry
 	for _, entry := range entries {
 		if entry.DeploymentID != deploymentID {
 			updatedEntries = append(updatedEntries, entry)
+		} else {
+			toDeleteEntry = &entry // Store the entry to be deleted
 		}
 	}
 
-	if len(updatedEntries) == len(entries) {
+	if toDeleteEntry==nil {
 		return fmt.Errorf("no entry found with DeploymentID: %s", deploymentID)
 	}
 
@@ -91,14 +97,23 @@ func DeleteEntry(deploymentID string) error {
 		return fmt.Errorf("failed to ensure tracker directory: %w", err)
 	}
 
+	// log the deletion action
+	fmt.Printf("🗑️ Deleting entry for repo: %s at %s\n", toDeleteEntry.Repo, toDeleteEntry.Path)
+
+	// deleting the folder 
+	if err := os.RemoveAll(toDeleteEntry.Path); err != nil {
+		return fmt.Errorf("failed to delete repo folder: %w", err)
+	}
+
+	// overwriting the repos.json file with updated entries
 	file, err := os.Create(trackerFilePath) // Overwrites existing file or creates new
 	if err != nil {
 		return fmt.Errorf("failed to create tracker file: %w", err)
 	}
 	defer file.Close()
 
-	enc := json.NewEncoder(file) // Encoder writes JSON to file
-	enc.SetIndent("", "  ")      // Pretty print JSON for readability
+	enc := json.NewEncoder(file)      // Encoder writes JSON to file
+	enc.SetIndent("", "  ")           // Pretty print JSON for readability
 	return enc.Encode(updatedEntries) // Serialize updated entries back to file
 }
 
