@@ -22,7 +22,7 @@ type Worker struct {
 	ContextDir     sql.NullString
 	DockerfilePath sql.NullString
 	ContainerName  sql.NullString
-	Port           sql.NullInt64 // the port to which the container is listening at x:3000 // something like that 
+	Port           sql.NullInt64 // the port to which the container is listening at x:3000
 }
 
 
