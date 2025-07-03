@@ -8,8 +8,8 @@ export class MessagingQueueService implements OnModuleInit, OnModuleDestroy {
   private connection: ChannelModel | null = null;
   private channel: Channel | null = null;
   private readonly exchange = 'blacktree.direct'; // implementing direct exchange
-  private readonly queue = 'blacktree.queue'; // implementing queue
-  private readonly routingKey = 'blacktree.routingKey'; // implementing routing key
+  private readonly queue = 'execute.queue'; // implementing queue
+  private readonly routingKey = 'worker.execute'; // implementing routing key
 
   constructor(private readonly configService: ConfigService) {}
 
