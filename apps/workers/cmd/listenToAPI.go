@@ -11,9 +11,10 @@ import (
 	"fmt"
 	"log"
 	"worker/internal/queue"
+	"encoding/json"
 )
 
-func listenToAPI(sendMessage chan string) {
+func listenToAPI(sendMessage chan queue.DeploymentMessage) {
 	fmt.Println("📡 Listening for messages from API...")
 
 	for {
@@ -29,8 +30,17 @@ func listenToAPI(sendMessage chan string) {
 			continue
 		}
 
+		var data queue.DeploymentMessage
+		
+		if err := json.Unmarshal(msg.Body, &data); err != nil {
+			log.Println("❌ Invalid JSON in message:", err)
+			msg.Nack(false, false)
+			continue
+		}
+
+
 		// send message body to processing pipeline
-		sendMessage <- string(msg.Body)
+		sendMessage <- data
 
 		// acknowledge after successful handoff
 		err = msg.Ack(false)

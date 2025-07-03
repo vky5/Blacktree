@@ -10,7 +10,7 @@ import (
 
 var mu sync.Mutex // Mutex to ensure thread safety (safe concurrent access to file)
 
-const trackerFilePath = "./repos.json" // the location of the tracker file
+const trackerFilePath = "./data/repos.json" // the location of the tracker file
 
 type RepoEntry struct {
 	DeploymentID string `json:"deploymentId"` // Unique ID for the deployment
@@ -29,7 +29,7 @@ func SaveEntry(entry RepoEntry) error {
 
 	entries = append(entries, entry) // Append new entry
 
-	if err := ensureTrackerDir(); err != nil {
+	if err := EnsureTrackerDir(trackerFilePath); err != nil {
 		return fmt.Errorf("failed to ensure tracker directory: %w", err)
 	}
 
@@ -93,7 +93,7 @@ func DeleteEntry(deploymentID string) error {
 		return fmt.Errorf("no entry found with DeploymentID: %s", deploymentID)
 	}
 
-	if err := ensureTrackerDir(); err != nil {
+	if err := EnsureTrackerDir(trackerFilePath); err != nil {
 		return fmt.Errorf("failed to ensure tracker directory: %w", err)
 	}
 
@@ -118,7 +118,7 @@ func DeleteEntry(deploymentID string) error {
 }
 
 // ensureTrackerDir creates the directory for the tracker file if it doesn't exist
-func ensureTrackerDir() error {
-	dir := filepath.Dir(trackerFilePath) // Get directory path from full file path
+func EnsureTrackerDir(trackpath string) error {
+	dir := filepath.Dir(trackpath) // Get directory path from full file path
 	return os.MkdirAll(dir, 0755)        // Create dir and parents if missing
 }

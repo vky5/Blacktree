@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"worker/internal/queue"
+	"worker/internal/store"
+	"worker/internal/tracker"
 )
 
 func main() {
@@ -21,15 +23,33 @@ func main() {
 	defer queue.Close() // ensures channel and connection are closed when main exits normally
 	fmt.Println("Connected Successfully")
 
-
 	// -------------------- Rabbit MQ Set Up Completed ----------------------
-	var recieveMessage chan string = make(chan string) // unbuffered channel because until the message is consumed from the channel we want that go routine to stop and wait  add buffer to increase concurrency
+
+	// ---------------------- Connecting to database sqlite -----------------
+	fmt.Println("Connecting to database....")
+	tracker.EnsureTrackerDir("./data/database.db") // to create the data folder before writing to db
+	err = store.InitDB("./data/database.db")
+
+	if err != nil {
+		log.Fatalln("❌ DB init failed:", err)
+	}
+
+	defer store.Close() // close the connection to db when main func completes execution
+
+	fmt.Println("Connecting to database completed......")
+
+	// ----------------------- Connecting to database completed --------------------
+	var recieveMessage chan queue.DeploymentMessage = make(chan queue.DeploymentMessage) // unbuffered channel because until the message is consumed from the channel we want that go routine to stop and wait  add buffer to increase concurrency
 
 	go listenToAPI(recieveMessage)
+
 
 	for msg := range recieveMessage {
 		// handling message
 		fmt.Println("🔧 Received message:", msg)
+
+		//------------------------- processing recieved message -----------------------------
+		handleCloning(msg)
 	}
 
 }

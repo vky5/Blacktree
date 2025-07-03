@@ -43,6 +43,8 @@ export class DeploymentService {
       dockerFilePath: deploymentData.dockerFilePath,
       deploymentStatus: DeploymentStatus.PENDING, // Default status
       branch: deploymentData.branch,
+      contextDir: deploymentData.contextDir,
+      composeFilePath: deploymentData.composeFilePath || undefined,
       user: { id: userId },
     });
 
