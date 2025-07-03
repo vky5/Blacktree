@@ -6,9 +6,9 @@ import (
 	"github.com/streadway/amqp"
 )
 
-var ( 
-	connection  *amqp.Connection // this is capital so we can export it 
-	channel     *amqp.Channel
+var (
+	connection *amqp.Connection // this is capital so we can export it
+	channel    *amqp.Channel
 	exchange   = "blacktree.direct"
 )
 
@@ -37,7 +37,7 @@ func Connect(connectionString string) (*amqp.Connection, error) {
 	}
 
 	var err error
-	connection, err = amqp.Dial(connectionString) // connecting to rabbit mq 
+	connection, err = amqp.Dial(connectionString) // connecting to rabbit mq
 	if err := failOnError(err, "Failed to connect to RabbitMQ"); err != nil {
 		return nil, err
 	}
@@ -49,13 +49,13 @@ func Connect(connectionString string) (*amqp.Connection, error) {
 
 	// Declare exchange
 	err = channel.ExchangeDeclare(
-		exchange,  // name
-		"direct",  // type
-		true,      // durable
-		false,     // auto-deleted
-		false,     // internal
-		false,     // no-wait
-		nil,       // arguments
+		exchange, // name
+		"direct", // type
+		true,     // durable
+		false,    // auto-deleted
+		false,    // internal
+		false,    // no-wait
+		nil,      // arguments
 	)
 	if err := failOnError(err, "Failed to declare exchange"); err != nil {
 		return nil, err
@@ -95,4 +95,13 @@ func declareAndBindQueue(queueName, routingKey string) error {
 		nil,
 	)
 	return failOnError(err, "Queue bind failed: "+queueName)
+}
+
+func Close() {
+	if channel != nil {
+		channel.Close()
+	}
+	if connection != nil {
+		connection.Close()
+	}
 }
