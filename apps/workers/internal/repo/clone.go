@@ -17,7 +17,7 @@ type CloneRepoInput struct {
 }
 
 // CloneRepo clones the Git repo into a uniquely named folder under ./repos/
-func CloneRepo(opt CloneRepoInput) error {
+func CloneRepo(opt CloneRepoInput, deploymentId string) error {
 	// Inject token if present
 	if opt.Token != nil {
 		opt.RepoURL = utils.InjectTokesInUrl(opt.RepoURL, opt.Token)
@@ -51,7 +51,7 @@ func CloneRepo(opt CloneRepoInput) error {
 
 	// storing the entry in tracker
 	tracker.SaveEntry(tracker.RepoEntry{
-		DeploymentID: fmt.Sprintf("%s-%d", repoName, timestamp), // Unique ID based on repo name and timestamp // TODO take this from the mq message
+		DeploymentID: deploymentId, // taken from the input
 		Path:         folderName,
 		Repo:         repoName,
 		Status:       "cloned",
