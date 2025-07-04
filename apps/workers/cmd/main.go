@@ -41,15 +41,17 @@ func main() {
 	// ----------------------- Connecting to database completed --------------------
 	var recieveMessage chan queue.DeploymentMessage = make(chan queue.DeploymentMessage) // unbuffered channel because until the message is consumed from the channel we want that go routine to stop and wait  add buffer to increase concurrency
 
-	go listenToAPI(recieveMessage)
+
+	go listenToAPI(recieveMessage) // this will listen to the docker images 
+	go builderLoop() // this will run till the main function is working and complete its execution of building the docker images
 
 
 	for msg := range recieveMessage {
 		// handling message
 		fmt.Println("🔧 Received message:", msg)
-
 		//------------------------- processing recieved message -----------------------------
 		handleCloning(msg)
+
 	}
 
 }

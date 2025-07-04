@@ -45,7 +45,7 @@ func handleCloning(msg queue.DeploymentMessage) {
 
 			// Fill these if available from msg:
 			ComposePath:    utils.ToNullString(msg.ComposeFilePath),
-			ImageName:      utils.ToNullString("blacktree/" + msg.Repository),
+			ImageName: utils.ToNullString("blacktree/" + utils.Slugify(msg.Repository) + "-" + msg.DeploymentID[:8]),
 			ContextDir:     utils.ToNullString(msg.ContextDir),
 			DockerfilePath: utils.ToNullString(msg.DockerfilePath),
 		}
