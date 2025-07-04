@@ -43,7 +43,7 @@ func InitDB(path string) error {
 	createTable := `
 	CREATE TABLE IF NOT EXISTS worker (
 		deploymentId   TEXT PRIMARY KEY NOT NULL,
-		status         TEXT NOT NULL CHECK(status IN ('cloned', 'built', 'failed', 'ready', 'removed')),
+		status         TEXT NOT NULL CHECK(status IN ('cloned', 'built', 'failed', 'ready', 'removed', 'building')),
 		createdAt      DATETIME DEFAULT CURRENT_TIMESTAMP,
 		updatedAt      DATETIME DEFAULT CURRENT_TIMESTAMP,
 		composePath    TEXT UNIQUE,

@@ -21,7 +21,7 @@ func BuildImage(opt BuildImageOptions) error {
 	fmt.Printf("📄 Dockerfile: %s\n", opt.DockerfilePath)
 
 	// Command: sudo ./build.sh <image-name> <context-dir> <dockerfile-path>
-	cmd := exec.Command("sudo", "./scripts/build.sh", opt.ImageName, opt.ContextDir, opt.DockerfilePath)
+	cmd := exec.Command("./scripts/build.sh", opt.ImageName, opt.ContextDir, opt.DockerfilePath)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
