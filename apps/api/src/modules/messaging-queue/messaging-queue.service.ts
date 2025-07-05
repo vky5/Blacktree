@@ -2,6 +2,9 @@ import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Channel, ChannelModel, connect } from 'amqplib';
 import { PublishDeploymentMessageDto } from './dto/publish-message.dto';
+import { TriggerDeployment } from './dto/trigger-message.dto';
+import { DeleteDeployment } from './dto/delete-message.dto';
+import { StopMessage } from './dto/stop-message.dto';
 
 @Injectable()
 export class MessagingQueueService implements OnModuleInit, OnModuleDestroy {
@@ -48,7 +51,14 @@ export class MessagingQueueService implements OnModuleInit, OnModuleDestroy {
   }
 
   // method to publish message to the queue
-  publishMessage(routingKey: string, message: PublishDeploymentMessageDto) {
+  publishMessage(
+    routingKey: string,
+    message:
+      | PublishDeploymentMessageDto
+      | TriggerDeployment
+      | DeleteDeployment
+      | StopMessage,
+  ) {
     if (!this.channel) {
       throw new Error('RabbitMQ channel is not initialized');
     }

@@ -10,6 +10,10 @@ import { Deployment } from './entities/deployment.entity';
 import { CreateDeploymentDTO } from './dto/deployment.dto';
 import { DeploymentStatus } from 'src/utils/enums/deployment-status.enum';
 import { MessagingQueueService } from '../messaging-queue/messaging-queue.service';
+import { PublishDeploymentMessageDto } from '../messaging-queue/dto/publish-message.dto';
+import { TriggerDeployment } from '../messaging-queue/dto/trigger-message.dto';
+import { DeleteDeployment } from '../messaging-queue/dto/delete-message.dto';
+import { StopMessage } from '../messaging-queue/dto/stop-message.dto';
 
 @Injectable()
 export class DeploymentService {
@@ -89,7 +93,7 @@ export class DeploymentService {
   }
 
   // creating a mq
-  async triggerDeployment(deploymentId: string) {
+  async buildDeployment(deploymentId: string) {
     const deployment = await this.deploymentRepo.findOne({
       where: { id: deploymentId },
       relations: ['user'], // Include user relation
@@ -111,7 +115,8 @@ export class DeploymentService {
       throw new BadRequestException('Deployment not found');
     }
 
-    const message = {
+    const message: PublishDeploymentMessageDto = {
+      type: 'build',
       deploymentId: deployment.id,
       token: deployment.user.token,
       repository: deployment.repository,
@@ -134,5 +139,36 @@ export class DeploymentService {
     }
 
     return deployment;
+  }
+
+  // trigger the deployment launch
+  triggerDeployment(deploymentId: string) {
+    const message: TriggerDeployment = {
+      type: 'trigger',
+      deploymentId: deploymentId,
+    };
+
+    this.messageingQueueService.publishMessage('blacktree.routingKey', message);
+  }
+
+  // delete the deployment from worker
+  deleteWorkerDeployment(deployentId: string) {
+    const message: DeleteDeployment = {
+      type: 'delete',
+      deploymentId: deployentId,
+    };
+
+    this.messageingQueueService.publishMessage('blacktree.routingKey', message);
+  }
+
+  // to stop the deployment worker
+
+  stopWorkerDeployment(deployentId: string) {
+    const message: StopMessage = {
+      type: 'stop',
+      deploymentId: deployentId,
+    };
+
+    this.messageingQueueService.publishMessage('blacktree.routingKey', message);
   }
 }

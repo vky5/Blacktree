@@ -25,4 +25,6 @@ export class PublishDeploymentMessageDto {
 
   @IsISO8601()
   createdAt: string;
+
+  readonly type = 'build';
 }

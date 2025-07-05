@@ -64,12 +64,36 @@ export class DeploymentController {
     return this.deploymentService.deleteDeployment(deploymentId);
   }
 
-  // trigger deployment by id
+  // build deployment by id
   @UseGuards(DeploymentOwnershipGuard)
-  @Post('/trigger/:deploymentId')
+  @Post('/build/:deploymentId')
+  @HttpCode(HttpStatus.OK)
+  buildDeployment(@Param('deploymentId') deploymentId: string) {
+    return this.deploymentService.buildDeployment(deploymentId);
+  }
+
+  // trigger deployment
+  @UseGuards(DeploymentOwnershipGuard)
+  @Post('/trigger/:deployentId')
   @HttpCode(HttpStatus.OK)
   triggerDeployment(@Param('deploymentId') deploymentId: string) {
     return this.deploymentService.triggerDeployment(deploymentId);
+  }
+
+  // delete deployment image in worker
+  @UseGuards(DeploymentOwnershipGuard)
+  @Post('/delete/:deploymentId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteWorkerDeployment(@Param('deploymentId') deploymentId: string) {
+    return this.deploymentService.deleteWorkerDeployment(deploymentId);
+  }
+
+  // to halt the running instance
+  @UseGuards(DeploymentOwnershipGuard)
+  @Post('/stop/:deploymentId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  stopWorkerDeployment(@Param('deploymentId') deploymentId: string) {
+    return this.deploymentService.stopWorkerDeployment(deploymentId);
   }
 }
 
