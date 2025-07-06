@@ -104,6 +104,7 @@ export class DeploymentService {
         dockerFilePath: true,
         contextDir: true,
         composeFilePath: true,
+        portNumber: true,
         user: {
           id: true,
           token: true,
@@ -124,8 +125,11 @@ export class DeploymentService {
       dockerFilePath: deployment.dockerFilePath,
       composeFilePath: deployment.composeFilePath || '',
       contextDir: deployment.contextDir,
+      portNumber: deployment.portNumber || '',
       createdAt: new Date().toISOString(),
     };
+
+    // console.log(message);
 
     this.messageingQueueService.publishMessage('blacktree.routingKey', message);
   }

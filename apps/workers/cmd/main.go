@@ -50,7 +50,7 @@ func main() {
 		// handling message
 		fmt.Println("🔧 Received message:", msg)
 		//------------------------- processing recieved message -----------------------------
-		handleCloning(msg)
+		consumeMessage(msg)
 
 	}
 

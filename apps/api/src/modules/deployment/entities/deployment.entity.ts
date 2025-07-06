@@ -53,6 +53,9 @@ export class Deployment {
   @OneToMany(() => Endpoint, (endpoint) => endpoint.deployment)
   endpoints: Endpoint[];
 
+  @Column({ type: 'varchar', nullable: true })
+  portNumber: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

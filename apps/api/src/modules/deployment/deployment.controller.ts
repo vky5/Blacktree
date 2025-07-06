@@ -74,7 +74,7 @@ export class DeploymentController {
 
   // trigger deployment
   @UseGuards(DeploymentOwnershipGuard)
-  @Post('/trigger/:deployentId')
+  @Post('/trigger/:deploymentId')
   @HttpCode(HttpStatus.OK)
   triggerDeployment(@Param('deploymentId') deploymentId: string) {
     return this.deploymentService.triggerDeployment(deploymentId);

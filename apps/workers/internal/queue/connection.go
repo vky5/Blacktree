@@ -6,22 +6,21 @@ import (
 	"github.com/streadway/amqp"
 )
 
-
 type DeploymentMessage struct { // this is the message that is recieved from the backend
+	Type            string `json:"type"`
 	DeploymentID    string `json:"deploymentId"`
-	Token           string `json:"token"`           // optional
+	Token           string `json:"token"` // optional
 	Repository      string `json:"repository"`
 	Branch          string `json:"branch"`
 	DockerfilePath  string `json:"dockerFilePath"`
 	ComposeFilePath string `json:"composeFilePath"`
 	ContextDir      string `json:"contextDir"`
 	CreatedAt       string `json:"createdAt"`
+	PortNumber      string `json:"portNumber"` // the port number to which the container is listening at x:3000
 }
 
-
-
 var (
-	connection *amqp.Connection 
+	connection *amqp.Connection
 	channel    *amqp.Channel
 	exchange   = "blacktree.direct"
 )

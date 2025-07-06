@@ -23,6 +23,10 @@ export class PublishDeploymentMessageDto {
   @IsString()
   contextDir: string;
 
+  @IsOptional()
+  @IsString()
+  portNumber?: string;
+
   @IsISO8601()
   createdAt: string;
 
