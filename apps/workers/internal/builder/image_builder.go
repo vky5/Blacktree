@@ -13,7 +13,7 @@ type BuildImageOptions struct {
 	DockerfilePath string // e.g., "./tmp/repos/repo-name-timestamp/Dockerfile"
 }
 
-// BuildImage builds the Docker image using a shell script that requires sudo
+// BuildImage builds the Docker image using a shell script
 func BuildImage(opt BuildImageOptions) error {
 	fmt.Printf("🔨 Starting Docker build...\n")
 	fmt.Printf("📦 Image: %s\n", opt.ImageName)

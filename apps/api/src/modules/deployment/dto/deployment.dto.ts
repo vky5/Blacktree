@@ -1,5 +1,11 @@
 import { Expose } from 'class-transformer';
-import { IsNotEmpty, IsString, MinLength } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  MinLength,
+  IsOptional,
+  IsArray,
+} from 'class-validator';
 
 export class CreateDeploymentDTO {
   @IsString()
@@ -22,6 +28,11 @@ export class CreateDeploymentDTO {
   @IsNotEmpty()
   @Expose()
   contextDir: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  portNumbers: string[];
 
   @IsString()
   @Expose()

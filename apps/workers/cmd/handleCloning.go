@@ -14,7 +14,7 @@ import (
 	"worker/internal/utils"
 )
 
-func handleCloning(msg queue.DeploymentMessage) {
+func handleCloningAndBuildingImage(msg queue.DeploymentMessage) {
 	input := repo.CloneRepoInput{
 		RepoURL: msg.Repository,
 		Branch:  msg.Branch,
@@ -45,14 +45,17 @@ func handleCloning(msg queue.DeploymentMessage) {
 
 			// Fill these if available from msg:
 			ComposePath:    utils.ToNullString(msg.ComposeFilePath),
-			ImageName: utils.ToNullString("blacktree/" + utils.Slugify(msg.Repository) + "-" + msg.DeploymentID[:8]),
+			ImageName:      utils.ToNullString("blacktree/" + utils.Slugify(msg.Repository) + "-" + msg.DeploymentID[:8]),
 			ContextDir:     utils.ToNullString(msg.ContextDir),
 			DockerfilePath: utils.ToNullString(msg.DockerfilePath),
+			Port:           utils.ToNullInt(msg.PortNumber),
 		}
+
+		log.Printf("Raw port string from message: %s", msg.PortNumber)
 
 		if err := store.InsertWorker(entry); err != nil {
 			log.Printf("⚠️ Failed to insert into DB for deployment %s: %v\n", msg.DeploymentID, err)
-		}else{
+		} else {
 			log.Printf("✅ Wrote entry successfully in ./data/database.db %s\n", msg.DeploymentID)
 		}
 	}()
