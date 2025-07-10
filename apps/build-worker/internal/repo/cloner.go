@@ -3,7 +3,7 @@
 package repo
 
 import (
-	dirman "build-worker/internal/dirMan"
+	dirman "build-worker/internal/dirManager"
 	"build-worker/internal/utils"
 	"fmt"
 	"path/filepath"
