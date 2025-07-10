@@ -50,7 +50,7 @@ It listens to build jobs from a queue (RabbitMQ), validates them, and dynamicall
                      |
                      v
          +------------------------+
-         | S3 / ECR / Status Logs |
+         | ECR / Status Logs      |
          +------------------------+
 
 ---

@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+
+package job;
+option go_package = "build-worker/internal/proto;jobpb";
+
+// message sent from orchestrator 
+message JobRequest{
+    string jobId = 1;               // unique tracking id for job
+    string repoUrl = 2;             // github repo to clone
+    string branch = 3;              // branch of the repo to be cloned
+    string dockerfilePath = 4;      // docker file path to build the image
+    string contextDir = 5;          // context dir path
+    string imageName = 6;           // image name to be set
+    string githubToken =7;          // github token to clone private repo
+}
+
+
+// returned by the worker to orhcestrator 
+message JobResponse{
+    string jobId = 1;                
+    bool success = 2;
+    string logs = 3;               // logs (stdout/stderr during build)
+    string imageUrl = 4;           // full ECR image url
+    string error = 5;              // error message if any
+}
+
+
+// gRPC service definition
+service JobService{
+    rpc RunJob(JobRequest) returns (JobResponse);
+}

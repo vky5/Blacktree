@@ -1,5 +1,8 @@
-go 1.21.1
+go 1.23.11
 
-use ./apps/build-worker
+toolchain go1.23.11
 
-use ./apps/build-orchestrator
+use (
+    ./apps/build-worker
+    ./apps/build-orchestrator
+)
