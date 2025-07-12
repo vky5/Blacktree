@@ -21,7 +21,7 @@ type CloneRepoInput struct {
 
 // CloneRepo clones the git repo into a uniquely nade folder under ./tmp/repos
 
-func CloneRepo(opt CloneRepoInput) error {
+func CloneRepo(opt CloneRepoInput) (*string, error) {
 	// Inject token if present
 	if opt.Token != nil {
 		opt.RepoURL = utils.InjectTokesInUrl(opt.RepoURL, opt.Token)
@@ -39,7 +39,7 @@ func CloneRepo(opt CloneRepoInput) error {
 	err := dirman.CreateFolder("tmp/repos")
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Prepare clone command
@@ -49,9 +49,9 @@ func CloneRepo(opt CloneRepoInput) error {
 
 	log.Printf("🔄 Cloning into: %s\n", folder)
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("git clone failed: %w", err)
+		return nil, fmt.Errorf("git clone failed: %w", err)
 	}
 
 	log.Println("✅ Repository cloned successfully")
-	return nil
+	return &folder, nil
 }

@@ -11,13 +11,19 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/client"
 )
 
-func TagAndPushImage(ctx context.Context, dockerCli *client.Client, imageName string, fullECRTag string, username, password, registryURL string) error {
+func TagAndPushImage(ctx context.Context, dockerCli *client.Client, imageName string, credentials registry.AuthConfig) error {
+	// compose the full ECR tag by prepending the registry URL from credentials
+	fullECRTag := fmt.Sprintf("%s/%s", strings.TrimSuffix(credentials.ServerAddress, "/"), imageName)
+
+	fmt.Println("Tagging local image", imageName, "as", fullECRTag)
+
 	// tag the image
 	if err := dockerCli.ImageTag(ctx, imageName, fullECRTag); err != nil {
 		return fmt.Errorf("failed to tag image: %w", err)
@@ -25,9 +31,9 @@ func TagAndPushImage(ctx context.Context, dockerCli *client.Client, imageName st
 
 	// build the base64 encoded auth config
 	authConfig := registry.AuthConfig{
-		Username:      username,
-		Password:      password,
-		ServerAddress: registryURL,
+		Username:      credentials.Username,
+		Password:      credentials.Password,
+		ServerAddress: credentials.ServerAddress,
 	}
 
 	encodedJSON, err := json.Marshal(authConfig)
@@ -53,6 +59,7 @@ func TagAndPushImage(ctx context.Context, dockerCli *client.Client, imageName st
 
 	return nil
 }
+
 // when we do docker push from terminal it uses ~/.docker/config.json
 // but the docker sdk client of go doesnt have the luxuary to access the config.json that's why for every such kind of operation we need to give it the access to the
 // credentials and serveraddresss as ewll
