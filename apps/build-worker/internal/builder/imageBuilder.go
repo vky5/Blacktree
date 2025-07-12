@@ -17,7 +17,7 @@ type BuildImageOptions struct {
 }
 
 // buildImage buils the docker image using a shell scrit
-func BuildImage(opt BuildImageOptions) error {
+func BuildImage(opt BuildImageOptions, folderName string) error {
 	log.Printf("🔨 Starting Docker build...\n")
 	fmt.Printf("📦 Image: %s\n", opt.ImageName)
 	fmt.Printf("📁 Context: %s\n", opt.ContextDir)
@@ -25,7 +25,7 @@ func BuildImage(opt BuildImageOptions) error {
 
 	// shell script to use buildkit to create the docker image
 
-	cmd := exec.Command("./scripts/build.sh", opt.ImageName, opt.ContextDir, opt.DockerfilePath)
+	cmd := exec.Command("./scripts/build.sh", opt.ImageName, opt.ContextDir, opt.DockerfilePath, folderName)
 	cmd.Stdout = os.Stdout //  Redirect stdout to terminall
 	cmd.Stderr = os.Stderr // Redirect stderr to terminal
 
