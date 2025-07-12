@@ -26,3 +26,4 @@ The worker sends an ack() → ✅ it's removed from the queue.
 The worker sends a nack() or the connection/channel is lost → 🔁 it requeues the message, and only then is it sent to another available worker.
 
 
+searl job processore
