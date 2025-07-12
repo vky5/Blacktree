@@ -14,5 +14,7 @@ func main(){
 	if err := utils.EnvInit("./.env"); err != nil {
 		log.Fatalf("❌ Failed to load env variables: %v", err)
 	}
+
+	log.Println()
 	
 }
