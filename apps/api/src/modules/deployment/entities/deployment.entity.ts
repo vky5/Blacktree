@@ -9,9 +9,9 @@ import {
   OneToMany,
 } from 'typeorm';
 
-import { DeploymentStatus } from 'src/utils/enums/deployment-status.enum';
 import { User } from 'src/modules/users/entities/users.entity';
 import { Endpoint } from './endpoint.entity';
+import { DeploymentVersion } from './deployment-version.entity';
 
 @Entity('deployment')
 export class Deployment {
@@ -30,21 +30,11 @@ export class Deployment {
   @Column({ type: 'varchar', nullable: false })
   dockerFilePath: string; // Path to Dockerfile
 
-  @Column({ type: 'varchar', nullable: true })
-  composeFilePath: string; // Path to docker-compose.yml (optional)
-
   @Column({ type: 'varchar', nullable: false, default: '.' })
   contextDir: string; // Context directory for Docker build
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   deployedUrl: string;
-
-  @Column({
-    type: 'enum',
-    enum: DeploymentStatus,
-    default: DeploymentStatus.PENDING,
-  })
-  deploymentStatus: DeploymentStatus;
 
   @ManyToOne(() => User, (user) => user.deployments, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
@@ -55,6 +45,15 @@ export class Deployment {
 
   @Column({ type: 'varchar', nullable: true })
   portNumber: string;
+
+  @Column({ type: 'jsonb', nullable: true })
+  envVars: Record<string, string>;
+
+  @OneToMany(() => DeploymentVersion, (ver) => ver.deployment)
+  versions: DeploymentVersion[];
+
+  @Column({ type: 'varchar', default: true })
+  autoDeploy: boolean;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -15,6 +15,7 @@ import { UsersModule } from 'src/modules/users/users.module';
 import { DeploymentModule } from 'src/modules/deployment/deployment.module';
 import { MessagingQueueModule } from 'src/modules/messaging-queue/messaging-queue.module';
 import { Endpoint } from 'src/modules/deployment/entities/endpoint.entity';
+import { DeploymentVersion } from 'src/modules/deployment/entities/deployment-version.entity';
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import { Endpoint } from 'src/modules/deployment/entities/endpoint.entity';
         | 'mariadb'
         | 'mongodb',
       url: process.env.DB_URL,
-      entities: [User, Deployment, Endpoint],
+      entities: [User, Deployment, Endpoint, DeploymentVersion],
       synchronize: true,
     }),
 
