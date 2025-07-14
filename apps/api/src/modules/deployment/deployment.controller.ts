@@ -16,7 +16,6 @@ import { DeploymentService } from './deployment.service';
 import { CreateDeploymentDTO } from './dto/deployment.dto';
 import { FakeGuard } from 'src/guards/fake.guard';
 import { RequestWithUser } from 'src/utils/types/RequestWithUser.interface';
-import { DeploymentOwnershipGuard } from './guards/deployment-ownership.guard';
 
 // @UseGuards(JWTClerkGuard) // for restricting all routes guard access to authenticated users
 @UseGuards(FakeGuard) //TODO remove this guard in production
@@ -62,38 +61,6 @@ export class DeploymentController {
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteDeployment(@Param('deploymentId') deploymentId: string) {
     return this.deploymentService.deleteDeployment(deploymentId);
-  }
-
-  // build deployment by id
-  @UseGuards(DeploymentOwnershipGuard)
-  @Post('/build/:deploymentId')
-  @HttpCode(HttpStatus.OK)
-  buildDeployment(@Param('deploymentId') deploymentId: string) {
-    return this.deploymentService.buildDeployment(deploymentId);
-  }
-
-  // trigger deployment
-  @UseGuards(DeploymentOwnershipGuard)
-  @Post('/trigger/:deploymentId')
-  @HttpCode(HttpStatus.OK)
-  triggerDeployment(@Param('deploymentId') deploymentId: string) {
-    return this.deploymentService.triggerDeployment(deploymentId);
-  }
-
-  // delete deployment image in worker
-  @UseGuards(DeploymentOwnershipGuard)
-  @Post('/delete/:deploymentId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  deleteWorkerDeployment(@Param('deploymentId') deploymentId: string) {
-    return this.deploymentService.deleteWorkerDeployment(deploymentId);
-  }
-
-  // to halt the running instance
-  @UseGuards(DeploymentOwnershipGuard)
-  @Post('/stop/:deploymentId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  stopWorkerDeployment(@Param('deploymentId') deploymentId: string) {
-    return this.deploymentService.stopWorkerDeployment(deploymentId);
   }
 }
 

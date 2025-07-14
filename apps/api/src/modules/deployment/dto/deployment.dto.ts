@@ -4,7 +4,7 @@ import {
   IsString,
   MinLength,
   IsOptional,
-  IsArray,
+  IsObject,
 } from 'class-validator';
 
 export class CreateDeploymentDTO {
@@ -29,19 +29,30 @@ export class CreateDeploymentDTO {
   @Expose()
   contextDir: string;
 
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  portNumbers: string[];
-
   @IsString()
+  @IsOptional()
   @Expose()
-  composeFilePath?: string; // Optional field for docker-compose.yml path
+  portNumber: string;
 
   @IsString()
   @IsNotEmpty()
   @Expose()
   branch: string;
+
+  @IsOptional()
+  @IsObject()
+  @Expose()
+  envVars: Record<string, string>;
+
+  @IsOptional()
+  @Expose()
+  autoDeploy: boolean;
+
+  // FIXME not adding custom url support but will think about it
+  // @IsOptional()
+  // @IsUrl({}, { message: 'Must be a valid URL' })
+  // @Expose()
+  // deployedUrl?: string;
 }
 
 // this is the data that is stored in the database
