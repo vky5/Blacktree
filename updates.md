@@ -30,14 +30,19 @@
 | Log every step                    | Add clear logging for all ops                  | ✅      |
 
 ## Day 3 – ECS Integration (Execution Phase)
-| Task                                            | Description                                    |
-| ----------------------------------------------- | ---------------------------------------------- |
-| 🔧 Define ECS Task Definition (JSON or via SDK) | Set CPU, memory, networking, IAM roles         |
-| 🚀 Implement `RunContainer(imageURI)` in Go     | Launch Fargate task using pushed ECR image     |
-| 🧪 Validate container start/stop flow           | Make sure ECS task starts, logs, exits cleanly |
-| 📥 Save ECS Task ARN + metadata                 | For status tracking or termination later       |
-| 🧠 Add environment vars to container            | Support job config injection                   |
-| 🧹 Auto-expire old tasks (optional)             | Clean up ECS tasks after X mins                |
+| Task                              | Description                                                       | Status |
+| --------------------------------- | ----------------------------------------------------------------- | ------ |
+| Finalize `Deployment` entity      | Added resourceVersion, envVars, portNumber, autoDeploy flags      | ✅      |
+| Create `DeploymentVersion` entity | Stores image URL, taskDefArn, taskArn, build/runtime logs         | ✅      |
+| Register ECS Task Definition      | Implemented `AwsService.registerTaskDefinition()` with config map | ✅      |
+| Run ECS container                 | Implemented `AwsService.runContainer()`                           | ✅      |
+| Stop ECS container                | Implemented `AwsService.stopContainer()` using taskArn            | ✅      |
+| Soft delete deployment            | Added `cleanResources()` method and controller route              | ✅      |
+| Build image trigger endpoint      | `/deployment/:id/build` via orchestrator pipeline                 | ✅      |
+| Trigger deploy endpoint           | `/deployment/:id/trigger` — launches container using ECS taskDef  | ✅      |
+| Stop deployment endpoint          | `/deployment/:id/stop` — updates status to STOPPED                | ✅      |
+| Delete deployment endpoint        | `/deployment/:id/delete` — soft deletes and clears task info      | ✅      |
+| Update `AwsService`               | Broke into register/run methods, added error handling             | ✅      |
 
 ## Day 4 – Worker ↔ Orchestrator gRPC Interface (Runtime Coordination)
 | Task                                | Description                                  |
