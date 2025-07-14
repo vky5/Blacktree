@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsObject,
 } from 'class-validator';
+import { ResourceVersion } from 'src/utils/enums/resource-version.enum';
 
 export class CreateDeploymentDTO {
   @IsString()
@@ -47,6 +48,10 @@ export class CreateDeploymentDTO {
   @IsOptional()
   @Expose()
   autoDeploy: boolean;
+
+  @IsOptional()
+  @Expose()
+  resourceVersion: ResourceVersion;
 
   // FIXME not adding custom url support but will think about it
   // @IsOptional()

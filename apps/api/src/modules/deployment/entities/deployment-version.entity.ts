@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Deployment } from './deployment.entity';
 import { DeploymentStatus } from 'src/utils/enums/deployment-status.enum';
 
@@ -7,14 +7,17 @@ export class DeploymentVersion {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Deployment, (deployment) => deployment.versions)
+  @OneToOne(() => Deployment, (deployment) => deployment.version)
   deployment: Deployment;
 
-  @Column()
-  imageUrl: string;
+  @Column({ nullable: true })
+  imageUrl: string | null;
 
-  @Column()
-  taskArn: string;
+  @Column({ nullable: true })
+  taskDefinitionArn: string | null; // this is where we should store the register task definition ARN. And NOTE one ARN per deployment
+
+  @Column({ nullable: true })
+  taskArn: string | null;
 
   @Column({
     type: 'enum',
@@ -24,8 +27,8 @@ export class DeploymentVersion {
   deploymentStatus: DeploymentStatus;
 
   @Column({ nullable: true })
-  buildLogsUrl: string;
+  buildLogsUrl: string | null;
 
   @Column({ nullable: true })
-  runTimeLogsUrl: string;
+  runTimeLogsUrl: string | null;
 }

@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Deployment } from './entities/deployment.entity';
-import { CreateDeploymentDTO } from './dto/deployment.dto';
+import { Deployment } from '../entities/deployment.entity';
+import { CreateDeploymentDTO } from '../dto/deployment.dto';
 
 @Injectable()
 export class DeploymentService {

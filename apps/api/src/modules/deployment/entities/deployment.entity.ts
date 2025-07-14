@@ -7,11 +7,13 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 
 import { User } from 'src/modules/users/entities/users.entity';
 import { Endpoint } from './endpoint.entity';
 import { DeploymentVersion } from './deployment-version.entity';
+import { ResourceVersion } from 'src/utils/enums/resource-version.enum';
 
 @Entity('deployment')
 export class Deployment {
@@ -49,11 +51,23 @@ export class Deployment {
   @Column({ type: 'jsonb', nullable: true })
   envVars: Record<string, string>;
 
-  @OneToMany(() => DeploymentVersion, (ver) => ver.deployment)
-  versions: DeploymentVersion[];
+  @OneToOne(() => DeploymentVersion, (ver) => ver.deployment, {
+    cascade: true,
+    eager: true,
+    nullable: true,
+  })
+  @JoinColumn() // Makeing this the owning side of the relation
+  version: DeploymentVersion;
 
   @Column({ type: 'varchar', default: true })
   autoDeploy: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: ResourceVersion,
+    default: ResourceVersion.BASIC,
+  })
+  resourceVersion: ResourceVersion;
 
   @CreateDateColumn()
   createdAt: Date;
