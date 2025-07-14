@@ -12,8 +12,8 @@ import {
 } from '@nestjs/common';
 import { EndpointService } from './endpoint.service';
 import { FakeGuard } from 'src/guards/fake.guard';
-import { CreateEndpointDto } from './dto/endpoint.dto';
-import { DeploymentOwnershipGuard } from './guards/deployment-ownership.guard';
+import { CreateEndpointDto } from '../dto/endpoint.dto';
+import { DeploymentOwnershipGuard } from '../guards/deployment-ownership.guard';
 // import { JWTClerkGuard } from 'src/guards/jwt-clerk.guard';
 
 //TODO URGENT: We are not testing that the resources user is updating or deleting belogs to the user or not. Fix it at once

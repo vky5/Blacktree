@@ -1,5 +1,7 @@
 export enum DeploymentStatus {
-  FAILED = 'failed',
-  DEPLOYED = 'deployed',
   PENDING = 'pending',
+  BUILT = 'built',
+  RUNNING = 'running',
+  STOPPED = 'stopped',
+  FAILED = 'failed',
 }

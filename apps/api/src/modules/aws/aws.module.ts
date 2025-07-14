@@ -4,6 +4,7 @@ import { AwsService } from './aws.service';
 
 @Module({
   controllers: [AwsController],
-  providers: [AwsService]
+  providers: [AwsService],
+  exports: [AwsService],
 })
 export class AwsModule {}
