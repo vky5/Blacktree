@@ -10,13 +10,13 @@ export class DeploymentVersion {
   @OneToOne(() => Deployment, (deployment) => deployment.version)
   deployment: Deployment;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   imageUrl: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   taskDefinitionArn: string | null; // this is where we should store the register task definition ARN. And NOTE one ARN per deployment
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   taskArn: string | null;
 
   @Column({
@@ -26,9 +26,9 @@ export class DeploymentVersion {
   })
   deploymentStatus: DeploymentStatus;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   buildLogsUrl: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   runTimeLogsUrl: string | null;
 }

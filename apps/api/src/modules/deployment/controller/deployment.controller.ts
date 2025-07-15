@@ -11,7 +11,7 @@ import {
   Param,
   Patch,
 } from '@nestjs/common';
-import { DeploymentService } from './deployment.service';
+import { DeploymentService } from '../service/deployment.service';
 // import { JWTClerkGuard } from 'src/guards/jwt-clerk.guard';
 import { CreateDeploymentDTO } from '../dto/deployment.dto';
 import { FakeGuard } from 'src/guards/fake.guard';
