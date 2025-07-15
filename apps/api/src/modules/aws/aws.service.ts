@@ -7,15 +7,22 @@ import {
   StopTaskCommand,
   DeregisterTaskDefinitionCommand,
   StopTaskCommandOutput,
+  AssignPublicIp,
 } from '@aws-sdk/client-ecs';
 import { BatchDeleteImageCommand, ECRClient } from '@aws-sdk/client-ecr';
 
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AwsService {
   private readonly ecsClient = new ECSClient({ region: 'us-east-1' });
   private readonly ecrClient = new ECRClient({ region: 'us-east-1' });
+
+  private executionRoleArn: string;
+  private clusterName: string;
+  private subnets: string[];
+  private securityGroups: string[];
 
   // different resources configurations
   private readonly configMap = {
@@ -24,12 +31,24 @@ export class AwsService {
     high: { cpu: '1024', memory: '2048' },
   };
 
-  //TODO Replace these with actual values
-  private readonly executionRoleArn =
-    'arn:aws:iam::<your-account-id>:role/ecsTaskExecutionRole';
-  private readonly clusterName = 'your-cluster-name';
-  private readonly subnets = ['subnet-xxxx'];
-  private readonly securityGroups = ['sg-xxxx'];
+  constructor(private readonly configService: ConfigService) {
+    this.executionRoleArn = this.configService.get<string>('EXECUTIONROLEARN')!;
+    this.clusterName = this.configService.get<string>('CLUSTERNAME')!;
+
+    const raw = this.configService.get<string>('SUBNET'); // because it adds '["". ""]' outside array so it was causing issue
+    try {
+      this.subnets = JSON.parse(raw ?? '[]') as string[];
+    } catch {
+      throw new Error('Invalid JSON in SUBNET env var');
+    }
+
+    const raw2 = this.configService.get<string>('SECURITY_GROUP');
+    try {
+      this.securityGroups = JSON.parse(raw2 ?? '[]') as string[];
+    } catch {
+      throw new Error('Invalid JSON in SUBNET env var');
+    }
+  }
 
   // Register ECS Task Definition
   async registerTaskDefinition(
@@ -78,26 +97,48 @@ export class AwsService {
 
   // Run Container on Fargate using a registered Task Definition
   async runContainer(taskDefArn: string): Promise<string> {
-    const runCmd = new RunTaskCommand({
-      cluster: this.clusterName,
-      taskDefinition: taskDefArn,
-      count: 1,
-      launchType: 'FARGATE',
-      networkConfiguration: {
-        awsvpcConfiguration: {
-          subnets: this.subnets,
-          assignPublicIp: 'ENABLED',
-          securityGroups: this.securityGroups,
+    try {
+      const runCmd = new RunTaskCommand({
+        cluster: this.clusterName,
+        taskDefinition: taskDefArn,
+        count: 1,
+        launchType: 'FARGATE',
+        networkConfiguration: {
+          awsvpcConfiguration: {
+            subnets: this.subnets,
+            assignPublicIp: AssignPublicIp.ENABLED,
+            securityGroups: this.securityGroups,
+          },
         },
-      },
-    });
+      });
 
-    const response: RunTaskCommandOutput = await this.ecsClient.send(runCmd);
-    const taskArn: string | undefined = response.tasks?.[0]?.taskArn;
+      console.log('[ECS] Running task with config:', {
+        cluster: this.clusterName,
+        taskDefinition: taskDefArn,
+        subnets: this.subnets,
+        securityGroups: this.securityGroups,
+      });
 
-    if (!taskArn) throw new Error('Failed to launch ECS task.');
+      const response: RunTaskCommandOutput = await this.ecsClient.send(runCmd);
 
-    return taskArn;
+      if (!response.tasks?.length || !response.tasks[0].taskArn) {
+        console.error('[ECS] No tasks launched. Failures:', response.failures);
+        if (response.failures && response.failures.length > 0) {
+          for (const failure of response.failures) {
+            console.error('ECS Task failure:', failure.arn, failure.reason);
+          }
+        }
+
+        throw new Error(
+          'ECS failed to launch task: ' + JSON.stringify(response.failures),
+        );
+      }
+
+      return response.tasks[0].taskArn;
+    } catch (err) {
+      console.error('[ECS ERROR]', err);
+      throw new Error('Failed to launch ECS task: ' + (err as Error).message);
+    }
   }
 
   // stop the container from the ARN
@@ -120,16 +161,37 @@ export class AwsService {
   }
 
   // deleting the ECR image
-  deleteEcrImage(imageUri: string) {
-    const [, repoName, tag] = imageUri.match(/([^/]+)\/([^:]+):(.+)$/) || [];
-    if (!repoName || !tag) return;
+  deleteEcrImage(imageUrl: string) {
+    const match = imageUrl.match(/^.+\.amazonaws\.com\/(.+):(.+)$/);
+    if (!match) return;
+
+    const [, repositoryName, imageTag] = match;
 
     const cmd = new BatchDeleteImageCommand({
-      repositoryName: repoName,
-      imageIds: [{ imageTag: tag }],
+      repositoryName,
+      imageIds: [{ imageTag }],
     });
 
     return this.ecrClient.send(cmd);
+  }
+
+  // restarting the ECS from taskARN
+  async restartTask(taskDefinitionArn: string): Promise<RunTaskCommandOutput> {
+    const runCmd = new RunTaskCommand({
+      cluster: this.clusterName,
+      taskDefinition: taskDefinitionArn,
+      launchType: 'FARGATE',
+      count: 1,
+      networkConfiguration: {
+        awsvpcConfiguration: {
+          subnets: this.subnets,
+          assignPublicIp: 'ENABLED',
+          securityGroups: this.securityGroups,
+        },
+      },
+    });
+
+    return this.ecsClient.send(runCmd);
   }
 }
 

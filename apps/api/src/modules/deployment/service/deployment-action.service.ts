@@ -67,7 +67,6 @@ export class DeploymentActionService {
       // 1. Fetch deployment along with the latest version
       const deployment = await this.deploymentRepo.findOne({
         where: { id: deploymentId },
-        relations: ['versions'],
       });
 
       if (!deployment) {
@@ -77,6 +76,32 @@ export class DeploymentActionService {
       const version = deployment.version;
       if (!version || !version.imageUrl) {
         throw new NotFoundException('No image version available to deploy');
+      }
+
+      // if taskarn is present
+      if (version.taskArn) {
+        try {
+          await this.awsService.stopContainer(version.taskArn);
+        } catch (error) {
+          console.log(error);
+          throw new InternalServerErrorException(
+            'Something went wrong with container stopping',
+          );
+        }
+      }
+
+      // if taskdefinitionarn is already there, deregister it and then register it again
+      if (version.taskDefinitionArn) {
+        try {
+          await this.awsService.deregisterTaskDefinition(
+            version.taskDefinitionArn,
+          );
+        } catch (error) {
+          console.log(error);
+          throw new InternalServerErrorException(
+            'Something went wrong with task definition',
+          );
+        }
       }
 
       // 2. Register Task Definition on ECS with given config
@@ -170,6 +195,29 @@ export class DeploymentActionService {
     } catch (err) {
       console.error(err);
       throw new InternalServerErrorException('Failed to clean resources.');
+    }
+  }
+
+  // restarting the ECS from task arn
+  async restartDeployment(deploymentId: string) {
+    try {
+      const deployment = await this.deploymentRepo.findOne({
+        where: { id: deploymentId },
+      });
+      if (!deployment?.version || !deployment.version.taskDefinitionArn) {
+        throw new BadRequestException(
+          'Didnt find any deployment for this ID to restart',
+        );
+      }
+
+      await this.awsService.restartTask(deployment.version.taskDefinitionArn);
+
+      return {
+        status: 'success',
+        message: 'Deployment restarted successfully',
+      };
+    } catch (error) {
+      console.log(error);
     }
   }
 }
