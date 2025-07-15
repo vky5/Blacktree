@@ -55,11 +55,12 @@ export class Deployment {
     cascade: true,
     eager: true,
     nullable: true,
+    onDelete: 'CASCADE',
   })
-  @JoinColumn() // Makeing this the owning side of the relation
+  @JoinColumn({ name: 'versionId' }) // Makeing this the owning side of the relation
   version: DeploymentVersion;
 
-  @Column({ type: 'varchar', default: true })
+  @Column({ type: 'boolean', default: true })
   autoDeploy: boolean;
 
   @Column({

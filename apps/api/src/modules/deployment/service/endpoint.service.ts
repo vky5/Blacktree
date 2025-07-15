@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Endpoint } from './entities/endpoint.entity';
-import { CreateEndpointDto } from './dto/endpoint.dto';
+import { Endpoint } from '../entities/endpoint.entity';
+import { CreateEndpointDto } from '../dto/endpoint.dto';
 
 @Injectable()
 export class EndpointService {

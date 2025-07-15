@@ -7,8 +7,8 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { DeploymentService } from '../deployment.service';
-import { EndpointService } from '../endpoint.service';
+import { DeploymentService } from '../service/deployment.service';
+import { EndpointService } from '../service/endpoint.service';
 import { Request } from 'express';
 import { RequestWithUser } from 'src/utils/types/RequestWithUser.interface';
 

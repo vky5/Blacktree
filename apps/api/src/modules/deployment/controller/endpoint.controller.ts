@@ -10,7 +10,7 @@ import {
   Patch,
   Get,
 } from '@nestjs/common';
-import { EndpointService } from './endpoint.service';
+import { EndpointService } from '../service/endpoint.service';
 import { FakeGuard } from 'src/guards/fake.guard';
 import { CreateEndpointDto } from '../dto/endpoint.dto';
 import { DeploymentOwnershipGuard } from '../guards/deployment-ownership.guard';
