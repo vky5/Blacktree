@@ -25,6 +25,8 @@ func main() {
 	log.Println("✅ Environment variables loaded successfully")
 
 	// -------------------- connecting to queue ------------------------
+	// 
+	
 
 }
 

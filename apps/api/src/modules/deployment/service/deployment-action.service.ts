@@ -220,4 +220,13 @@ export class DeploymentActionService {
       console.log(error);
     }
   }
+
+  // to redeploy the new built
+  redeploy(deploymentId: string) {
+    console.log(' 🔥     this is booya');
+    const prm1 = this.cleanResources(deploymentId);
+
+    const prm2 = this.buildDeployment(deploymentId);
+    return Promise.all([prm1, prm2]);
+  }
 }
