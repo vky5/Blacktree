@@ -2,9 +2,15 @@ import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
+  HttpException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+
+import { Endpoints } from '@octokit/types';
+
+export type CreateWebhookResponse =
+  Endpoints['POST /repos/{owner}/{repo}/hooks']['response']['data'];
 
 @Injectable()
 export class AuthService {
@@ -67,5 +73,54 @@ export class AuthService {
       throw new BadRequestException('Unexpected response format from GitHub');
     }
     return res.data.map((repo: { name: string }) => repo.name);
+  }
+
+  async createWebhookForRepo(
+    repoFullName: string,
+    webhookUrl: string,
+    accessToken: string,
+  ): Promise<CreateWebhookResponse> {
+    const [owner, repo] = repoFullName.split('/');
+    const githubApiUrl = `https://api.github.com/repos/${owner}/${repo}/hooks`;
+
+    const webhookSecret = this.configService.get<string>(
+      'GITHUB_WEBHOOK_SECRET',
+    );
+
+    const payload = {
+      name: 'web',
+      active: true,
+      events: ['push'],
+      config: {
+        url: webhookUrl,
+        content_type: 'json',
+        secret: webhookSecret,
+        insecure_ssl: '0',
+      },
+    };
+
+    try {
+      const response = await axios.post<CreateWebhookResponse>(
+        githubApiUrl,
+        payload,
+        {
+          headers: {
+            Authorization: `token ${accessToken}`,
+            Accept: 'application/vnd.github.v3+json',
+          },
+        },
+      );
+
+      return response.data;
+    } catch (error: unknown) {
+      const message =
+        axios.isAxiosError(error) && error.response?.data
+          ? JSON.stringify(error.response.data)
+          : (error as Error).message;
+
+      console.error('[GITHUB_WEBHOOK_ERROR]', message);
+
+      throw new HttpException('Failed to create GitHub webhook', 500);
+    }
   }
 }
