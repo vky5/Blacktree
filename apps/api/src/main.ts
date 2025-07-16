@@ -4,6 +4,7 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 
 import * as cookieparser from 'cookie-parser';
 import { AllExceptionsFilter } from './common/filters/allexcetion.filter';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -20,6 +21,9 @@ async function bootstrap() {
 
   // when sending cookie express is enough but when reading cookie we do need cookie parser and for next application we need new Cookies to setup cookies
   app.use(cookieparser());
+
+  // 👉 Use raw body parser for GitHub webhooks only
+  app.use('/api/v1/webhook', bodyParser.raw({ type: 'application/json' }));
 
   // creating the global prefix for the backend
   const globalPrefix = 'api/v1';

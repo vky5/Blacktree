@@ -13,6 +13,7 @@ import { DeploymentActionsController } from './controller/deployment-actions.con
 import { DeploymentActionService } from './service/deployment-action.service';
 import { AwsModule } from '../aws/aws.module';
 import { WebhookController } from './controller/webhook.controller';
+import { WebhookService } from './service/webhook.service';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { WebhookController } from './controller/webhook.controller';
     EndpointService,
     DeploymentOwnershipGuard,
     DeploymentActionService,
+    WebhookService,
   ],
 })
 export class DeploymentModule {}

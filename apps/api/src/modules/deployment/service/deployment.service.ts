@@ -123,4 +123,14 @@ export class DeploymentService {
 
     return deployment;
   }
+
+  // find the repo with same repo name and branch
+  async findByRepoAndBranch(repo: string, branch: string) {
+    return this.deploymentRepo.findOne({
+      where: {
+        repository: repo,
+        branch: branch,
+      },
+    });
+  }
 }
