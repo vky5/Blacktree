@@ -8,12 +8,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Deployment } from '../entities/deployment.entity';
 import { CreateDeploymentDTO } from '../dto/deployment.dto';
+import { AuthService } from 'src/modules/users/auth.service';
+import { ConfigService } from '@nestjs/config';
+import { UsersService } from 'src/modules/users/users.service';
 
 @Injectable()
 export class DeploymentService {
   constructor(
     @InjectRepository(Deployment)
     private deploymentRepo: Repository<Deployment>,
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+    private readonly usersService: UsersService,
   ) {}
 
   // for creating a new deployment
@@ -21,29 +27,53 @@ export class DeploymentService {
     deploymentData: CreateDeploymentDTO,
     userId: string,
   ): Promise<Deployment> {
-    const res = await this.deploymentRepo.findOne({
+    const existingDeployment = await this.deploymentRepo.findOne({
       where: {
         branch: deploymentData.branch,
         repository: deploymentData.repository,
       },
     });
 
-    if (res) {
+    if (existingDeployment) {
       throw new BadRequestException(
-        'Deployment of similar data already exists',
+        'A deployment with this branch and repository already exists',
       );
     }
 
-    const newDeployment = this.deploymentRepo.create({
-      name: deploymentData.name,
-      repository: deploymentData.repository,
-      dockerFilePath: deploymentData.dockerFilePath,
-      branch: deploymentData.branch,
-      contextDir: deploymentData.contextDir,
-      user: { id: userId },
-    });
+    const webhookUrl = this.configService.get<string>('WEBHOOK_URL');
+    if (!webhookUrl) {
+      throw new InternalServerErrorException('WEBHOOK_URL is not configured');
+    }
 
-    return this.deploymentRepo.save(newDeployment);
+    const userInfo = await this.usersService.findOneById(userId);
+    if (!userInfo?.token) {
+      throw new BadRequestException(
+        'User has not connected their GitHub account',
+      );
+    }
+
+    try {
+      const webhookInfo = (await this.authService.createWebhookForRepo(
+        deploymentData.repository,
+        webhookUrl,
+        userInfo.token,
+      )) as { id: number };
+
+      const newDeployment = this.deploymentRepo.create({
+        name: deploymentData.name,
+        repository: deploymentData.repository,
+        dockerFilePath: deploymentData.dockerFilePath,
+        branch: deploymentData.branch,
+        contextDir: deploymentData.contextDir,
+        user: { id: userId },
+        webhookid: webhookInfo.id.toString(),
+      });
+
+      return await this.deploymentRepo.save(newDeployment);
+    } catch (error: unknown) {
+      console.error('[CREATE_DEPLOYMENT_WEBHOOK_ERROR]', error);
+      throw new InternalServerErrorException('Failed to create GitHub webhook');
+    }
   }
 
   // for updating an existing deployment

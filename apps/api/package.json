@@ -46,6 +46,7 @@
     "@nestjs/platform-express": "^11.0.12",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.12",
+    "@octokit/types": "^14.1.0",
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.10.7",
     "@types/amqplib": "^0.10.7",

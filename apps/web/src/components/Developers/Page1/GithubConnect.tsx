@@ -24,8 +24,10 @@ function GithubConnect() {
 
   // Function to handle GitHub authentication
   const connectToGithub = () => {
-    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=repo%20read:user%20user:email`;
- // public_repo scope allows access to public repositories, read:user allows reading user profile data, and user:email allows access to the user's email address
+    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=repo%20admin:repo_hook%20read:user%20user:email`;
+    // public_repo scope allows access to public repositories, read:user allows reading user profile data, and user:email allows access to the user's email address
+    // it also inclues admin:repo_hook which we are gonna use to create the webhooks for CI integration
+    
     window.location.href = githubAuthUrl;
   };
 

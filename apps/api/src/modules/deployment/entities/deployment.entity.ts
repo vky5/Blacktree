@@ -70,6 +70,9 @@ export class Deployment {
   })
   resourceVersion: ResourceVersion;
 
+  @Column({ type: 'varchar' })
+  webhookid: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

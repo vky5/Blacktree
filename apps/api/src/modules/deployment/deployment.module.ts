@@ -12,6 +12,7 @@ import { DeploymentVersion } from './entities/deployment-version.entity';
 import { DeploymentActionsController } from './controller/deployment-actions.controller';
 import { DeploymentActionService } from './service/deployment-action.service';
 import { AwsModule } from '../aws/aws.module';
+import { WebhookController } from './controller/webhook.controller';
 
 @Module({
   imports: [
@@ -20,7 +21,11 @@ import { AwsModule } from '../aws/aws.module';
     MessagingQueueModule,
     AwsModule,
   ],
-  controllers: [DeploymentController, DeploymentActionsController],
+  controllers: [
+    DeploymentController,
+    DeploymentActionsController,
+    WebhookController,
+  ],
   providers: [
     DeploymentService,
     EndpointService,
