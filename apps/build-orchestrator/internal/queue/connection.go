@@ -5,7 +5,6 @@ package queue
 import (
 	"build-orchestrator/internal/utils"
 	"log"
-	"os"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -14,7 +13,7 @@ import (
 var (
 	connection *amqp.Connection
 	channel    *amqp.Channel
-	exchange   = os.Getenv("EXCHANGE")
+	exchange   = "blacktree.direct"
 )
 
 // Routing keys and queues
@@ -95,6 +94,7 @@ func declareAndBindQueue(queueName, routingKey string) error {
 }
 
 func Close() {
+	log.Printf("🔄 Shutting the connection with queue")
 	if channel != nil {
 		if err := channel.Close(); err != nil {
 			log.Printf("❌ Failed to close RabbitMQ channel: %v", err)
@@ -105,4 +105,5 @@ func Close() {
 			log.Printf("❌ Failed to close RabbitMQ connection: %v", err)
 		}
 	}
+	log.Printf("✅ Connection with queue has been closed")
 }
