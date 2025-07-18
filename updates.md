@@ -44,14 +44,15 @@
 | Delete deployment endpoint        | `/deployment/:id/delete` — soft deletes and clears task info      | ✅      |
 | Update `AwsService`               | Broke into register/run methods, added error handling             | ✅      |
 
-## Day 4 – Worker ↔ Orchestrator gRPC Interface (Runtime Coordination)
-| Task                                | Description                                  |
-| ----------------------------------- | -------------------------------------------- |
-| 🔌 Define gRPC JobService           | `StartJob`, `GetStatus`, `Cancel`, `Ping`    |
-| 💬 Setup worker gRPC server         | Listens on port 50051                        |
-| 🧠 Connect orchestrator gRPC client | Calls `StartJob()` when a worker is assigned |
-| ❤️ Add health check handler         | `/Heartbeat()` for liveness                  |
-| ❌ Support job cancellation          | `Cancel()` to stop a job                     |
+## Day 4 – Worker ↔ Orchestrator gRPC Interface (Runtime Coordination)| **Task**                                  | **Description**                                                    | **Status** |
+| ----------------------------------------- | ------------------------------------------------------------------ | ---------- |
+| Implement pull-based job assignment       | Orchestrator pulls from job queue only when workers are free       | ✅          |
+| Trigger `BuildJob()` on worker            | Use goroutines, channels to execute work concurrently              | ✅          |
+| Send build result back to backend         | Via NATS / MQ / gRPC / HTTP callback                               | ✅          |
+| Handle retries on failure                 | Retry N times if clone/build fails                                 | ✅          |
+| Design build message structure            | Includes repo, branch, dockerfile, imageName, etc.                 | ✅          |
+| Create build queue + response queue types | `queue.JobMessage`, `queue.JobResult` structures for communication | ✅          |
+
 
 ## Day 5 – Monitoring, Logs, Scaling & Polish
 | Task                                      | Description                                |
