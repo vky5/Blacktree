@@ -11,7 +11,7 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-// NewConsumer sets up and returns a new consumer for a queue
+// Creates and returns a new Consumer for the given queue.
 func NewConsumer(queueName string) (*Consumer, error) {
 	if connection == nil || channel == nil {
 		return nil, utils.FailedOnError("Publishing to queue", nil, "RabbitMQ connection/channel is not initialized")

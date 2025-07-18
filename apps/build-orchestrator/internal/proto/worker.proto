@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+
+package workerpb;
+option go_package = "build-orchestrator/internal/proto;workerpb";
+
+// registratorin of workers 
+message WorkerInfo {
+  string id = 1;
+  string ip = 2;
+  int32 port = 3;
+  string region = 4;
+}
+
+// response from registration of worker
+message RegisterAck {
+  bool success = 1;
+  string message = 2;
+}
+
+
+message PingRequest {
+  string id = 1;
+}
+
+message PongResponse {
+  bool healthy = 1;
+}
+
+
+service WorkerService {
+  rpc Register(WorkerInfo) returns (RegisterAck); // to register the worker to the orchestrator
+  rpc Ping(PingRequest) returns (PongResponse); // for worker to tell their status automatically 
+}
