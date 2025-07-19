@@ -44,7 +44,8 @@
 | Delete deployment endpoint        | `/deployment/:id/delete` — soft deletes and clears task info      | ✅      |
 | Update `AwsService`               | Broke into register/run methods, added error handling             | ✅      |
 
-## Day 4 – Worker ↔ Orchestrator gRPC Interface (Runtime Coordination)| **Task**                                  | **Description**                                                    | **Status** |
+## Day 4 – Worker ↔ Orchestrator gRPC Interface (Runtime Coordination)
+| **Task**                                  | **Description**                                                    | **Status** |
 | ----------------------------------------- | ------------------------------------------------------------------ | ---------- |
 | Implement pull-based job assignment       | Orchestrator pulls from job queue only when workers are free       | ✅          |
 | Trigger `BuildJob()` on worker            | Use goroutines, channels to execute work concurrently              | ✅          |
