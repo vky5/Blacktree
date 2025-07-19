@@ -1,23 +1,24 @@
 package dispatcher
 
 import (
-	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/queue"
 	"context"
 	"sync"
+
+	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/queue"
+	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/workerman"
 )
 
 type DispatcherState struct {
-	SendMessageToWorker chan queue.DeploymentMessage // Channel used to send deployment jobs to workers via gRPC
-	FreeWorkerChan      chan string                  // a channel that checkHealthForAll() talks to and if there is any worker, it calles the RunJob
-	// jobResultChan       chan queue.ResultMessage // message to be sent to MQ of control plane
-	CancelMap map[string]context.CancelFunc // idk
-	CancelMu  sync.Mutex                    // Mutex to ensure thread-safe access to the cancelMap from multiple goroutines
+	JobQueue      chan *queue.DeploymentMessage // jobs pulled from RabbitMQ
+	CancelMap     map[string]context.CancelFunc
+	CancelMapLock sync.Mutex
+	WorkerManager *workerman.WorkerManager // manager contains freeWorkersChan internally
 }
 
-func NewDispatcherState(jobChan chan queue.DeploymentMessage, freeChan chan string) *DispatcherState {
+func NewDispatcherState(jobQueue chan *queue.DeploymentMessage, wm *workerman.WorkerManager) *DispatcherState {
 	return &DispatcherState{
-		SendMessageToWorker: jobChan,
-		FreeWorkerChan:      freeChan,
-		CancelMap:           make(map[string]context.CancelFunc),
+		JobQueue:      jobQueue,
+		CancelMap:     make(map[string]context.CancelFunc),
+		WorkerManager: wm,
 	}
 }

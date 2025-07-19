@@ -4,7 +4,6 @@
 a job dispatcher with concurrency control, health checks, worker orchestration, gRPC coordination, and context-aware cancellation for jobs
 */
 
-
 // I will add emojis in logs
 
 package main
@@ -15,20 +14,25 @@ import (
 	"log"
 	"os"
 
+	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/dispatcher"
+	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/grpc"
 	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/queue"
 	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/utils"
+	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/workerman"
 )
 
 func main() {
 	log.Println("🔄 Starting orchestrator")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	if err := run(); err != nil {
+	if err := run(ctx); err != nil {
 		log.Printf("❌ Fatal error: %v", err)
 		os.Exit(1) // defer calls in `main()` are still respected because `run()` returned
 	}
 }
 
-func run() error {
+func run(ctx context.Context) error {
 	// Load env variables
 	if err := utils.EnvInit("./.env"); err != nil {
 		return fmt.Errorf("failed to load env variables: %w", err)
@@ -57,31 +61,29 @@ func run() error {
 	log.Printf("🎧 Listening on queue: %s", consumer.QueueName)
 
 	// start listening in a loop
-	sendMessageToWorker := make(chan queue.DeploymentMessage) // creating an unbuffered channel
+	jobs := make(chan *queue.DeploymentMessage) // creating an unbuffered channel
 
-	// handling the graceful shutdown of queue
-	ctx, cancel := context.WithCancel(context.Background()) // cancel() can be called to signal all goroutines watching ctx that they should stop.
-	defer cancel()                                          // ensures that resources tied to the context are cleaned up when the function exits.
+	manager := workerman.NewWorkerManager(10)
+	ds := dispatcher.NewDispatcherState(jobs, manager)
+
+	// start the gRPC server to acccept worker registration
+	go grpc.StartGRPCServer(5051, manager)
 
 	errChan := make(chan error, 1)
 
-	go func() { // listening to the messags from the queue taking in control of the speed the message is coming
-		if err := messageFromQueue(ctx, sendMessageToWorker, *consumer); err != nil {
+	// listening to the messags from the queue taking in control of the speed the message is coming
+	go func() {
+		if err := messageFromQueue(ctx, jobs, *consumer); err != nil {
 			errChan <- err
 		}
 	}()
 
-	// for msg := range sendMessageToWorker {
-	// 	// TODO processing logic for distribution of job to workers
-	// 	select {
-	// 	case <-ctx.Done(): //
-	// 		log.Println("🛑 Orchestrator context cancelled")
-	// 	case err := <-errChan: // if errChan is not empty
-	// 		log.Printf("❌ Error received: %v", err)
-	// 		return err
-	// 	}
-
-	// }
+	// starting the dispatcher
+	go func() {
+		if err := dispatcher.JobDispatcher(ctx, ds, manager); err != nil {
+			log.Fatalf("Dispatcher error: %v", err)
+		}
+	}()
 
 	return nil
 
@@ -92,16 +94,16 @@ func run() error {
 2. check for the free worker using Round Robin Logic
 
 case 3a: free worker found
-	1. If free worker returned, invoke the RPC call to create the build and store in ECR all through worker 
+	1. If free worker returned, invoke the RPC call to create the build and store in ECR all through worker
 	2. take away the message from unbuffered channel so the goroutine can return to its normal func and continue its operation and fetch new message from mq
 
 case 3b: free worker not found
 	1. if no new worker found, store the message in the unbuffered channel and use it like a storage
-	2. Call the checkHealthForAll worker and that will check health sequentially for all workers and that will give the state of all workers if any is free give it the task 
-	3. incase the server returns the response of any worker that its task is done, it will first check if its unbuffered channel has any message 
+	2. Call the checkHealthForAll worker and that will check health sequentially for all workers and that will give the state of all workers if any is free give it the task
+	3. incase the server returns the response of any worker that its task is done, it will first check if its unbuffered channel has any message
 
 	case 4a: if it does
-		assign the task to the to that worker 
+		assign the task to the to that worker
 	case 4b: if it is empty
 		set its status to free and keep listeiing the job
 

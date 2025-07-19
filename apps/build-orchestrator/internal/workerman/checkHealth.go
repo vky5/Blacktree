@@ -13,11 +13,14 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func (wm *WorkerManager) CheckHealthForAll() error {
+func (wm *WorkerManager) CheckHealthForAll() ([]*Worker, error) {
 
 	// this func is gonna create multiple goroutine each goroutine asking for the
 	// state of worker by spawning the gorotuine
 	var wg sync.WaitGroup // we wait for the goroutine to finish its task before calling wg.Done()
+	var mu sync.Mutex     // this is for updating the free workers array
+
+	var freeWorkers []*Worker
 
 	wm.mu.Lock()
 	workersCopy := make([]*Worker, len(wm.workers))
@@ -25,20 +28,27 @@ func (wm *WorkerManager) CheckHealthForAll() error {
 	wm.mu.Unlock()
 
 	for _, worker := range workersCopy {
-		wg.Add(1) // wg.Add((1) is like saying i + 1 to number of goroutin
+		wg.Add(1) // wg.Add(1) is like saying i + 1 to number of goroutin
 
 		go func(w *Worker) { // defining the func
+
 			defer wg.Done()
 			// here goes grpc health check logic
-			wm.pingWorker(w) // calling the func to actually call the 
+			res := wm.pingWorker(w) // calling the func to actually call the ping method
+			if res != nil {
+				mu.Lock()
+				freeWorkers = append(freeWorkers, res)
+				mu.Unlock()
+			}
 
 		}(worker) // immediately calling the func back with the worker cool
 	}
 
-	return nil
+	wg.Wait()
+	return freeWorkers, nil
 }
 
-func (wm *WorkerManager) pingWorker(w *Worker) {
+func (wm *WorkerManager) pingWorker(w *Worker) *Worker {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -47,7 +57,7 @@ func (wm *WorkerManager) pingWorker(w *Worker) {
 	if err != nil {
 		log.Printf("Failed to dial worker %s: %v", w.Info.Id, err)
 		wm.SetWorkerState(w.Info.Id, "dead")
-		return
+		return nil
 	}
 	defer conn.Close() // to close the connection at the end
 
@@ -59,7 +69,7 @@ func (wm *WorkerManager) pingWorker(w *Worker) {
 	if err != nil {
 		log.Printf("Worker %s unhealthy or did not respond correctly", w.Info.Id)
 		wm.SetWorkerState(w.Info.Id, "dead")
-		return
+		return nil
 	}
 	// Handle based on the status enum
 	switch resp.Status {
@@ -78,4 +88,9 @@ func (wm *WorkerManager) pingWorker(w *Worker) {
 		wm.SetWorkerState(w.Info.Id, "dead")
 	}
 
+	if w.state == "free" {
+		return w
+	}
+
+	return nil
 }

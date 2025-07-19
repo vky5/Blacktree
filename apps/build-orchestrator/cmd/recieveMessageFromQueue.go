@@ -16,7 +16,7 @@ import (
 )
 
 // Listens to Backend using RabbitMQ
-func messageFromQueue(ctx context.Context, sendMessageToWorker chan queue.DeploymentMessage, consumer queue.Consumer) error {
+func messageFromQueue(ctx context.Context, sendMessageToWorker chan *queue.DeploymentMessage, consumer queue.Consumer) error {
 	defer close(sendMessageToWorker)
 
 	fmt.Println("📡 Listening for messages from API...")
@@ -48,7 +48,7 @@ func messageFromQueue(ctx context.Context, sendMessageToWorker chan queue.Deploy
 			}
 
 			// sending message to the channel
-			sendMessageToWorker <- singleMessageFromQueue // since channel is unbuffered until this message is not processed, It will get stuck at this
+			sendMessageToWorker <- &singleMessageFromQueue // since channel is unbuffered until this message is not processed, It will get stuck at this
 
 			// acknowledge after successful handoff
 			err = msg.Ack(false)
