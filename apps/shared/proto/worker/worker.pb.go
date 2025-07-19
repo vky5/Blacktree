@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.6
 // 	protoc        v3.21.12
-// source: internal/proto/worker.proto
+// source: shared/proto/worker/worker.proto
 
 package workerpb
 
@@ -34,7 +34,7 @@ type WorkerInfo struct {
 
 func (x *WorkerInfo) Reset() {
 	*x = WorkerInfo{}
-	mi := &file_internal_proto_worker_proto_msgTypes[0]
+	mi := &file_shared_proto_worker_worker_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -46,7 +46,7 @@ func (x *WorkerInfo) String() string {
 func (*WorkerInfo) ProtoMessage() {}
 
 func (x *WorkerInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_proto_worker_proto_msgTypes[0]
+	mi := &file_shared_proto_worker_worker_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -59,7 +59,7 @@ func (x *WorkerInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkerInfo.ProtoReflect.Descriptor instead.
 func (*WorkerInfo) Descriptor() ([]byte, []int) {
-	return file_internal_proto_worker_proto_rawDescGZIP(), []int{0}
+	return file_shared_proto_worker_worker_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *WorkerInfo) GetId() string {
@@ -101,7 +101,7 @@ type RegisterAck struct {
 
 func (x *RegisterAck) Reset() {
 	*x = RegisterAck{}
-	mi := &file_internal_proto_worker_proto_msgTypes[1]
+	mi := &file_shared_proto_worker_worker_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -113,7 +113,7 @@ func (x *RegisterAck) String() string {
 func (*RegisterAck) ProtoMessage() {}
 
 func (x *RegisterAck) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_proto_worker_proto_msgTypes[1]
+	mi := &file_shared_proto_worker_worker_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -126,7 +126,7 @@ func (x *RegisterAck) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegisterAck.ProtoReflect.Descriptor instead.
 func (*RegisterAck) Descriptor() ([]byte, []int) {
-	return file_internal_proto_worker_proto_rawDescGZIP(), []int{1}
+	return file_shared_proto_worker_worker_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *RegisterAck) GetSuccess() bool {
@@ -152,7 +152,7 @@ type PingRequest struct {
 
 func (x *PingRequest) Reset() {
 	*x = PingRequest{}
-	mi := &file_internal_proto_worker_proto_msgTypes[2]
+	mi := &file_shared_proto_worker_worker_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -164,7 +164,7 @@ func (x *PingRequest) String() string {
 func (*PingRequest) ProtoMessage() {}
 
 func (x *PingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_proto_worker_proto_msgTypes[2]
+	mi := &file_shared_proto_worker_worker_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -177,7 +177,7 @@ func (x *PingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PingRequest.ProtoReflect.Descriptor instead.
 func (*PingRequest) Descriptor() ([]byte, []int) {
-	return file_internal_proto_worker_proto_rawDescGZIP(), []int{2}
+	return file_shared_proto_worker_worker_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *PingRequest) GetId() string {
@@ -196,7 +196,7 @@ type PongResponse struct {
 
 func (x *PongResponse) Reset() {
 	*x = PongResponse{}
-	mi := &file_internal_proto_worker_proto_msgTypes[3]
+	mi := &file_shared_proto_worker_worker_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -208,7 +208,7 @@ func (x *PongResponse) String() string {
 func (*PongResponse) ProtoMessage() {}
 
 func (x *PongResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_proto_worker_proto_msgTypes[3]
+	mi := &file_shared_proto_worker_worker_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -221,7 +221,7 @@ func (x *PongResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PongResponse.ProtoReflect.Descriptor instead.
 func (*PongResponse) Descriptor() ([]byte, []int) {
-	return file_internal_proto_worker_proto_rawDescGZIP(), []int{3}
+	return file_shared_proto_worker_worker_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *PongResponse) GetHealthy() bool {
@@ -231,11 +231,11 @@ func (x *PongResponse) GetHealthy() bool {
 	return false
 }
 
-var File_internal_proto_worker_proto protoreflect.FileDescriptor
+var File_shared_proto_worker_worker_proto protoreflect.FileDescriptor
 
-const file_internal_proto_worker_proto_rawDesc = "" +
+const file_shared_proto_worker_worker_proto_rawDesc = "" +
 	"\n" +
-	"\x1binternal/proto/worker.proto\x12\bworkerpb\"X\n" +
+	" shared/proto/worker/worker.proto\x12\x06worker\"X\n" +
 	"\n" +
 	"WorkerInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x0e\n" +
@@ -248,35 +248,35 @@ const file_internal_proto_worker_proto_rawDesc = "" +
 	"\vPingRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"(\n" +
 	"\fPongResponse\x12\x18\n" +
-	"\ahealthy\x18\x01 \x01(\bR\ahealthy2\x7f\n" +
-	"\rWorkerService\x127\n" +
-	"\bRegister\x12\x14.workerpb.WorkerInfo\x1a\x15.workerpb.RegisterAck\x125\n" +
-	"\x04Ping\x12\x15.workerpb.PingRequest\x1a\x16.workerpb.PongResponseB,Z*build-orchestrator/internal/proto;workerpbb\x06proto3"
+	"\ahealthy\x18\x01 \x01(\bR\ahealthy2w\n" +
+	"\rWorkerService\x123\n" +
+	"\bRegister\x12\x12.worker.WorkerInfo\x1a\x13.worker.RegisterAck\x121\n" +
+	"\x04Ping\x12\x13.worker.PingRequest\x1a\x14.worker.PongResponseB?Z=github.com/Blacktreein/Blacktree/shared/proto/worker;workerpbb\x06proto3"
 
 var (
-	file_internal_proto_worker_proto_rawDescOnce sync.Once
-	file_internal_proto_worker_proto_rawDescData []byte
+	file_shared_proto_worker_worker_proto_rawDescOnce sync.Once
+	file_shared_proto_worker_worker_proto_rawDescData []byte
 )
 
-func file_internal_proto_worker_proto_rawDescGZIP() []byte {
-	file_internal_proto_worker_proto_rawDescOnce.Do(func() {
-		file_internal_proto_worker_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_internal_proto_worker_proto_rawDesc), len(file_internal_proto_worker_proto_rawDesc)))
+func file_shared_proto_worker_worker_proto_rawDescGZIP() []byte {
+	file_shared_proto_worker_worker_proto_rawDescOnce.Do(func() {
+		file_shared_proto_worker_worker_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_shared_proto_worker_worker_proto_rawDesc), len(file_shared_proto_worker_worker_proto_rawDesc)))
 	})
-	return file_internal_proto_worker_proto_rawDescData
+	return file_shared_proto_worker_worker_proto_rawDescData
 }
 
-var file_internal_proto_worker_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
-var file_internal_proto_worker_proto_goTypes = []any{
-	(*WorkerInfo)(nil),   // 0: workerpb.WorkerInfo
-	(*RegisterAck)(nil),  // 1: workerpb.RegisterAck
-	(*PingRequest)(nil),  // 2: workerpb.PingRequest
-	(*PongResponse)(nil), // 3: workerpb.PongResponse
+var file_shared_proto_worker_worker_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_shared_proto_worker_worker_proto_goTypes = []any{
+	(*WorkerInfo)(nil),   // 0: worker.WorkerInfo
+	(*RegisterAck)(nil),  // 1: worker.RegisterAck
+	(*PingRequest)(nil),  // 2: worker.PingRequest
+	(*PongResponse)(nil), // 3: worker.PongResponse
 }
-var file_internal_proto_worker_proto_depIdxs = []int32{
-	0, // 0: workerpb.WorkerService.Register:input_type -> workerpb.WorkerInfo
-	2, // 1: workerpb.WorkerService.Ping:input_type -> workerpb.PingRequest
-	1, // 2: workerpb.WorkerService.Register:output_type -> workerpb.RegisterAck
-	3, // 3: workerpb.WorkerService.Ping:output_type -> workerpb.PongResponse
+var file_shared_proto_worker_worker_proto_depIdxs = []int32{
+	0, // 0: worker.WorkerService.Register:input_type -> worker.WorkerInfo
+	2, // 1: worker.WorkerService.Ping:input_type -> worker.PingRequest
+	1, // 2: worker.WorkerService.Register:output_type -> worker.RegisterAck
+	3, // 3: worker.WorkerService.Ping:output_type -> worker.PongResponse
 	2, // [2:4] is the sub-list for method output_type
 	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -284,26 +284,26 @@ var file_internal_proto_worker_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_internal_proto_worker_proto_init() }
-func file_internal_proto_worker_proto_init() {
-	if File_internal_proto_worker_proto != nil {
+func init() { file_shared_proto_worker_worker_proto_init() }
+func file_shared_proto_worker_worker_proto_init() {
+	if File_shared_proto_worker_worker_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_internal_proto_worker_proto_rawDesc), len(file_internal_proto_worker_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_shared_proto_worker_worker_proto_rawDesc), len(file_shared_proto_worker_worker_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_internal_proto_worker_proto_goTypes,
-		DependencyIndexes: file_internal_proto_worker_proto_depIdxs,
-		MessageInfos:      file_internal_proto_worker_proto_msgTypes,
+		GoTypes:           file_shared_proto_worker_worker_proto_goTypes,
+		DependencyIndexes: file_shared_proto_worker_worker_proto_depIdxs,
+		MessageInfos:      file_shared_proto_worker_worker_proto_msgTypes,
 	}.Build()
-	File_internal_proto_worker_proto = out.File
-	file_internal_proto_worker_proto_goTypes = nil
-	file_internal_proto_worker_proto_depIdxs = nil
+	File_shared_proto_worker_worker_proto = out.File
+	file_shared_proto_worker_worker_proto_goTypes = nil
+	file_shared_proto_worker_worker_proto_depIdxs = nil
 }

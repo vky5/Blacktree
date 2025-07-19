@@ -3,7 +3,7 @@
 package queue
 
 import (
-	"build-orchestrator/internal/utils"
+	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/utils"
 	"log"
 
 	amqp "github.com/rabbitmq/amqp091-go"

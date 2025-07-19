@@ -1,4 +1,4 @@
-module build-worker
+module github.com/Blacktreein/Blacktree/build-worker
 
 go 1.23.11
 
@@ -55,3 +55,5 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
 	gotest.tools/v3 v3.5.2 // indirect
 )
+
+replace github.com/Blacktreein/Blacktree/shared => ../shared

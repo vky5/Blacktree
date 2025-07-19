@@ -3,7 +3,7 @@ package main
 
 import (
 	"log"
-	"build-worker/internal/utils"
+	"github.com/Blacktreein/Blacktree/build-worker/internal/utils"
 )
 
 

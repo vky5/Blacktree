@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v3.21.12
-// source: internal/proto/worker.proto
+// source: shared/proto/worker/worker.proto
 
 package workerpb
 
@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	WorkerService_Register_FullMethodName = "/workerpb.WorkerService/Register"
-	WorkerService_Ping_FullMethodName     = "/workerpb.WorkerService/Ping"
+	WorkerService_Register_FullMethodName = "/worker.WorkerService/Register"
+	WorkerService_Ping_FullMethodName     = "/worker.WorkerService/Ping"
 )
 
 // WorkerServiceClient is the client API for WorkerService service.
@@ -142,7 +142,7 @@ func _WorkerService_Ping_Handler(srv interface{}, ctx context.Context, dec func(
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var WorkerService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "workerpb.WorkerService",
+	ServiceName: "worker.WorkerService",
 	HandlerType: (*WorkerServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -155,5 +155,5 @@ var WorkerService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "internal/proto/worker.proto",
+	Metadata: "shared/proto/worker/worker.proto",
 }

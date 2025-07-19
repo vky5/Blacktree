@@ -3,8 +3,8 @@
 package repo
 
 import (
-	dirman "build-worker/internal/dirManager"
-	"build-worker/internal/utils"
+	dirman "github.com/Blacktreein/Blacktree/build-worker/internal/dirManager"
+	"github.com/Blacktreein/Blacktree/build-worker/internal/utils"
 	"fmt"
 	"path/filepath"
 	"time"

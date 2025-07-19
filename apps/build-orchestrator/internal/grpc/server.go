@@ -9,8 +9,8 @@ import (
 	"log"
 	"net"
 
-	workerpb "build-orchestrator/internal/proto"
-	"build-orchestrator/internal/workerman"
+	workerpb "github.com/Blacktreein/Blacktree/apps/shared/proto/worker"
+	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/workerman"
 )
 
 type OrchestratorGRPCServer struct {
@@ -57,3 +57,25 @@ func (s *OrchestratorGRPCServer) Register(ctx context.Context, req *workerpb.Wor
 }
 
 // aahh I am surely gonna forget what I did here
+
+
+/*
+
+When your worker's gRPC server receives a request (e.g. RunJob), it runs each handler in a separate goroutine by default.
+
+
+When you register your service with gRPC using:
+
+
+pb.RegisterWorkerServiceServer(grpcServer, &Worker{})
+and then call:
+
+grpcServer.Serve(listener)
+
+The gRPC server:
+Starts listening for requests
+
+For each incoming request, it spins up a new goroutine to handle that RPC call
+
+So your handler function runs concurrently and independently
+*/

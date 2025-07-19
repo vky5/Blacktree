@@ -1,8 +1,8 @@
 syntax = "proto3";
 
 
-package workerpb;
-option go_package = "build-orchestrator/internal/proto;workerpb";
+package worker;
+option go_package = "github.com/Blacktreein/Blacktree/shared/proto/worker;workerpb";
 
 // registratorin of workers 
 message WorkerInfo {
@@ -17,7 +17,6 @@ message RegisterAck {
   bool success = 1;
   string message = 2;
 }
-
 
 message PingRequest {
   string id = 1;
