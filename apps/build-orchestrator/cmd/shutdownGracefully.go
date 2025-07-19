@@ -2,7 +2,7 @@
 
 package main
 
-import "build-orchestrator/internal/queue"
+import "github.com/Blacktreein/Blacktree/build-orchestrator/internal/queue"
 
 
 func shutdownGracefully(){

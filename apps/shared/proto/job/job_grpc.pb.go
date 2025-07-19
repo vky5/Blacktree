@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v3.21.12
-// source: job.proto
+// source: shared/proto/job/job.proto
 
 package jobpb
 
@@ -121,5 +121,5 @@ var JobService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "job.proto",
+	Metadata: "shared/proto/job/job.proto",
 }

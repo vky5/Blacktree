@@ -4,7 +4,7 @@
 package queue
 
 import (
-	"build-orchestrator/internal/utils"
+	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/utils"
 	"log"
 	"time"
 

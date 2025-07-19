@@ -3,7 +3,7 @@
 package workerman
 
 import (
-	workerpb "build-orchestrator/internal/proto"
+	workerpb "github.com/Blacktreein/Blacktree/apps/shared/proto/worker"
 	"context"
 	"time"
 )

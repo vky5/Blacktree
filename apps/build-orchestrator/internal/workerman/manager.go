@@ -6,7 +6,8 @@
 package workerman
 
 import (
-	workerpb "build-orchestrator/internal/proto"
+	workerpb "github.com/Blacktreein/Blacktree/apps/shared/proto/worker"
+
 	"sync"
 	"time"
 )
@@ -17,20 +18,19 @@ type Worker struct {
 	state    string // state can be busy, free, dead
 }
 
-// keeping the array of all workers 
+// keeping the array of all workers
 type WorkerManager struct {
-	mu             sync.Mutex // so that when a type (example a varible w Workermanager, w.Worker is updated no other goroutine intefres with it)
-	workers        []*Worker
-	roundRobinIdx  int
+	mu            sync.Mutex // so that when a type (example a varible w Workermanager, w.Worker is updated no other goroutine intefres with it)
+	workers       []*Worker
+	roundRobinIdx int
 }
-
 
 // for safely updating the state of the worker
 func (wm *WorkerManager) SetWorkerState(workerID string, state string) {
 	wm.mu.Lock()
 	defer wm.mu.Unlock()
 
-	for _, w:=range wm.workers {
+	for _, w := range wm.workers {
 		if w.Info.Id == workerID {
 			w.state = state
 			break

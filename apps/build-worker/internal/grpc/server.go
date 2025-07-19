@@ -8,7 +8,7 @@ import (
 	"log"
 	"net"
 
-	"build-worker/internal/proto"
+	jobpb "github.com/Blacktreein/Blacktree/apps/shared/proto/job"
 )
 
 

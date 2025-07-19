@@ -82,3 +82,17 @@ It listens to build jobs from a queue (RabbitMQ), validates them, and dynamicall
 - ❌ Failure
 
 - 🔄 In progress
+
+
+| Feature / Concept                  | **My Implementation (Blacktree build system)**               | **Kubernetes**                                                                    |
+| ---------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| **Workload Type**                  | One-off build jobs triggered on-demand                         | Long-running apps (Deployments, StatefulSets), CronJobs, Jobs, DaemonSets, etc.   |
+| **Scheduling**                     | Central orchestrator assigns jobs to free workers (pull model) | Advanced scheduler with pluggable policies, constraints, resource requests/limits |
+| **Worker Management**              | Workers register manually and maintain a `busy`/`free` state   | Nodes auto-join clusters, have resource-aware health checks, autoscaling, taints  |
+| **Job Lifecycle**                  | Basic retry logic, status tracking, result reporting via MQ    | Full lifecycle with crash recovery, pod eviction, restart policies, etc.          |
+| **Networking & Service Discovery** | gRPC or direct communication over known ports                  | Full-blown DNS-based service discovery, load balancing, virtual networking        |
+| **Storage / Volume support**       | Not implemented yet                                            | Supports persistent volumes, claims, CSI plugins                                  |
+| **Security & Policies**            | basic ACL logic                         | Role-based access control, service accounts, pod security policies                |
+| **Extensibility**                  | Code-based extensibility (you control the source)              | Declarative YAML + Operators + Custom Resource Definitions (CRDs)                 |
+| **Deployment & Config**            | Imperative Go logic + possible future YAML/JSON configs        | Declarative, state-driven config via manifests and Helm                           |
+

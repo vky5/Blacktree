@@ -11,8 +11,8 @@ import (
 	"fmt"
 	"log"
 
-	"build-orchestrator/internal/queue"
-	"build-orchestrator/internal/utils"
+	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/queue"
+	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/utils"
 )
 
 // Listens to Backend using RabbitMQ

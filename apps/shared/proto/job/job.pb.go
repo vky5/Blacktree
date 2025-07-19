@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.6
 // 	protoc        v3.21.12
-// source: job.proto
+// source: shared/proto/job/job.proto
 
 package jobpb
 
@@ -21,6 +21,56 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// --- Worker status can be BUSY or FREE ---
+type WorkerStatus int32
+
+const (
+	WorkerStatus_UNKNOWN WorkerStatus = 0
+	WorkerStatus_FREE    WorkerStatus = 1
+	WorkerStatus_BUSY    WorkerStatus = 2
+)
+
+// Enum value maps for WorkerStatus.
+var (
+	WorkerStatus_name = map[int32]string{
+		0: "UNKNOWN",
+		1: "FREE",
+		2: "BUSY",
+	}
+	WorkerStatus_value = map[string]int32{
+		"UNKNOWN": 0,
+		"FREE":    1,
+		"BUSY":    2,
+	}
+)
+
+func (x WorkerStatus) Enum() *WorkerStatus {
+	p := new(WorkerStatus)
+	*p = x
+	return p
+}
+
+func (x WorkerStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (WorkerStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_shared_proto_job_job_proto_enumTypes[0].Descriptor()
+}
+
+func (WorkerStatus) Type() protoreflect.EnumType {
+	return &file_shared_proto_job_job_proto_enumTypes[0]
+}
+
+func (x WorkerStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use WorkerStatus.Descriptor instead.
+func (WorkerStatus) EnumDescriptor() ([]byte, []int) {
+	return file_shared_proto_job_job_proto_rawDescGZIP(), []int{0}
+}
+
 // message sent from orchestrator
 type JobRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
@@ -37,7 +87,7 @@ type JobRequest struct {
 
 func (x *JobRequest) Reset() {
 	*x = JobRequest{}
-	mi := &file_job_proto_msgTypes[0]
+	mi := &file_shared_proto_job_job_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -49,7 +99,7 @@ func (x *JobRequest) String() string {
 func (*JobRequest) ProtoMessage() {}
 
 func (x *JobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_job_proto_msgTypes[0]
+	mi := &file_shared_proto_job_job_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -62,7 +112,7 @@ func (x *JobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JobRequest.ProtoReflect.Descriptor instead.
 func (*JobRequest) Descriptor() ([]byte, []int) {
-	return file_job_proto_rawDescGZIP(), []int{0}
+	return file_shared_proto_job_job_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *JobRequest) GetJobId() string {
@@ -128,7 +178,7 @@ type JobResponse struct {
 
 func (x *JobResponse) Reset() {
 	*x = JobResponse{}
-	mi := &file_job_proto_msgTypes[1]
+	mi := &file_shared_proto_job_job_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -140,7 +190,7 @@ func (x *JobResponse) String() string {
 func (*JobResponse) ProtoMessage() {}
 
 func (x *JobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_job_proto_msgTypes[1]
+	mi := &file_shared_proto_job_job_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -153,7 +203,7 @@ func (x *JobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JobResponse.ProtoReflect.Descriptor instead.
 func (*JobResponse) Descriptor() ([]byte, []int) {
-	return file_job_proto_rawDescGZIP(), []int{1}
+	return file_shared_proto_job_job_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *JobResponse) GetJobId() string {
@@ -191,11 +241,64 @@ func (x *JobResponse) GetError() string {
 	return ""
 }
 
-var File_job_proto protoreflect.FileDescriptor
+// --- Response with status of the worker ---
+type PingResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	WorkerId      string                 `protobuf:"bytes,1,opt,name=workerId,proto3" json:"workerId,omitempty"`
+	Status        WorkerStatus           `protobuf:"varint,2,opt,name=status,proto3,enum=job.WorkerStatus" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
 
-const file_job_proto_rawDesc = "" +
+func (x *PingResponse) Reset() {
+	*x = PingResponse{}
+	mi := &file_shared_proto_job_job_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PingResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PingResponse) ProtoMessage() {}
+
+func (x *PingResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_shared_proto_job_job_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PingResponse.ProtoReflect.Descriptor instead.
+func (*PingResponse) Descriptor() ([]byte, []int) {
+	return file_shared_proto_job_job_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *PingResponse) GetWorkerId() string {
+	if x != nil {
+		return x.WorkerId
+	}
+	return ""
+}
+
+func (x *PingResponse) GetStatus() WorkerStatus {
+	if x != nil {
+		return x.Status
+	}
+	return WorkerStatus_UNKNOWN
+}
+
+var File_shared_proto_job_job_proto protoreflect.FileDescriptor
+
+const file_shared_proto_job_job_proto_rawDesc = "" +
 	"\n" +
-	"\tjob.proto\x12\x03job\"\xdc\x01\n" +
+	"\x1ashared/proto/job/job.proto\x12\x03job\"\xdc\x01\n" +
 	"\n" +
 	"JobRequest\x12\x14\n" +
 	"\x05jobId\x18\x01 \x01(\tR\x05jobId\x12\x18\n" +
@@ -212,58 +315,70 @@ const file_job_proto_rawDesc = "" +
 	"\asuccess\x18\x02 \x01(\bR\asuccess\x12\x12\n" +
 	"\x04logs\x18\x03 \x01(\tR\x04logs\x12\x1a\n" +
 	"\bimageUrl\x18\x04 \x01(\tR\bimageUrl\x12\x14\n" +
-	"\x05error\x18\x05 \x01(\tR\x05error29\n" +
+	"\x05error\x18\x05 \x01(\tR\x05error\"U\n" +
+	"\fPingResponse\x12\x1a\n" +
+	"\bworkerId\x18\x01 \x01(\tR\bworkerId\x12)\n" +
+	"\x06status\x18\x02 \x01(\x0e2\x11.job.WorkerStatusR\x06status*/\n" +
+	"\fWorkerStatus\x12\v\n" +
+	"\aUNKNOWN\x10\x00\x12\b\n" +
+	"\x04FREE\x10\x01\x12\b\n" +
+	"\x04BUSY\x10\x0229\n" +
 	"\n" +
 	"JobService\x12+\n" +
-	"\x06RunJob\x12\x0f.job.JobRequest\x1a\x10.job.JobResponseB#Z!build-worker/internal/proto;jobpbb\x06proto3"
+	"\x06RunJob\x12\x0f.job.JobRequest\x1a\x10.job.JobResponseB9Z7github.com/Blacktreein/Blacktree/shared/proto/job;jobpbb\x06proto3"
 
 var (
-	file_job_proto_rawDescOnce sync.Once
-	file_job_proto_rawDescData []byte
+	file_shared_proto_job_job_proto_rawDescOnce sync.Once
+	file_shared_proto_job_job_proto_rawDescData []byte
 )
 
-func file_job_proto_rawDescGZIP() []byte {
-	file_job_proto_rawDescOnce.Do(func() {
-		file_job_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_job_proto_rawDesc), len(file_job_proto_rawDesc)))
+func file_shared_proto_job_job_proto_rawDescGZIP() []byte {
+	file_shared_proto_job_job_proto_rawDescOnce.Do(func() {
+		file_shared_proto_job_job_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_shared_proto_job_job_proto_rawDesc), len(file_shared_proto_job_job_proto_rawDesc)))
 	})
-	return file_job_proto_rawDescData
+	return file_shared_proto_job_job_proto_rawDescData
 }
 
-var file_job_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_job_proto_goTypes = []any{
-	(*JobRequest)(nil),  // 0: job.JobRequest
-	(*JobResponse)(nil), // 1: job.JobResponse
+var file_shared_proto_job_job_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_shared_proto_job_job_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_shared_proto_job_job_proto_goTypes = []any{
+	(WorkerStatus)(0),    // 0: job.WorkerStatus
+	(*JobRequest)(nil),   // 1: job.JobRequest
+	(*JobResponse)(nil),  // 2: job.JobResponse
+	(*PingResponse)(nil), // 3: job.PingResponse
 }
-var file_job_proto_depIdxs = []int32{
-	0, // 0: job.JobService.RunJob:input_type -> job.JobRequest
-	1, // 1: job.JobService.RunJob:output_type -> job.JobResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+var file_shared_proto_job_job_proto_depIdxs = []int32{
+	0, // 0: job.PingResponse.status:type_name -> job.WorkerStatus
+	1, // 1: job.JobService.RunJob:input_type -> job.JobRequest
+	2, // 2: job.JobService.RunJob:output_type -> job.JobResponse
+	2, // [2:3] is the sub-list for method output_type
+	1, // [1:2] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_job_proto_init() }
-func file_job_proto_init() {
-	if File_job_proto != nil {
+func init() { file_shared_proto_job_job_proto_init() }
+func file_shared_proto_job_job_proto_init() {
+	if File_shared_proto_job_job_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_job_proto_rawDesc), len(file_job_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   2,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_shared_proto_job_job_proto_rawDesc), len(file_shared_proto_job_job_proto_rawDesc)),
+			NumEnums:      1,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_job_proto_goTypes,
-		DependencyIndexes: file_job_proto_depIdxs,
-		MessageInfos:      file_job_proto_msgTypes,
+		GoTypes:           file_shared_proto_job_job_proto_goTypes,
+		DependencyIndexes: file_shared_proto_job_job_proto_depIdxs,
+		EnumInfos:         file_shared_proto_job_job_proto_enumTypes,
+		MessageInfos:      file_shared_proto_job_job_proto_msgTypes,
 	}.Build()
-	File_job_proto = out.File
-	file_job_proto_goTypes = nil
-	file_job_proto_depIdxs = nil
+	File_shared_proto_job_job_proto = out.File
+	file_shared_proto_job_job_proto_goTypes = nil
+	file_shared_proto_job_job_proto_depIdxs = nil
 }

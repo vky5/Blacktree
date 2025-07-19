@@ -2,7 +2,7 @@
 
 package workerman
 
-import workerpb "build-orchestrator/internal/proto"
+import workerpb "github.com/Blacktreein/Blacktree/apps/shared/proto/worker"
 
 // Round robin selection over free workers
 func (wm *WorkerManager) SelectNextWorker() *workerpb.WorkerInfo {

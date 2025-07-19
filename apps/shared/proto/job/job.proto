@@ -2,7 +2,8 @@ syntax = "proto3";
 
 
 package job;
-option go_package = "build-worker/internal/proto;jobpb";
+option go_package = "github.com/Blacktreein/Blacktree/shared/proto/job;jobpb";
+
 
 // message sent from orchestrator 
 message JobRequest{
@@ -24,6 +25,20 @@ message JobResponse{
     string imageUrl = 4;           // full ECR image url
     string error = 5;              // error message if any
 }
+
+// --- Worker status can be BUSY or FREE ---
+enum WorkerStatus {
+  UNKNOWN = 0;
+  FREE = 1;
+  BUSY = 2;
+}
+
+// --- Response with status of the worker ---
+message PingResponse {
+  string workerId = 1;
+  WorkerStatus status = 2;
+}
+
 
 
 // gRPC service definition

@@ -1,5 +1,10 @@
 // this is the entrypoint of the buil-orchestrator
 
+/*
+a job dispatcher with concurrency control, health checks, worker orchestration, gRPC coordination, and context-aware cancellation for jobs
+*/
+
+
 // I will add emojis in logs
 
 package main
@@ -10,8 +15,8 @@ import (
 	"log"
 	"os"
 
-	"build-orchestrator/internal/queue"
-	"build-orchestrator/internal/utils"
+	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/queue"
+	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/utils"
 )
 
 func main() {
@@ -81,3 +86,23 @@ func run() error {
 	return nil
 
 }
+
+/*
+1. Get the message from the queue and stored in unbuffered channel (this will hold the job message )
+2. check for the free worker using Round Robin Logic
+
+case 3a: free worker found
+	1. If free worker returned, invoke the RPC call to create the build and store in ECR all through worker 
+	2. take away the message from unbuffered channel so the goroutine can return to its normal func and continue its operation and fetch new message from mq
+
+case 3b: free worker not found
+	1. if no new worker found, store the message in the unbuffered channel and use it like a storage
+	2. Call the checkHealthForAll worker and that will check health sequentially for all workers and that will give the state of all workers if any is free give it the task 
+	3. incase the server returns the response of any worker that its task is done, it will first check if its unbuffered channel has any message 
+
+	case 4a: if it does
+		assign the task to the to that worker 
+	case 4b: if it is empty
+		set its status to free and keep listeiing the job
+
+*/

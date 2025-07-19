@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"build-worker/internal/aws"
-	"build-worker/internal/builder"
-	jobpb "build-worker/internal/proto"
-	"build-worker/internal/repo"
+	"github.com/Blacktreein/Blacktree/build-worker/internal/aws"
+	"github.com/Blacktreein/Blacktree/build-worker/internal/builder"
+	jobpb "github.com/Blacktreein/Blacktree/apps/shared/proto/job"
+	"github.com/Blacktreein/Blacktree/build-worker/internal/repo"
 )
 
 func RunJobLogic(ctx context.Context, req *jobpb.JobRequest) (*jobpb.JobResponse, error) {
