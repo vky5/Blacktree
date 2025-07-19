@@ -1,9 +1,9 @@
-PROTOC        := protoc
-PROTOC_GEN_GO := $(shell which protoc-gen-go)
-PROTOC_GEN_GRPC := $(shell which protoc-gen-go-grpc)
+PROTOC            := protoc
+PROTOC_GEN_GO     := $(shell which protoc-gen-go)
+PROTOC_GEN_GRPC   := $(shell which protoc-gen-go-grpc)
 
-PROTO_DIR     := shared/proto
-PROTO_FILES   := $(shell find $(PROTO_DIR) -name '*.proto')
+PROTO_DIR         := apps/shared/proto
+PROTO_FILES       := $(shell find $(PROTO_DIR) -name '*.proto')
 
 .PHONY: all clean proto
 
@@ -18,9 +18,9 @@ ifndef PROTOC_GEN_GRPC
 endif
 	@echo "Generating Go code from proto files..."
 	@for file in $(PROTO_FILES); do \
-		$(PROTOC) -I=. \
-			--go_out=paths=source_relative:. \
-			--go-grpc_out=paths=source_relative:. \
+		$(PROTOC) -I=apps/shared/proto \
+			--go_out=paths=source_relative:apps/shared/proto \
+			--go-grpc_out=paths=source_relative:apps/shared/proto \
 			$$file || exit 1; \
 	done
 

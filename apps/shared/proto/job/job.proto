@@ -33,15 +33,19 @@ enum WorkerStatus {
   BUSY = 2;
 }
 
-// --- Response with status of the worker ---
+
+// Ping mechanism to check worker state
 message PingResponse {
   string workerId = 1;
   WorkerStatus status = 2;
 }
 
 
+message PingRequest {}
+
 
 // gRPC service definition
 service JobService{
     rpc RunJob(JobRequest) returns (JobResponse);
+    rpc Ping(PingRequest) returns (PingResponse);
 }

@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v3.21.12
-// source: shared/proto/job/job.proto
+// source: job/job.proto
 
 package jobpb
 
@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	JobService_RunJob_FullMethodName = "/job.JobService/RunJob"
+	JobService_Ping_FullMethodName   = "/job.JobService/Ping"
 )
 
 // JobServiceClient is the client API for JobService service.
@@ -29,6 +30,7 @@ const (
 // gRPC service definition
 type JobServiceClient interface {
 	RunJob(ctx context.Context, in *JobRequest, opts ...grpc.CallOption) (*JobResponse, error)
+	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
 }
 
 type jobServiceClient struct {
@@ -49,6 +51,16 @@ func (c *jobServiceClient) RunJob(ctx context.Context, in *JobRequest, opts ...g
 	return out, nil
 }
 
+func (c *jobServiceClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PingResponse)
+	err := c.cc.Invoke(ctx, JobService_Ping_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // JobServiceServer is the server API for JobService service.
 // All implementations must embed UnimplementedJobServiceServer
 // for forward compatibility.
@@ -56,6 +68,7 @@ func (c *jobServiceClient) RunJob(ctx context.Context, in *JobRequest, opts ...g
 // gRPC service definition
 type JobServiceServer interface {
 	RunJob(context.Context, *JobRequest) (*JobResponse, error)
+	Ping(context.Context, *PingRequest) (*PingResponse, error)
 	mustEmbedUnimplementedJobServiceServer()
 }
 
@@ -68,6 +81,9 @@ type UnimplementedJobServiceServer struct{}
 
 func (UnimplementedJobServiceServer) RunJob(context.Context, *JobRequest) (*JobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RunJob not implemented")
+}
+func (UnimplementedJobServiceServer) Ping(context.Context, *PingRequest) (*PingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
 func (UnimplementedJobServiceServer) mustEmbedUnimplementedJobServiceServer() {}
 func (UnimplementedJobServiceServer) testEmbeddedByValue()                    {}
@@ -108,6 +124,24 @@ func _JobService_RunJob_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _JobService_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JobServiceServer).Ping(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: JobService_Ping_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JobServiceServer).Ping(ctx, req.(*PingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // JobService_ServiceDesc is the grpc.ServiceDesc for JobService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -119,7 +153,11 @@ var JobService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "RunJob",
 			Handler:    _JobService_RunJob_Handler,
 		},
+		{
+			MethodName: "Ping",
+			Handler:    _JobService_Ping_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "shared/proto/job/job.proto",
+	Metadata: "job/job.proto",
 }

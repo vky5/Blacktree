@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	jobpb "github.com/Blacktreein/Blacktree/apps/shared/proto/job"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -23,29 +24,26 @@ func (wm *WorkerManager) CheckHealthForAll() error {
 	copy(workersCopy, wm.workers)
 	wm.mu.Unlock()
 
-	for _, worker:= range workersCopy {
+	for _, worker := range workersCopy {
 		wg.Add(1) // wg.Add((1) is like saying i + 1 to number of goroutin
 
-		go func (w *Worker) {  // defining the func
+		go func(w *Worker) { // defining the func
 			defer wg.Done()
 			// here goes grpc health check logic
-			w.p
+			wm.pingWorker(w) // calling the func to actually call the 
 
-
-		}(worker) // immediately calling the func back with the worker cool 
+		}(worker) // immediately calling the func back with the worker cool
 	}
 
 	return nil
 }
 
-
 func (wm *WorkerManager) pingWorker(w *Worker) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-
-	//  each worker stores its address in Info 
-	conn, err := grpc.NewClient(w.Info.Ip, grpc.WithTransportCredentials(insecure.NewCredentials()),)
+	//  each worker stores its address in Info
+	conn, err := grpc.NewClient(w.Info.Ip, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Printf("Failed to dial worker %s: %v", w.Info.Id, err)
 		wm.SetWorkerState(w.Info.Id, "dead")
@@ -53,11 +51,31 @@ func (wm *WorkerManager) pingWorker(w *Worker) {
 	}
 	defer conn.Close() // to close the connection at the end
 
+	// create client from generated GRPC code
+	client := jobpb.NewJobServiceClient(conn)
 
-	// create client from generated GRPC code 
-	client := work
+	// resp, err := client.Ping(ctx, &jobpb.PingRequest{})
+	resp, err := client.Ping(ctx, &jobpb.PingRequest{})
+	if err != nil {
+		log.Printf("Worker %s unhealthy or did not respond correctly", w.Info.Id)
+		wm.SetWorkerState(w.Info.Id, "dead")
+		return
+	}
+	// Handle based on the status enum
+	switch resp.Status {
+	case jobpb.WorkerStatus_UNKNOWN:
+		log.Printf("Worker %s returned UNKNOWN status", w.Info.Id)
+		wm.SetWorkerState(w.Info.Id, "dead")
 
-	
+	case jobpb.WorkerStatus_BUSY:
+		wm.SetWorkerState(w.Info.Id, "busy")
 
+	case jobpb.WorkerStatus_FREE:
+		wm.SetWorkerState(w.Info.Id, "free")
+
+	default:
+		log.Printf("Worker %s returned unrecognized status: %v", w.Info.Id, resp.Status)
+		wm.SetWorkerState(w.Info.Id, "dead")
+	}
 
 }
