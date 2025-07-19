@@ -55,17 +55,16 @@
 
 
 ## Day 5 – Monitoring, Logs, Scaling & Polish
-| Task                                      | Description                                |
-| ----------------------------------------- | ------------------------------------------ |
-| 📊 Stream logs from CloudWatch (ECS task) | Show stdout/stderr of running containers   |
-| 🧠 Add job status polling                 | Mark job as done/failed in DB              |
-| 💬 Push logs to orchestrator/backend      | Realtime logs or final dump                |
-| 🔁 Retry on container crash               | Use ECS Task exit code or `StoppedReason`  |
-| 📦 Optional: Support multi-region         | Run workers/orchestrator in multiple zones |
-| 🔐 Add IAM + VPC boundaries               | Secure ECR, ECS roles, log access          |
-| ⚙️ Optional: TTLs for job cleanup         | Clean up job metadata/images after X days  |
-
-
+| **Task**                            | **Description**                                                             | **Status** |
+| ----------------------------------- | --------------------------------------------------------------------------- | ---------- |
+| Create `DispatcherState` struct     | Holds job channel, cancel context, WaitGroup for shutdown                   | ✅          |
+| Create `NewDispatcherState()`       | Constructor to initialize dispatcher state cleanly                          | ✅          |
+| Implement dispatcher `Start()` loop | Select loop: listens to job channel and shutdown context                    | ✅          |
+| Integrate WorkerManager             | Pulls available workers from WorkerManager channel (no local tracking)      | ✅          |
+| Use pointer in job channel          | Jobs are passed as `*DeploymentMessage` to allow nil check and shared state | ✅          |
+| Handle job cancellation             | Each job runs in a goroutine with `context.WithCancel()`                    | ✅          |
+| Add `WaitGroup` to dispatcher       | Tracks job goroutines and ensures graceful shutdown                         | ✅          |
+| Remove free worker slice tracking   | Eliminated unused logic in dispatcher; relies on WorkerManager channel      | ✅          |
 
 
 
