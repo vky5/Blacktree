@@ -13,14 +13,31 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func (wm *WorkerManager) CheckHealthForAll() ([]*Worker, error) {
+func (wm *WorkerManager) StartHealthChecker(ctx context.Context, interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			log.Println("Health checker stopped.")
+			return
+		case <-ticker.C:
+			log.Println("Checking worker health...")
+			err := wm.CheckHealthForAll()
+			if err != nil {
+				log.Printf("Health check error: %v", err)
+			}
+		}
+	}
+}
+
+
+func (wm *WorkerManager) CheckHealthForAll() error {
 
 	// this func is gonna create multiple goroutine each goroutine asking for the
 	// state of worker by spawning the gorotuine
 	var wg sync.WaitGroup // we wait for the goroutine to finish its task before calling wg.Done()
-	var mu sync.Mutex     // this is for updating the free workers array
-
-	var freeWorkers []*Worker
 
 	wm.mu.Lock()
 	workersCopy := make([]*Worker, len(wm.workers))
@@ -34,18 +51,13 @@ func (wm *WorkerManager) CheckHealthForAll() ([]*Worker, error) {
 
 			defer wg.Done()
 			// here goes grpc health check logic
-			res := wm.pingWorker(w) // calling the func to actually call the ping method
-			if res != nil {
-				mu.Lock()
-				freeWorkers = append(freeWorkers, res)
-				mu.Unlock()
-			}
+			wm.pingWorker(w) // calling the func to actually call the ping method
 
 		}(worker) // immediately calling the func back with the worker cool
 	}
 
 	wg.Wait()
-	return freeWorkers, nil
+	return nil
 }
 
 func (wm *WorkerManager) pingWorker(w *Worker) *Worker {
@@ -86,10 +98,6 @@ func (wm *WorkerManager) pingWorker(w *Worker) *Worker {
 	default:
 		log.Printf("Worker %s returned unrecognized status: %v", w.Info.Id, resp.Status)
 		wm.SetWorkerState(w.Info.Id, "dead")
-	}
-
-	if w.state == "free" {
-		return w
 	}
 
 	return nil

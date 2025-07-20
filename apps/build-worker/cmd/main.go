@@ -1,8 +1,10 @@
-// entry point of worker 
+// entry point of worker
 package main
 
 import (
 	"log"
+
+	"github.com/Blacktreein/Blacktree/build-worker/internal/grpc"
 	"github.com/Blacktreein/Blacktree/build-worker/internal/utils"
 )
 
@@ -16,8 +18,11 @@ func main(){
 	}
 
 	log.Println()
-	
+
 	// listening to the port 
+	go grpc.StartGRPCServer(50051)
+
+
 
 	
 }
