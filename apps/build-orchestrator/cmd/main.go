@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/dispatcher"
 	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/grpc"
@@ -64,6 +65,8 @@ func run(ctx context.Context) error {
 	jobs := make(chan *queue.DeploymentMessage) // creating an unbuffered channel
 
 	manager := workerman.NewWorkerManager(10)
+	go manager.StartHealthChecker(ctx, 2*time.Minute) // this will periodically check health in every 2 minutes
+
 	ds := dispatcher.NewDispatcherState(jobs, manager)
 
 	// start the gRPC server to acccept worker registration
