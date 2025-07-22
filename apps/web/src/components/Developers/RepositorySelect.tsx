@@ -19,9 +19,7 @@ function RepositorySelect({
   const [dockerPath, setDockerPath] = useState("./Dockerfile");
 
   const [repos, setRepos] = useState<string[]>([]);
-  const [branches, setBranches] = useState<string[]>([]);
 
-  // Fetch user repos on mount
   useEffect(() => {
     const fetchRepos = async () => {
       try {
@@ -37,27 +35,6 @@ function RepositorySelect({
     fetchRepos();
   }, []);
 
-  // Fetch branches when repo changes
-  useEffect(() => {
-    const fetchBranches = async () => {
-      if (!selectedRepo) return;
-
-      try {
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/branches?repo=${selectedRepo}`,
-          { withCredentials: true }
-        );
-        setBranches(res.data.branches);
-      } catch (error) {
-        console.error("Failed to load branches:", error);
-      }
-    };
-
-    fetchBranches();
-    setBranch(""); // reset selected branch
-  }, [selectedRepo]);
-
-  // Notify parent when any field changes
   useEffect(() => {
     onChange({ repo: selectedRepo, branch, dockerPath });
   }, [selectedRepo, branch, dockerPath]);
@@ -67,7 +44,7 @@ function RepositorySelect({
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="mt-8 p-6 rounded-xl bg-zinc-900 border border-zinc-800 shadow-md"
+      className="mt-8 p-6 rounded-xl bg-[#0B0F19] border border-zinc-800 shadow-md"
     >
       <div className="text-lg font-semibold text-emerald-500 mb-4">
         Repository Selection
@@ -80,7 +57,7 @@ function RepositorySelect({
           <select
             value={selectedRepo}
             onChange={(e) => setSelectedRepo(e.target.value)}
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full bg-[#0B0F19]/80 border border-zinc-700 rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             <option value="" disabled>
               Select a repository
@@ -93,33 +70,23 @@ function RepositorySelect({
           </select>
         </div>
 
-        {/* Branch Dropdown */}
+        {/* Branch Input */}
         <div className="w-full sm:w-1/2">
           <label className="block text-sm text-gray-300 mb-1">Branch</label>
-          <select
+          <input
+            type="text"
             value={branch}
             onChange={(e) => setBranch(e.target.value)}
-            className={`w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-              !selectedRepo ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            disabled={!selectedRepo}
-          >
-            <option value="" disabled>
-              {selectedRepo ? "Select a branch" : "Select a repository first"}
-            </option>
-            {branches.map((b) => (
-              <option key={b} value={b}>
-                {b}
-              </option>
-            ))}
-          </select>
+            placeholder="e.g. main or develop"
+            className="w-full bg-[#0B0F19]/80 border border-zinc-700 rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
         </div>
       </div>
 
       {/* Dockerfile Path */}
       <div>
         <label className="block text-sm text-gray-300 mb-1">Dockerfile Path</label>
-        <div className="flex items-center gap-2 bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2">
+        <div className="flex items-center gap-2 bg-[#0B0F19]/80 border border-zinc-700 rounded-md px-3 py-2">
           <FaGithub className="text-zinc-400" />
           <input
             value={dockerPath}

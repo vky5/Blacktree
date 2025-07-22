@@ -32,7 +32,7 @@ function GithubConnect() {
   };
 
   return (
-    <div className="flex items-center justify-between rounded-xl p-5 bg-[#111111]/80 border border-[#8C35EB]/20 shadow-[0_0_0_1px_rgba(140,53,235,0.05),0_0_30px_rgba(140,53,235,0.1)] backdrop-blur-sm">
+    <div className="flex items-center justify-between rounded-xl p-5 bg-[#0B0F19]/80 border border-[#8C35EB]/20 shadow-[0_0_0_1px_rgba(140,53,235,0.05),0_0_30px_rgba(140,53,235,0.1)] backdrop-blur-sm">
       {/* Left Section */}
       <div className="flex items-center gap-4">
         <div className="p-3 bg-white rounded-full shadow-sm">
