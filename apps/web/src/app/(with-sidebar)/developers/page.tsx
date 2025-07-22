@@ -12,7 +12,7 @@ function HostAPI() {
   const totalSteps = 4;
 
   return (
-    <div className="bg-black min-h-screen p-6 text-white">
+    <div className="bg-[#030712] min-h-screen p-6 text-white">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">API Marketplace</h1>
         <p className="text-gray-400">
