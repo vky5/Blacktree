@@ -93,7 +93,12 @@ export default function DeploymentListItem({
     },
   };
 
-  const config = statusConfig[status];
+  const config = statusConfig[status] ?? {
+  label: "Unknown",
+  icon: <XCircle size={14} className="text-gray-400" />,
+  className: "bg-gray-800 text-gray-400 border border-gray-600",
+};
+
 
   return (
     <div className="bg-[#0B0F19] rounded-xl border border-[#1a1f2e] px-5 py-4 flex flex-col gap-2 w-full">

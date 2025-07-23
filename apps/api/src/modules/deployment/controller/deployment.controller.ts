@@ -66,9 +66,9 @@ export class DeploymentController {
 
 /*
 - [x] Route to create a new deployment
-- [x] route to add endpoints 
+- [x] route to add endpoints
 - [x] route to update endpoints
-- [x] route to delete endpoints 
+- [x] route to delete endpoints
 - [x] route to update deployment fields
 
 */

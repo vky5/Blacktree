@@ -34,9 +34,6 @@ export class Deployment {
   @Column({ type: 'varchar', nullable: false, default: '.' })
   contextDir: string; // Context directory for Docker build
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  deployedUrl: string;
-
   @ManyToOne(() => User, (user) => user.deployments, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user: User;

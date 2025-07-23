@@ -1,18 +1,33 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useSyncUser } from "@/utils/clerk/userSync";
 import { useUser } from "@clerk/nextjs";
-
 import { Button } from "@/components/ui/button";
-
 import { StatCard } from "@/components/Dashboard/statCard";
 import DeploymentHeading from "@/components/Deployments/DeploymentPageHeading";
 import DeploymentListItem from "@/components/Deployments/DeploymentListItem";
+import axios from "axios";
 
 export default function DeploymentsPage() {
   useSyncUser();
   const { user, isLoaded } = useUser();
+  const [deployments, setDeployments] = useState([]);
+
+  useEffect(() => {
+    const getAllDeployments = async () => {
+      try {
+        const res = await axios.get(
+          process.env.NEXT_PUBLIC_BACKEND_URL + "/hosted"
+        );
+        setDeployments(res.data); // assumes it's an array
+      } catch (err) {
+        console.error("Error fetching deployments:", err);
+      }
+    };
+
+    getAllDeployments();
+  }, []);
 
   if (!isLoaded) return <div>Loading...</div>;
 
@@ -25,8 +40,6 @@ export default function DeploymentsPage() {
         </Button>
       </div>
 
-      {/*  */}
-      {/* <div className="text-xl py-5">Stats</div> */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <StatCard label="Public APIs" value={2} color="green" />
         <StatCard label="Private APIs" value={5} color="amber" />
@@ -34,51 +47,27 @@ export default function DeploymentsPage() {
       </div>
 
       <div className="space-y-5">
-        <DeploymentListItem
-          name="weather-api"
-          status="Running"
-          visibility="Public"
-          branch="main"
-          commit="a1b2c3d"
-          requests="1.2k requests"
-          uptime="99.9%"
-          updatedAt="2 hours ago"
-          framework="Node.js"
-          region="us-east-1"
-          buildTime="45s"
-          visitUrl="https://example.com"
-        />
+        {deployments.map((item: any, idx: number) => {
+          const d = item.deployment;
 
-        <DeploymentListItem
-          name="user-auth-service"
-          status="Failed"
-          visibility="Private"
-          branch="develop"
-          commit="e4f5g6h"
-          requests="856 requests"
-          uptime="98.5%"
-          updatedAt="5 minutes ago"
-          framework="Python"
-          region="us-west-2"
-          buildTime="2m 15s"
-          visitUrl="https://example.com"
-        />
-
-
-        <DeploymentListItem
-          name="user-auth-service"
-          status="Building"
-          visibility="Private"
-          branch="develop"
-          commit="e4f5g6h"
-          requests="856 requests"
-          uptime="98.5%"
-          updatedAt="5 minutes ago"
-          framework="Python"
-          region="us-west-2"
-          buildTime="2m 15s"
-          visitUrl="https://example.com"
-        />
+          return (
+            <DeploymentListItem
+              key={item.id || idx}
+              name={d?.name || "Untitled API"}
+              status={item.deploymentStatus || "Unknown"}
+              visibility={d?.private ? "Private" : "Public"}
+              branch={d?.branch || "main"}
+              commit={"N/A"} // You can fill this later with real commit if available
+              requests={"N/A"} // Replace with real data if available
+              uptime={"N/A"} // Replace with uptime if you track it
+              updatedAt={d?.updatedAt || d?.createdAt || null}
+              framework={"Unknown"} // Update if framework detection is added
+              region={"us-east-1"} // Static for now unless tracked
+              buildTime={"N/A"} // Fill if available
+              visitUrl={item.deploymentUrl || "#"}
+            />
+          );
+        })}
       </div>
     </div>
   );

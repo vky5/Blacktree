@@ -11,6 +11,7 @@ import { CreateDeploymentDTO } from '../dto/deployment.dto';
 import { AuthService } from 'src/modules/users/auth.service';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from 'src/modules/users/users.service';
+import { DeploymentVersion } from '../entities/deployment-version.entity';
 
 @Injectable()
 export class DeploymentService {
@@ -20,6 +21,8 @@ export class DeploymentService {
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
     private readonly usersService: UsersService,
+    @InjectRepository(DeploymentVersion)
+    private deploymentVersionRepo: Repository<DeploymentVersion>,
   ) {}
 
   // for creating a new deployment
@@ -140,6 +143,13 @@ export class DeploymentService {
           autoDeploy: true,
         },
       },
+    });
+  }
+
+  getAllDeploymnetVersions(userId: string) {
+    return this.deploymentVersionRepo.find({
+      where: { user: { id: userId } },
+      relations: ['deployment'],
     });
   }
 }
