@@ -67,6 +67,7 @@ export class DeploymentService {
         contextDir: deploymentData.contextDir,
         user: { id: userId },
         webhookid: webhookInfo.id.toString(),
+        private: deploymentData.private,
       });
 
       return await this.deploymentRepo.save(newDeployment);
@@ -130,6 +131,14 @@ export class DeploymentService {
       where: {
         repository: repo,
         branch: branch,
+      },
+      relations: ['deployversion'],
+      select: {
+        id: true,
+        version: {
+          id: true,
+          autoDeploy: true,
+        },
       },
     });
   }

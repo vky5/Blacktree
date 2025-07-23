@@ -9,6 +9,7 @@ import {
 
 import { UserRole } from 'src/utils/enums/user-role.enum';
 import { Deployment } from 'src/modules/deployment/entities/deployment.entity';
+import { DeploymentVersion } from 'src/modules/deployment/entities/deployment-version.entity';
 
 @Entity('User')
 export class User {
@@ -32,6 +33,9 @@ export class User {
 
   @OneToMany(() => Deployment, (deployment) => deployment.user)
   deployments: Deployment[];
+
+  @OneToMany(() => DeploymentVersion, (depVer) => depVer.user)
+  hosted: DeploymentVersion[];
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   token: string;

@@ -1,14 +1,18 @@
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Deployment } from './deployment.entity';
 import { DeploymentStatus } from 'src/utils/enums/deployment-status.enum';
+import { User } from 'src/modules/users/entities/users.entity';
 
 @Entity('deployversion')
 export class DeploymentVersion {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @OneToOne(() => Deployment, (deployment) => deployment.version)
+  @ManyToOne(() => Deployment, (deployment) => deployment.version)
   deployment: Deployment;
+
+  @ManyToOne(() => User, (user) => user.hosted, { onDelete: 'CASCADE' })
+  user: User;
 
   @Column({ type: 'varchar', nullable: true })
   imageUrl: string | null;
@@ -18,6 +22,9 @@ export class DeploymentVersion {
 
   @Column({ type: 'varchar', nullable: true })
   taskArn: string | null;
+
+  @Column({ type: 'boolean', default: true })
+  autoDeploy: boolean;
 
   @Column({
     type: 'enum',
