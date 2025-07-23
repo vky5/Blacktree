@@ -26,12 +26,16 @@ export class DeploymentActionService {
     private readonly awsService: AwsService,
   ) {}
 
-  // for building the image and uploading the image to the ecr
-  // sending a build job to orchestrator to send to the workers
-  async buildDeployment(deploymentId: string) {
+  // Builds image and uploads to ECR by publishing job to orchestrator
+  async buildDeployment(
+    deploymentId: string,
+    userId?: string,
+    existingVersionId?: string,
+  ) {
+    // Fetch the deployment with necessary details and the owner token
     const deployment = await this.deploymentRepo.findOne({
       where: { id: deploymentId },
-      relations: ['user'], // Include user relation
+      relations: ['user'],
       select: {
         id: true,
         repository: true,
@@ -48,9 +52,24 @@ export class DeploymentActionService {
     if (!deployment) {
       throw new BadRequestException('Deployment not found');
     }
+    if (!existingVersionId) {
+      if (!userId) {
+        throw new BadRequestException(
+          'User ID must be provided when no existing deployment version is supplied',
+        );
+      }
 
+      // Create and save a new DeploymentVersion
+      const newVersion = await this.createDeploymnetVersion(
+        deploymentId,
+        userId,
+      );
+
+      existingVersionId = newVersion.id;
+    }
+    // Prepare and send build message to orchestrator queue
     const message: PublishDeploymentMessageDto = {
-      deploymentId: deployment.id,
+      deploymentId: existingVersionId,
       token: deployment.user.token,
       repository: deployment.repository,
       branch: deployment.branch,
@@ -62,26 +81,22 @@ export class DeploymentActionService {
     this.messageingQueueService.publishMessage('blacktree.routingKey', message);
   }
 
-  async triggerDeployment(deploymentId: string) {
+  async triggerDeployment(deploymentVersionId: string) {
     try {
       // 1. Fetch deployment along with the latest version
-      const deployment = await this.deploymentRepo.findOne({
-        where: { id: deploymentId },
+      const deploymentHosted = await this.deploymentVersionRepo.findOne({
+        where: { id: deploymentVersionId },
+        relations: ['deployment'],
       });
 
-      if (!deployment) {
+      if (!deploymentHosted) {
         throw new NotFoundException('Deployment not found');
       }
 
-      const version = deployment.version;
-      if (!version || !version.imageUrl) {
-        throw new NotFoundException('No image version available to deploy');
-      }
-
       // if taskarn is present
-      if (version.taskArn) {
+      if (deploymentHosted.taskArn) {
         try {
-          await this.awsService.stopContainer(version.taskArn);
+          await this.awsService.stopContainer(deploymentHosted.taskArn);
         } catch (error) {
           console.log(error);
           throw new InternalServerErrorException(
@@ -91,10 +106,10 @@ export class DeploymentActionService {
       }
 
       // if taskdefinitionarn is already there, deregister it and then register it again
-      if (version.taskDefinitionArn) {
+      if (deploymentHosted.taskDefinitionArn) {
         try {
           await this.awsService.deregisterTaskDefinition(
-            version.taskDefinitionArn,
+            deploymentHosted.taskDefinitionArn,
           );
         } catch (error) {
           console.log(error);
@@ -104,26 +119,31 @@ export class DeploymentActionService {
         }
       }
 
+      // checking if the imageUrl exists or not
+      if (!deploymentHosted.imageUrl) {
+        throw new NotFoundException(
+          'Can not launch the deployment, no image url present',
+        );
+      }
+
       // 2. Register Task Definition on ECS with given config
       const taskDefArn = await this.awsService.registerTaskDefinition(
-        version.imageUrl,
-        deployment.envVars || {},
-        parseInt(deployment.portNumber || '3000'), // fallback port
-        deployment.resourceVersion,
+        deploymentHosted.imageUrl,
+        deploymentHosted.deployment.envVars || {},
+        parseInt(deploymentHosted.deployment.portNumber || '3000'), // fallback port
+        deploymentHosted.deployment.resourceVersion,
       );
-
-      // 3. Save the registered Task Definition ARN in DB
-      version.taskDefinitionArn = taskDefArn;
-      await this.deploymentVersionRepo.save(version);
 
       // 4. Run the container based on the task definition
       const taskArn = await this.awsService.runContainer(taskDefArn);
 
       // 5. Save taskArn (running instance) for future termination/tracking
-      version.taskArn = taskArn;
-      version.deploymentStatus = DeploymentStatus.RUNNING;
+      // 3. Save the registered Task Definition ARN in DB
+      deploymentHosted.taskDefinitionArn = taskDefArn;
+      deploymentHosted.taskArn = taskArn;
+      deploymentHosted.deploymentStatus = DeploymentStatus.RUNNING;
 
-      await this.deploymentVersionRepo.save(version);
+      await this.deploymentVersionRepo.save(deploymentHosted);
 
       return {
         message: 'Container launched successfully',
@@ -136,37 +156,38 @@ export class DeploymentActionService {
   }
 
   // stopping the deployment
-  async stopDeployment(deploymentId: string) {
-    const res = await this.deploymentRepo.findOne({
-      where: { id: deploymentId },
+  async stopDeployment(deploymentVersionId: string) {
+    const res = await this.deploymentVersionRepo.findOne({
+      where: { id: deploymentVersionId },
     });
 
-    if (!res || !res.version) {
+    if (!res) {
       throw new NotFoundException('No deployment found');
     }
 
-    if (!res.version.taskArn) {
+    if (!res.taskArn) {
       throw new Error('Task ARN is missing. Cannot stop container.');
     }
 
-    await this.awsService.stopContainer(res?.version?.taskArn);
+    await this.awsService.stopContainer(res?.taskArn);
 
-    res.version.deploymentStatus = DeploymentStatus.STOPPED; // updating the status of the deployment
-    await this.deploymentVersionRepo.save(res.version);
+    res.deploymentStatus = DeploymentStatus.STOPPED; // updating the status of the deployment
+    await this.deploymentVersionRepo.save(res);
   }
 
   // soft deleting the contianer
   // stop the container, deregister the task definition, delete the image from ECR
-  async cleanResources(deploymentId: string) {
-    const deployment = await this.deploymentRepo.findOne({
-      where: { id: deploymentId }, // eager is true so no need to define relation
+  async cleanResources(deploymentVersionId: string) {
+    const deployment = await this.deploymentVersionRepo.findOne({
+      where: { id: deploymentVersionId }, // eager is true so no need to define relation
     });
 
-    if (!deployment || !deployment.version) {
+    if (!deployment) {
       throw new NotFoundException('Deployment or version not found');
     }
 
-    const { taskArn, taskDefinitionArn, imageUrl } = deployment.version;
+    const { taskArn, taskDefinitionArn, imageUrl } = deployment;
+
     try {
       // stop the ecs task
       if (taskArn) {
@@ -184,14 +205,15 @@ export class DeploymentActionService {
       }
 
       // update the DB
-      deployment.version.deploymentStatus = DeploymentStatus.STOPPED;
-      deployment.version.taskArn = null;
-      deployment.version.taskDefinitionArn = null;
-      deployment.version.imageUrl = null;
-      deployment.version.buildLogsUrl = null;
-      deployment.version.runTimeLogsUrl = null;
+      deployment.deploymentStatus = DeploymentStatus.STOPPED;
+      deployment.taskArn = null;
+      deployment.taskDefinitionArn = null;
+      deployment.imageUrl = null;
+      deployment.buildLogsUrl = null;
+      deployment.runTimeLogsUrl = null;
 
-      await this.deploymentVersionRepo.save(deployment.version);
+      await this.deploymentVersionRepo.save(deployment);
+      return deployment; // since we are returning the deployment we can get the req.user from here but
     } catch (err) {
       console.error(err);
       throw new InternalServerErrorException('Failed to clean resources.');
@@ -199,18 +221,18 @@ export class DeploymentActionService {
   }
 
   // restarting the ECS from task arn
-  async restartDeployment(deploymentId: string) {
+  async restartDeployment(deploymentVersionId: string) {
     try {
-      const deployment = await this.deploymentRepo.findOne({
-        where: { id: deploymentId },
+      const deployment = await this.deploymentVersionRepo.findOne({
+        where: { id: deploymentVersionId },
       });
-      if (!deployment?.version || !deployment.version.taskDefinitionArn) {
+      if (!deployment || !deployment.taskDefinitionArn) {
         throw new BadRequestException(
           'Didnt find any deployment for this ID to restart',
         );
       }
 
-      await this.awsService.restartTask(deployment.version.taskDefinitionArn);
+      await this.awsService.restartTask(deployment.taskDefinitionArn);
 
       return {
         status: 'success',
@@ -222,11 +244,38 @@ export class DeploymentActionService {
   }
 
   // to redeploy the new built
-  redeploy(deploymentId: string) {
-    console.log(' 🔥     this is booya');
-    const prm1 = this.cleanResources(deploymentId);
+  async redeploy(deploymentVersionId: string) {
+    const deploymentVersion = await this.deploymentVersionRepo.findOne({
+      where: { id: deploymentVersionId },
+      relations: ['deployment'],
+      select: {
+        id: true,
+        deployment: {
+          id: true,
+        },
+      },
+    });
 
-    const prm2 = this.buildDeployment(deploymentId);
-    return Promise.all([prm1, prm2]);
+    if (!deploymentVersion) {
+      throw new BadRequestException('Deployment version not found');
+    }
+
+    await this.cleanResources(deploymentVersionId);
+
+    return this.buildDeployment(
+      deploymentVersion.deployment.id, // correct deploymentId (blueprint)
+      undefined, // no new userId needed
+      deploymentVersion.id, // reuse this deployment version
+    );
+  }
+
+  private createDeploymnetVersion(deploymentId: string, userId: string) {
+    const depVersion = this.deploymentVersionRepo.create({
+      deployment: { id: deploymentId },
+      user: { id: userId },
+      deploymentStatus: DeploymentStatus.PENDING,
+    });
+
+    return this.deploymentVersionRepo.save(depVersion);
   }
 }

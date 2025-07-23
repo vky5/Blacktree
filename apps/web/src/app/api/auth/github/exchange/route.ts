@@ -22,7 +22,6 @@ export async function POST(req: NextRequest) {
 
   const tokenData = await tokenRes.json();
 
-  console.log("GitHub tokenData", tokenData);
 
   if (!tokenData.access_token) {
     return NextResponse.json({ error: "Failed to get token" }, { status: 400 });

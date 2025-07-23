@@ -25,7 +25,6 @@ export async function GET() {
   const response = NextResponse.json({ message: "Token set" }, { status: 200 });
   const jwtToken = typeof token === "string" ? token : token.jwt;
 
-  console.log("token string is :", jwtToken);
 
   response.cookies.set({
     name: "jwt",

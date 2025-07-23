@@ -51,7 +51,17 @@ export class WebhookService {
     const deployment = await this.getMatchingDeployment(repo, branch);
     if (!deployment) return { status: 'ignored' };
 
-    await this.deploymentActionService.redeploy(deployment.id);
+    const redeployPromises: Promise<void>[] = [];
+
+    for (const version of deployment.version) {
+      if (version.autoDeploy) {
+        redeployPromises.push(
+          this.deploymentActionService.redeploy(version.id),
+        );
+      }
+    }
+    await Promise.allSettled(redeployPromises);
+
     console.log(`[WEBHOOK] Triggered redeployment for ${repo}:${branch}`);
     return { status: 'redeployed' };
   }
@@ -65,11 +75,6 @@ export class WebhookService {
 
     if (!deployment) {
       console.log(`[WEBHOOK] No matching deployment for ${repo}:${branch}`);
-      return null;
-    }
-
-    if (!deployment.autoDeploy) {
-      console.log(`[WEBHOOK] Auto deploy is off for ${repo}:${branch}`);
       return null;
     }
 

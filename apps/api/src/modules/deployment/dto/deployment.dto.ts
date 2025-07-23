@@ -47,11 +47,11 @@ export class CreateDeploymentDTO {
 
   @IsOptional()
   @Expose()
-  autoDeploy: boolean;
+  resourceVersion: ResourceVersion;
 
   @IsOptional()
   @Expose()
-  resourceVersion: ResourceVersion;
+  private: boolean;
 
   // FIXME not adding custom url support but will think about it
   // @IsOptional()

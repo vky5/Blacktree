@@ -7,7 +7,6 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
-  OneToOne,
 } from 'typeorm';
 
 import { User } from 'src/modules/users/entities/users.entity';
@@ -51,17 +50,13 @@ export class Deployment {
   @Column({ type: 'jsonb', nullable: true })
   envVars: Record<string, string>;
 
-  @OneToOne(() => DeploymentVersion, (ver) => ver.deployment, {
-    cascade: true,
-    eager: true,
+  @OneToMany(() => DeploymentVersion, (ver) => ver.deployment, {
+    // removed eager:true a lot of changes needed in backend
+    // cascade: true, // we dont want that whenever a deploymnet is deleted all the created deploymnets from user account also gets deleted
     nullable: true,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'versionId' }) // Makeing this the owning side of the relation
-  version: DeploymentVersion;
-
-  @Column({ type: 'boolean', default: true })
-  autoDeploy: boolean;
+  version: DeploymentVersion[];
 
   @Column({
     type: 'enum',
@@ -69,6 +64,15 @@ export class Deployment {
     default: ResourceVersion.BASIC,
   })
   resourceVersion: ResourceVersion;
+
+  @Column({ type: 'varchar', nullable: true })
+  description: string;
+
+  @Column({ type: 'text', array: true, nullable: true })
+  tags: string[];
+
+  @Column({ type: 'boolean', default: false }) // if other users can access that repo or not
+  private: boolean;
 
   @Column({ type: 'varchar' })
   webhookid: string;
