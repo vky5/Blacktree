@@ -14,6 +14,7 @@ import { DeploymentActionService } from './service/deployment-action.service';
 import { AwsModule } from '../aws/aws.module';
 import { WebhookController } from './controller/webhook.controller';
 import { WebhookService } from './service/webhook.service';
+import HostedDeploymentController from './controller/hosted-deployment.controller';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { WebhookService } from './service/webhook.service';
     DeploymentController,
     DeploymentActionsController,
     WebhookController,
+    HostedDeploymentController,
   ],
   providers: [
     DeploymentService,

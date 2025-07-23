@@ -90,7 +90,7 @@ export class DeploymentActionService {
       });
 
       if (!deploymentHosted) {
-        throw new NotFoundException('Deployment not found');
+        throw new NotFoundException('no hosted deployemnt found');
       }
 
       // if taskarn is present

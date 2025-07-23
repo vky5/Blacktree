@@ -75,7 +75,6 @@ func (wm *WorkerManager) pingWorker(w *Worker) *Worker {
 
 	// create client from generated GRPC code
 	client := jobpb.NewJobServiceClient(conn)
-
 	// resp, err := client.Ping(ctx, &jobpb.PingRequest{})
 	resp, err := client.Ping(ctx, &jobpb.PingRequest{})
 	if err != nil {

@@ -26,6 +26,9 @@ export class DeploymentVersion {
   @Column({ type: 'boolean', default: true })
   autoDeploy: boolean;
 
+  @Column({ type: 'varchar', nullable: true })
+  deploymentUrl: string;
+
   @Column({
     type: 'enum',
     enum: DeploymentStatus,
