@@ -1,5 +1,6 @@
 "use client";
 
+import axios from "axios";
 import GithubConnect from "./Page1/GithubConnect";
 import RepositorySelect from "./RepositorySelect";
 import { useAuth } from "@/context/AuthContext";
@@ -20,34 +21,38 @@ interface FormData {
 
 function IntegrationStep1({}: {}) {
   const { userData } = useAuth();
-  const [formData, setFormData] = useState<FormData>({
-    repo: "",
-    branch: "",
-    dockerPath: "./Dockerfile",
-    contextDir: ".",
-    port: "3000",
-    category: "Utilities",
-    visibility: true,
-    name: "",
-    description: "",
-    envVars: {},
-  });
+  const [formData, setFormData] = useState<FormData | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleRepoChange = (data: {
-    repo: string;
-    branch: string;
-    dockerPath: string;
-  }) => {
-    setFormData((prev) => ({
-      ...prev,
-      repo: data.repo,
-      branch: data.branch,
-      dockerPath: data.dockerPath,
-    }));
-  };
-
-  const handleFormSubmit = (data: FormData) => {
+  const handleFormSubmit = async (data: FormData) => {
     setFormData(data);
+    setIsSubmitting(true);
+
+    try {
+      const res = await axios.post(
+        process.env.NEXT_PUBLIC_BACKEND_URL + "/deployment",
+        {
+          name: data.name,
+          repository: data.repo,
+          dockerFilePath: data.dockerPath,
+          branch: data.branch,
+          port: data.port,
+          contextDir: data.contextDir,
+          envVars: data.envVars,
+          category: data.category,
+          visibility: data.visibility,
+          description: data.description,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+      console.log("Deployment submitted:", res.data);
+    } catch (error) {
+      console.error("Submission error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -65,7 +70,7 @@ function IntegrationStep1({}: {}) {
 
       {userData?.github_connect === true && (
         <div>
-          <RepositorySelect onSubmit={handleFormSubmit} />
+          <RepositorySelect onSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
         </div>
       )}
     </div>
