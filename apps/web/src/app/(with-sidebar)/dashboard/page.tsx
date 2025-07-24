@@ -8,9 +8,12 @@ import WelcomeBanner from "@/components/Dashboard/WelcomeBanner";
 import { Button } from "@/components/ui/button";
 import DeploymentCard from "@/components/Dashboard/DeploymentCard";
 import { StatCard } from "@/components/Dashboard/statCard";
-import TabComponent from "@/components/Dashboard/SelectionButton";
+import Tabs from "@/components/Dashboard/SelectionButton";
 import APIKeyCard from "@/components/Dashboard/APIKeyCard";
-import AnalyticsView from "@/components/Dashboard/AnalyticsView"; // ✅ Added
+import AnalyticsView from "@/components/Dashboard/AnalyticsView";
+import { APIKey } from "@/components/Dashboard/APIKeyCard";
+
+import { BarChart3, Key, Globe } from "lucide-react";
 
 const fakeDeployments = [
   {
@@ -36,12 +39,12 @@ const fakeDeployments = [
   },
 ];
 
-const fakeAPIKeys = [
+const fakeAPIKeys: APIKey[] = [
   {
     id: "key-1",
     name: "Weather Service Key",
-    key: "wthr-45acbd89xkq-2341",
-    status: "active",
+    apiKey: "wthr-45acbd89xkq-2341",
+    status: "active", // now inferred as "active"
     created: "July 5, 2025",
     lastUsed: "Today, 2h ago",
     requests: 3200,
@@ -49,7 +52,7 @@ const fakeAPIKeys = [
   {
     id: "key-2",
     name: "Auth Service Key",
-    key: "auth-12cdf7a0xyq-8491",
+    apiKey: "auth-12cdf7a0xyq-8491",
     status: "inactive",
     created: "June 18, 2025",
     lastUsed: "Never used",
@@ -58,12 +61,19 @@ const fakeAPIKeys = [
   {
     id: "key-3",
     name: "Database Sync Key",
-    key: "dbs-91xyzc121kq-1933",
+    apiKey: "dbs-91xyzc121kq-1933",
     status: "active",
     created: "July 10, 2025",
     lastUsed: "Yesterday",
     requests: 1050,
   },
+];
+
+
+const dashboardTabs = [
+  { id: 1, label: "Analytics", icon: BarChart3 },
+  { id: 2, label: "API Keys", icon: Key },
+  { id: 3, label: "Deployments", icon: Globe },
 ];
 
 function APIKeyManager() {
@@ -81,8 +91,8 @@ function APIKeyManager() {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
         {fakeAPIKeys.map((apiKey) => (
           <APIKeyCard
-            id={apiKey.id}
-            apiKey={apiKey}
+            key={apiKey.id}
+            apiKey={apiKey} // pass the whole object
             copiedKey={copiedKey}
             copyApiKey={copyApiKey}
           />
@@ -108,7 +118,7 @@ function DeploymentsView() {
 export default function DashboardPage() {
   useSyncUser();
   const { user, isLoaded } = useUser();
-  const [activeTab, setActiveTab] = useState(3); // 1 = Analytics, 2 = API Keys, 3 = Deployments
+  const [activeTab, setActiveTab] = useState(1); // Default to Deployments
 
   if (!isLoaded) return <div className="text-white p-10">Loading...</div>;
 
@@ -131,7 +141,11 @@ export default function DashboardPage() {
 
       {/* Tabs */}
       <div className="mb-8">
-        <TabComponent onTabChange={setActiveTab} />
+        <Tabs
+          tabs={dashboardTabs}
+          onTabChange={setActiveTab}
+          initialTabId={1}
+        />
       </div>
 
       {/* Content Switch */}
