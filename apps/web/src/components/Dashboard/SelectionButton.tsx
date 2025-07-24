@@ -37,7 +37,7 @@ export default function Tabs({
             onClick={() => handleTabClick(tab.id)}
             className={`
               flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 flex-1
-              text-sm font-medium justify-center
+              text-sm font-medium justify-center hover:cursor-pointer
               focus:outline-none focus:ring-2 focus:ring-[#33CF96]/30
               border
               ${
