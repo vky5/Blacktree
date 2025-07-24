@@ -152,4 +152,16 @@ export class DeploymentService {
       relations: ['deployment'],
     });
   }
+
+  getDeploymentsCreatedByUser(userId: string) {
+    return this.deploymentRepo.find({
+      where: { user: { id: userId } },
+    });
+  }
+
+  getAllPublicDeployment() {
+    return this.deploymentRepo.find({
+      where: { private: false },
+    });
+  }
 }

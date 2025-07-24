@@ -1,46 +1,82 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import Tabs from "@/components/Dashboard/SelectionButton";
 import { PackagePlus, Package } from "lucide-react";
 import IntegrationStep1 from "@/components/Developers/IntegrationStep1.1";
 import BlueprintCard from "@/components/Deployments/BlueprintCard";
 
 function HostAPI() {
-  const [activeTab, setActiveTab] = useState(1); // 1 = Create Blueprint, 2 = My Blueprints
+  const [activeTab, setActiveTab] = useState(1);
+  const [blueprints, setBlueprints] = useState<BlueprintCardProps[]>([]);
+
+  const [loading, setLoading] = useState(false);
 
   const tabOptions = [
     { id: 1, label: "Create Blueprint", icon: PackagePlus },
     { id: 2, label: "My Blueprints", icon: Package },
   ];
 
-  const fakeBlueprints = [
-    {
-      name: "Weather API Service",
-      description: "Real-time weather data API with caching and rate limiting",
-      version: "v1.0.3",
-      updatedAt: "1 week ago",
-      deployments: 12,
-      stars: 8,
-      isPublic: true,
-      onEdit: () => alert("Edit Weather API"),
-      onDeploy: () => alert("Deploy Weather API"),
-      onView: () => alert("View Weather API"),
-    },
-    {
-      name: "Auth Service",
-      description: "User authentication and authorization microservice",
-      version: "v2.1.0",
-      updatedAt: "3 days ago",
-      deployments: 5,
-      stars: 15,
-      isPublic: false,
-      onEdit: () => alert("Edit Auth Service"),
-      onDeploy: () => alert("Deploy Auth Service"),
-      onView: () => alert("View Auth Service"),
-    },
-  ];
+  interface BlueprintCardProps {
+    name: string;
+    description: string;
+    version: string;
+    updatedAt: string;
+    deployments: number;
+    stars: number;
+    isPublic: boolean;
+    onEdit: () => void;
+    onDeploy: () => void;
+    onView: () => void;
+  }
 
+  interface BlueprintResponse {
+    name: string;
+    repository: string;
+    dockerFilePath: string;
+    contextDir: string;
+    portNumber: number | null;
+    branch: string;
+    envVars: Record<string, string> | null;
+    resourceVersion: string;
+    private: boolean;
+  }
+  // Fetch blueprints from backend
+  useEffect(() => {
+    const fetchBlueprints = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(
+          process.env.NEXT_PUBLIC_BACKEND_URL + "/deployment/user", // Change if your endpoint differs
+          { withCredentials: true }
+        );
+
+        const data = res.data;
+
+        const transformed = data.map((item: BlueprintResponse) => ({
+          name: item.name,
+          description: `Repo: ${item.repository}`,
+          version: item.resourceVersion || "v1.0.0",
+          updatedAt: "Just now", // Default, unless backend provides it
+          deployments: 0, // Default fallback
+          stars: 0,
+          isPublic: !item.private,
+          onEdit: () => alert(`Edit ${item.name}`),
+          onDeploy: () => alert(`Deploy ${item.name}`),
+          onView: () => alert(`View ${item.name}`),
+        }));
+
+        setBlueprints(transformed);
+      } catch (error) {
+        console.error("Failed to fetch blueprints:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlueprints();
+  }, []);
 
   return (
     <div className="bg-[#030712] min-h-screen p-6 text-white">
@@ -67,11 +103,17 @@ function HostAPI() {
       {activeTab === 2 && (
         <div>
           <h2 className="text-xl font-semibold mb-4">My Blueprints</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            {fakeBlueprints.map((bp, index) => (
-              <BlueprintCard key={index} {...bp} />
-            ))}
-          </div>
+          {loading ? (
+            <p>Loading...</p>
+          ) : blueprints.length === 0 ? (
+            <p className="text-gray-400">No blueprints found.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              {blueprints.map((bp, index) => (
+                <BlueprintCard key={index} {...bp} />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
