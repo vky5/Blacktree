@@ -7,8 +7,6 @@ import IntegrationStep1 from "@/components/Developers/IntegrationStep1.1";
 import BlueprintCard from "@/components/Deployments/BlueprintCard";
 
 function HostAPI() {
-  const [currentStep, setCurrentStep] = useState(2);
-  const [readyForNext, setReadyForNext] = useState(false);
   const [activeTab, setActiveTab] = useState(1); // 1 = Create Blueprint, 2 = My Blueprints
 
   const tabOptions = [
@@ -43,29 +41,6 @@ function HostAPI() {
     },
   ];
 
-  const fakeDeployments = [
-    {
-      id: 1,
-      name: "Weather API",
-      status: "Running",
-      port: 3001,
-      createdAt: "2025-07-10",
-    },
-    {
-      id: 2,
-      name: "Auth Service",
-      status: "Stopped",
-      port: 5000,
-      createdAt: "2025-07-08",
-    },
-    {
-      id: 3,
-      name: "Product DB API",
-      status: "Running",
-      port: 4000,
-      createdAt: "2025-07-12",
-    },
-  ];
 
   return (
     <div className="bg-[#030712] min-h-screen p-6 text-white">
