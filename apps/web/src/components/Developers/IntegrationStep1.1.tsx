@@ -36,11 +36,11 @@ function IntegrationStep1({}: {}) {
           repository: data.repo,
           dockerFilePath: data.dockerPath,
           branch: data.branch,
-          port: data.port,
+          portNumber: data.port,
           contextDir: data.contextDir,
           envVars: data.envVars,
           category: data.category,
-          visibility: data.visibility,
+          private: !data.visibility,
           description: data.description,
         },
         {

@@ -16,12 +16,27 @@ import { DeploymentService } from '../service/deployment.service';
 import { CreateDeploymentDTO } from '../dto/deployment.dto';
 import { FakeGuard } from 'src/guards/fake.guard';
 import { RequestWithUser } from 'src/utils/types/RequestWithUser.interface';
+import { Serialize } from 'src/interceptors/serialize-interceptor';
 
 // @UseGuards(JWTClerkGuard) // for restricting all routes guard access to authenticated users
 @UseGuards(FakeGuard) //TODO remove this guard in production
 @Controller('deployment')
 export class DeploymentController {
   constructor(private deploymentService: DeploymentService) {}
+
+  @Get('/user')
+  @HttpCode(HttpStatus.OK)
+  @Serialize(CreateDeploymentDTO)
+  getUsersDeployment(@Req() req: RequestWithUser) {
+    return this.deploymentService.getDeploymentsCreatedByUser(req.user.id);
+  }
+
+  @Get('/public')
+  @HttpCode(HttpStatus.OK)
+  @Serialize(CreateDeploymentDTO)
+  getAllPublicDeployments() {
+    return this.deploymentService.getAllPublicDeployment();
+  }
 
   // route to create a new deployment
   @Post()
@@ -63,12 +78,3 @@ export class DeploymentController {
     return this.deploymentService.deleteDeployment(deploymentId);
   }
 }
-
-/*
-- [x] Route to create a new deployment
-- [x] route to add endpoints
-- [x] route to update endpoints
-- [x] route to delete endpoints
-- [x] route to update deployment fields
-
-*/
