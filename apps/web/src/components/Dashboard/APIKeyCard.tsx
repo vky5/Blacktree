@@ -14,7 +14,7 @@ import {
 
 import { MoreVertical, RefreshCw, Eye, Trash2, Copy, CheckCircle } from "lucide-react";
 
-interface APIKey {
+export interface APIKey {
   id: string;
   name: string;
   apiKey: string;

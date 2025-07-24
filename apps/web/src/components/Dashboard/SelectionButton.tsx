@@ -1,14 +1,24 @@
 import React, { useState } from "react";
-import { BarChart3, Key, Globe } from "lucide-react";
+import { LucideIcon } from "lucide-react";
 
-export default function TabComponent({ onTabChange = (update: number) => {} }) {
-  const [activeTab, setActiveTab] = useState(1);
+interface Tab {
+  id: number;
+  label: string;
+  icon: LucideIcon;
+}
 
-  const tabs = [
-    { id: 1, label: "Analytics", icon: BarChart3 },
-    { id: 2, label: "API Keys", icon: Key },
-    { id: 3, label: "Deployments", icon: Globe },
-  ];
+interface TabsProps {
+  tabs: Tab[];
+  onTabChange?: (tabId: number) => void;
+  initialTabId?: number;
+}
+
+export default function Tabs({
+  tabs,
+  onTabChange = () => {},
+  initialTabId = tabs[0]?.id,
+}: TabsProps) {
+  const [activeTab, setActiveTab] = useState(initialTabId);
 
   const handleTabClick = (tabId: number) => {
     setActiveTab(tabId);
