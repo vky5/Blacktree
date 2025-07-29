@@ -18,6 +18,7 @@ import axios from "axios";
 function page() {
   const { handleOAuthSignIn } = useOAuthSignIn();
 
+  // clerk injects a lot of things so it is better to wait until it is loaded that is what isLoaded for 
   const { isLoaded, signUp, setActive } = useSignUp();
   const router = useRouter();
 
@@ -31,7 +32,7 @@ function page() {
   const [verifiying, setVerifying] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
 
-  if (!isLoaded) {
+  if (!isLoaded) { // waiting for clerk to complete loading
     return <>add loading screen please</>;
   }
 
