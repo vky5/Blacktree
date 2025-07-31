@@ -11,14 +11,14 @@ import {
   Get,
 } from '@nestjs/common';
 import { EndpointService } from '../service/endpoint.service';
-import { FakeGuard } from 'src/guards/fake.guard';
 import { CreateEndpointDto } from '../dto/endpoint.dto';
 import { DeploymentOwnershipGuard } from '../guards/deployment-ownership.guard';
+import { JWTClerkGuard } from 'src/guards/jwt-clerk.guard';
 // import { JWTClerkGuard } from 'src/guards/jwt-clerk.guard';
 
 //TODO URGENT: We are not testing that the resources user is updating or deleting belogs to the user or not. Fix it at once
 
-@UseGuards(FakeGuard, DeploymentOwnershipGuard) // TODO: Remove this guard in production
+@UseGuards(JWTClerkGuard, DeploymentOwnershipGuard) // TODO: Remove this guard in production
 @Controller('endpoint')
 export class EndpointController {
   constructor(private readonly endpointService: EndpointService) {}

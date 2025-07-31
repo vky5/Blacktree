@@ -7,10 +7,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { DeploymentService } from '../service/deployment.service';
-import { FakeGuard } from 'src/guards/fake.guard';
 import { RequestWithUser } from 'src/utils/types/RequestWithUser.interface';
+import { JWTClerkGuard } from 'src/guards/jwt-clerk.guard';
 
-@UseGuards(FakeGuard)
+@UseGuards(JWTClerkGuard)
 @Controller('hosted')
 export default class HostedDeploymentController {
   constructor(private readonly deploymentService: DeploymentService) {}

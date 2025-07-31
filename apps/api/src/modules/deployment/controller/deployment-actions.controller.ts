@@ -10,12 +10,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import { FakeGuard } from 'src/guards/fake.guard';
 import { DeploymentOwnershipGuard } from '../guards/deployment-ownership.guard';
 import { DeploymentActionService } from '../service/deployment-action.service';
 import { RequestWithUser } from 'src/utils/types/RequestWithUser.interface';
+import { JWTClerkGuard } from 'src/guards/jwt-clerk.guard';
 
-@UseGuards(FakeGuard)
+@UseGuards(JWTClerkGuard)
 @Controller('deployment')
 export class DeploymentActionsController {
   constructor(
