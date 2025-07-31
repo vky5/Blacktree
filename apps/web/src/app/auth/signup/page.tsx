@@ -91,7 +91,7 @@ function page() {
   };
 
   return (
-    <div className="flex items-center justify-center space-x-16 min-h-screen">
+    <div className="flex items-center justify-center space-x-16 min-h-screen bg-white">
       <div>
         <LeftSection />
       </div>
@@ -105,7 +105,7 @@ function page() {
               <h1 className="text-xl md:text-2xl font-extrabold text-black leading-tight">
                 Create an account
               </h1>
-              <p className="text-sm text-gray-600 max-w-3xl mx-auto">
+              <p className="text-sm max-w-3xl mx-auto text-black">
                 Sign up to start using BlackTree
               </p>
             </div>
@@ -114,13 +114,13 @@ function page() {
             <div className="flex flex-col space-y-5 py-5">
               <button
                 onClick={() => handleOAuthSignIn("oauth_github", "/dashboard")}
-                className="border border-emerald rounded-lg hover:bg-emerald/50 transition duration-150 py-2 space-x-4 flex items-center justify-center"
+                className="border border-emerald rounded-lg hover:bg-emerald/50 transition duration-150 py-2 space-x-4 flex items-center justify-center text-black"
               >
                 <FaGithub className="text-2xl" />
                 <span>Continue With Github</span>
               </button>
               <button
-                className="border border-emerald rounded-lg hover:bg-emerald/50 transition duration-150 py-2 space-x-4 flex items-center justify-center"
+                className="border border-emerald rounded-lg hover:bg-emerald/50 transition duration-150 py-2 space-x-4 flex items-center justify-center text-black"
                 onClick={() => handleOAuthSignIn("oauth_google", "/dashboard")}
               >
                 <FcGoogle className="text-2xl" />
@@ -178,7 +178,7 @@ function page() {
             </div>
 
             <div>
-              <p className="text-sm text-center text-gray-600">
+              <p className="text-sm text-center text-black">
                 Already have an account?{" "}
                 <Link
                   href="/auth/login"
@@ -200,7 +200,7 @@ function page() {
               <h2 className="text-xl font-bold text-center text-black">
                 Verify Your Email
               </h2>
-              <p className="text-sm text-gray-600 text-center">
+              <p className="text-sm text-center text-black">
                 Enter the verification code sent to your email.
               </p>
               <form onSubmit={handleVerifyCode} className="space-y-4">

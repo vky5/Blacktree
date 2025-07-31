@@ -29,12 +29,11 @@ function page() {
 
   if (!isLoaded) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-white text-black">
         <p>Loading...</p>
       </div>
     );
   }
-
 
   // function to handle Signin button click
   // Workflow:
@@ -82,7 +81,7 @@ function page() {
 
   return (
     // Flex container to center the content vertically and horizontally
-    <div className="flex items-center justify-center min-h-screen py-10">
+    <div className="flex items-center justify-center min-h-screen py-10 bg-white text-black">
       {/* The main content container */}
       <div className="w-full max-w-lg md:w-1/3">
         {/* ColouredDiv: Wrapper that adds background color */}
@@ -94,11 +93,11 @@ function page() {
               {/* Logo */}
               <Logo />
               {/* Main heading */}
-              <h1 className="text-xl md:text-2xl font-extrabold text-black leading-tight">
+              <h1 className="text-xl md:text-2xl font-extrabold leading-tight">
                 Welcome back
               </h1>
               {/* Description text */}
-              <p className="text-sm md:text-lg text-gray-600 max-w-3xl mx-auto">
+              <p className="text-sm md:text-lg max-w-3xl mx-auto">
                 Sign in to your account to continue
               </p>
             </div>
@@ -165,8 +164,7 @@ function page() {
 
             {/* Sign-up link for new users */}
             <div>
-              <p className="text-sm text-center text-gray-600">
-                Don't have an account?{" "}
+              <p className="text-sm text-center">Don't have an account?{" "}
                 <Link
                   href="/auth/signup"
                   className="text-emerald-600 font-medium hover:underline"
