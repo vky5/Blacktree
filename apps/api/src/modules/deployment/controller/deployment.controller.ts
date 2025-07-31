@@ -16,8 +16,10 @@ import { JWTClerkGuard } from 'src/guards/jwt-clerk.guard';
 import { CreateDeploymentDTO } from '../dto/deployment.dto';
 import { RequestWithUser } from 'src/utils/types/RequestWithUser.interface';
 import { Serialize } from 'src/interceptors/serialize-interceptor';
+import { OwnershipGuard } from 'src/guards/ownership.guard';
+import { CheckOwnership } from 'src/guards/check-ownership.decorator';
 
-@UseGuards(JWTClerkGuard) // for restricting all routes guard access to authenticated users
+@UseGuards(JWTClerkGuard, OwnershipGuard) // for restricting all routes guard access to authenticated users
 @Controller('deployment')
 export class DeploymentController {
   constructor(private deploymentService: DeploymentService) {}
@@ -54,6 +56,7 @@ export class DeploymentController {
   // @UseGuards(DeploymentOwnershipGuard)
   @Get(':deploymetId')
   @HttpCode(HttpStatus.OK)
+  @CheckOwnership('deployment')
   getDeployment(@Param('deploymetId') deploymentId: string) {
     return this.deploymentService.deploymentInfo(deploymentId);
   }
@@ -61,6 +64,7 @@ export class DeploymentController {
   // route to update an existing deployment (handle status through service layer)
   @Patch(':deploymentId')
   @HttpCode(HttpStatus.OK)
+  @CheckOwnership('deployment')
   updateDeployment(
     @Param('deploymentId') deploymentId: string,
     @Body() updateData: Partial<CreateDeploymentDTO>,
@@ -72,6 +76,7 @@ export class DeploymentController {
   // route to delete the deployment
   @Delete(':deploymentId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @CheckOwnership('deployment')
   deleteDeployment(@Param('deploymentId') deploymentId: string) {
     return this.deploymentService.deleteDeployment(deploymentId);
   }

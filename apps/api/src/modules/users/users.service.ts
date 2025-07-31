@@ -36,7 +36,7 @@ export class UsersService {
   /**
    * Find a user by their UUID
    */
-  findOneById(id: string): Promise<User | null> {
+  findById(id: string): Promise<User | null> {
     return this.repo.findOneBy({ id });
   }
 

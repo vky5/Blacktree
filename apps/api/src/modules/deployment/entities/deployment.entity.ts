@@ -35,7 +35,7 @@ export class Deployment {
   contextDir: string; // Context directory for Docker build
 
   @ManyToOne(() => User, (user) => user.deployments, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({ name: 'userId' }) // it means create a foregin key of userId and typeorm by default uses uuid as foreign key that referes to primary key (here the primary key is user's uuid)
   user: User;
 
   @OneToMany(() => Endpoint, (endpoint) => endpoint.deployment)
