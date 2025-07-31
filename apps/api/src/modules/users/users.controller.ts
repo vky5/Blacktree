@@ -20,7 +20,6 @@ import { AuthService } from './auth.service';
 import { UserRole } from 'src/utils/enums/user-role.enum';
 import { Serialize } from 'src/interceptors/serialize-interceptor';
 import { plainToInstance } from 'class-transformer';
-import { FakeGuard } from 'src/guards/fake.guard';
 
 @Controller('users')
 export class UsersController {
@@ -32,7 +31,7 @@ export class UsersController {
   // Me Route
   @Serialize(UserDto)
   @Get('me')
-  @UseGuards(FakeGuard)
+  @UseGuards(JWTClerkGuard)
   me(@Req() req: RequestWithUser) {
     // Return the user object from the request
     console.log('User from request:', req.user.id);
@@ -61,7 +60,7 @@ export class UsersController {
 
   // get the repo from the access token of the users
   @Get('/repos')
-  @UseGuards(FakeGuard)
+  @UseGuards(JWTClerkGuard)
   @HttpCode(HttpStatus.OK)
   async getRepos(@Req() req: RequestWithUser) {
     const token = typeof req.user.token === 'string' ? req.user.token : '';

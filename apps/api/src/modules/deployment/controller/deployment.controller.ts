@@ -12,14 +12,12 @@ import {
   Patch,
 } from '@nestjs/common';
 import { DeploymentService } from '../service/deployment.service';
-// import { JWTClerkGuard } from 'src/guards/jwt-clerk.guard';
+import { JWTClerkGuard } from 'src/guards/jwt-clerk.guard';
 import { CreateDeploymentDTO } from '../dto/deployment.dto';
-import { FakeGuard } from 'src/guards/fake.guard';
 import { RequestWithUser } from 'src/utils/types/RequestWithUser.interface';
 import { Serialize } from 'src/interceptors/serialize-interceptor';
 
-// @UseGuards(JWTClerkGuard) // for restricting all routes guard access to authenticated users
-@UseGuards(FakeGuard) //TODO remove this guard in production
+@UseGuards(JWTClerkGuard) // for restricting all routes guard access to authenticated users
 @Controller('deployment')
 export class DeploymentController {
   constructor(private deploymentService: DeploymentService) {}
