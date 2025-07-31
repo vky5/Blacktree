@@ -12,9 +12,9 @@ interface InputFieldProps {
 
 function InputField({ label, type, placeholder, className, value, onChange }: InputFieldProps) {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col text-black">
       {/* Label */}
-      <label className="font-medium text-sm text-gray-700">{label}</label>
+      <label className="font-medium text-sm">{label}</label>
       {/* Input field */}
       <input
         type={type}

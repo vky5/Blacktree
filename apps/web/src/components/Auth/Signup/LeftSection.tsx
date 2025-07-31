@@ -22,8 +22,8 @@ function LeftSection() {
   ];
 
   return (
-    <div className='flex flex-col items-stretch'>
-      <h1 className="text-2xl md:text-2xl font-extrabold text-black leading-tight">Why Join Blacktree?</h1>
+    <div className='flex flex-col items-stretch text-black'>
+      <h1 className="text-2xl md:text-2xl font-extrabold leading-tight">Why Join Blacktree?</h1>
       <span className='text-lg my-5'>
         Join thousands of developers already using BlackTree to monetize and
         deploy their APIs
