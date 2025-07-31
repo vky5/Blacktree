@@ -48,7 +48,7 @@ export class DeploymentService {
       throw new InternalServerErrorException('WEBHOOK_URL is not configured');
     }
 
-    const userInfo = await this.usersService.findOneById(userId);
+    const userInfo = await this.usersService.findById(userId);
     if (!userInfo?.token) {
       throw new BadRequestException(
         'User has not connected their GitHub account',
@@ -107,6 +107,7 @@ export class DeploymentService {
     }
   }
 
+  // get the entire deployment data with user data
   findByIdWithUser(deploymentId: string): Promise<Deployment | null> {
     return this.deploymentRepo.findOne({
       where: { id: deploymentId },
@@ -114,6 +115,13 @@ export class DeploymentService {
       select: {
         id: true,
       },
+    });
+  }
+
+  // get the deployment info with uuid of users
+  findById(deploymentId: string) {
+    return this.deploymentRepo.findOne({
+      where: { id: deploymentId },
     });
   }
 

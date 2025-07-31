@@ -14,8 +14,10 @@ import { DeploymentOwnershipGuard } from '../guards/deployment-ownership.guard';
 import { DeploymentActionService } from '../service/deployment-action.service';
 import { RequestWithUser } from 'src/utils/types/RequestWithUser.interface';
 import { JWTClerkGuard } from 'src/guards/jwt-clerk.guard';
+import { OwnershipGuard } from 'src/guards/ownership.guard';
+import { CheckOwnership } from 'src/guards/check-ownership.decorator';
 
-@UseGuards(JWTClerkGuard)
+@UseGuards(JWTClerkGuard, OwnershipGuard)
 @Controller('deployment')
 export class DeploymentActionsController {
   constructor(
@@ -26,6 +28,7 @@ export class DeploymentActionsController {
   @UseGuards(DeploymentOwnershipGuard)
   @Post(':deploymentId/build')
   @HttpCode(HttpStatus.OK)
+  @CheckOwnership('deployment')
   buildDeployment(
     @Param('deploymentId') deploymentId: string,
     @Req() req: RequestWithUser,
@@ -40,6 +43,7 @@ export class DeploymentActionsController {
   @UseGuards(DeploymentOwnershipGuard)
   @Post(':deploymentId/trigger')
   @HttpCode(HttpStatus.OK)
+  @CheckOwnership('deployment')
   triggerDeployment(@Param('deploymentId') deploymentId: string) {
     return this.deploymentActionService.triggerDeployment(deploymentId);
   }
@@ -48,6 +52,7 @@ export class DeploymentActionsController {
   @UseGuards(DeploymentOwnershipGuard)
   @Post(':deploymentId/stop')
   @HttpCode(HttpStatus.OK)
+  @CheckOwnership('deployment')
   async stopDeployment(@Param('deploymentId') deploymentId: string) {
     try {
       await this.deploymentActionService.stopDeployment(deploymentId);
@@ -66,6 +71,7 @@ export class DeploymentActionsController {
   @UseGuards(DeploymentOwnershipGuard)
   @Delete(':deploymentId/delete')
   @HttpCode(HttpStatus.OK)
+  @CheckOwnership('deployment')
   async softDeleteDeployment(@Param('deploymentId') deploymentId: string) {
     try {
       await this.deploymentActionService.cleanResources(deploymentId);
@@ -86,6 +92,7 @@ export class DeploymentActionsController {
   @UseGuards(DeploymentOwnershipGuard)
   @Post(':deploymentId/restart')
   @HttpCode(HttpStatus.OK)
+  @CheckOwnership('deployment')
   restartDeployment(@Param('deploymentId') deploymentId: string) {
     return this.deploymentActionService.restartDeployment(deploymentId);
   }

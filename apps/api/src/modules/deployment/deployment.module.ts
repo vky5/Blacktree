@@ -15,6 +15,7 @@ import { AwsModule } from '../aws/aws.module';
 import { WebhookController } from './controller/webhook.controller';
 import { WebhookService } from './service/webhook.service';
 import HostedDeploymentController from './controller/hosted-deployment.controller';
+import { ResourceServiceMapProvider } from 'src/guards/resource-service-map.provider';
 
 @Module({
   imports: [
@@ -35,6 +36,8 @@ import HostedDeploymentController from './controller/hosted-deployment.controlle
     DeploymentOwnershipGuard,
     DeploymentActionService,
     WebhookService,
+    ResourceServiceMapProvider,
   ],
+  exports: [DeploymentService],
 })
 export class DeploymentModule {}

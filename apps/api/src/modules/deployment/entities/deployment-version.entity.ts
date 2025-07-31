@@ -1,4 +1,10 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Deployment } from './deployment.entity';
 import { DeploymentStatus } from 'src/utils/enums/deployment-status.enum';
 import { User } from 'src/modules/users/entities/users.entity';
@@ -12,7 +18,12 @@ export class DeploymentVersion {
   deployment: Deployment;
 
   @ManyToOne(() => User, (user) => user.hosted, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
   user: User;
+
+  /*deploymentVersion.userId; // foreign key (if you select it)
+deploymentVersion.user;   // full User entity (if relation loaded)
+*/
 
   @Column({ type: 'varchar', nullable: true })
   imageUrl: string | null;

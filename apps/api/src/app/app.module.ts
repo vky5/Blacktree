@@ -17,6 +17,7 @@ import { MessagingQueueModule } from 'src/modules/messaging-queue/messaging-queu
 import { Endpoint } from 'src/modules/deployment/entities/endpoint.entity';
 import { DeploymentVersion } from 'src/modules/deployment/entities/deployment-version.entity';
 import { AwsModule } from 'src/modules/aws/aws.module';
+import { CoreModule } from 'src/modules/coreModule/core.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { AwsModule } from 'src/modules/aws/aws.module';
     DeploymentModule,
     MessagingQueueModule,
     AwsModule,
+    CoreModule,
   ],
   controllers: [AppController],
   providers: [AppService],
