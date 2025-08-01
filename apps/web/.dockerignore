@@ -1,0 +1,24 @@
+# Dependencies
+node_modules
+.pnpm
+.next
+
+# Env + secrets
+.env
+.env.*  # Prevent all env variants
+.npmrc
+
+# Logs and OS junk
+npm-debug.log
+pnpm-debug.log
+yarn-debug.log
+yarn-error.log
+.DS_Store
+
+# Git
+.git
+.gitignore
+
+# Docker files themselves
+Dockerfile
+docker-compose.yml
