@@ -51,6 +51,32 @@ export class AuthService {
     return res.data.access_token;
   }
 
+  // get the user info from the access token
+  async getGithubUserInfo(token: string): Promise<any> {
+    interface GithubUser {
+      login: string; // GitHub username
+      id: number;
+      avatar_url: string;
+      html_url: string;
+      email: string | null;
+      name: string | null;
+    }
+    
+    const res = await axios.get('http://api.github.com/user', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github.v3+json',
+      },
+    });
+    if (res.status !== 200) {
+      throw new BadRequestException('Failed to retrieve user info from GitHub');
+    }
+    if (!res.data || typeof res.data !== 'object') {
+      throw new BadRequestException('Unexpected response format from GitHub');
+    }
+    return res.data; // getting the user info from the response.
+  }
+
   // auth logic for getting repositories
   async getGithubRepositories(token: string): Promise<string[]> {
     const res = await axios.get('https://api.github.com/user/repos', {
@@ -59,8 +85,6 @@ export class AuthService {
         Accept: 'application/vnd.github.v3+json',
       },
     });
-
-    console.log(res);
 
     if (res.status !== 200) {
       throw new BadRequestException(
@@ -75,6 +99,7 @@ export class AuthService {
     return res.data.map((repo: { name: string }) => repo.name);
   }
 
+  // repository should be in the format "owner/repo"
   async createWebhookForRepo(
     repoFullName: string,
     webhookUrl: string,

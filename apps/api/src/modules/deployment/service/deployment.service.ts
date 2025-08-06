@@ -30,10 +30,13 @@ export class DeploymentService {
     deploymentData: CreateDeploymentDTO,
     userId: string,
   ): Promise<Deployment> {
+    console.log('creating deployment , ' + deploymentData.repository);
+
     const existingDeployment = await this.deploymentRepo.findOne({
       where: {
         branch: deploymentData.branch,
         repository: deploymentData.repository,
+        user: { id: userId },
       },
     });
 

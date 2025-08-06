@@ -48,8 +48,11 @@ export class UsersController {
   ) {
     const token = await this.authService.getGithubAccessToken(body.code);
 
+    const userInfoFromGithub = await this.authService.getGithubUserInfo(token);
+
     await this.userService.updateUser(req.user.id, {
       token,
+      githubUsername: userInfoFromGithub.login,
       role: UserRole.DEV,
     });
 

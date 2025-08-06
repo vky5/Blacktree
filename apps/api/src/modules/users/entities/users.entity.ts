@@ -40,6 +40,9 @@ export class User {
   @Column({ type: 'varchar', length: 255, nullable: true })
   token: string;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  githubUsername: string;
+
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role: string;
 
