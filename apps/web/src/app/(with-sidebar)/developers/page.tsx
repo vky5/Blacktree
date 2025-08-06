@@ -6,11 +6,11 @@ import Tabs from "@/components/Dashboard/SelectionButton";
 import { PackagePlus, Package } from "lucide-react";
 import IntegrationStep1 from "@/components/Developers/IntegrationStep1.1";
 import BlueprintCard from "@/components/Deployments/BlueprintCard";
+import BigLoader from "@/components/ui/BigLoader";
 
 function HostAPI() {
   const [activeTab, setActiveTab] = useState(1);
   const [blueprints, setBlueprints] = useState<BlueprintCardProps[]>([]);
-
   const [loading, setLoading] = useState(false);
 
   const tabOptions = [
@@ -42,30 +42,36 @@ function HostAPI() {
     resourceVersion: string;
     private: boolean;
   }
-  // Fetch blueprints from backend
+
   useEffect(() => {
     const fetchBlueprints = async () => {
       setLoading(true);
       try {
         const res = await axios.get(
-          process.env.NEXT_PUBLIC_BACKEND_URL + "/deployment/user", // Change if your endpoint differs
+          process.env.NEXT_PUBLIC_BACKEND_URL + "/deployment/user",
           { withCredentials: true },
         );
 
         const data = res.data;
 
-        const transformed = data.map((item: BlueprintResponse) => ({
-          name: item.name,
-          description: `Repo: ${item.repository}`,
-          version: item.resourceVersion || "v1.0.0",
-          updatedAt: "Just now", // Default, unless backend provides it
-          deployments: 0, // Default fallback
-          stars: 0,
-          isPublic: !item.private,
-          onEdit: () => alert(`Edit ${item.name}`),
-          onDeploy: () => alert(`Deploy ${item.name}`),
-          onView: () => alert(`View ${item.name}`),
-        }));
+        const transformed = data.map((item: BlueprintResponse) => {
+          if (!item.repository) {
+            console.warn("Missing repository in blueprint:", item);
+          }
+
+          return {
+            name: item.name,
+            repository: item.repository || "unknown/repo",
+            dockerFilePath: item.dockerFilePath || "",
+            contextDir: item.contextDir || "",
+            branch: item.branch || "main",
+            resourceVersion: item.resourceVersion || "v1.0.0",
+            private: item.private,
+            onEdit: () => alert(`Edit ${item.name}`),
+            onDeploy: () => alert(`Deploy ${item.name}`),
+            onDelete: () => alert(`View ${item.name}`),
+          };
+        });
 
         setBlueprints(transformed);
       } catch (error) {
@@ -104,7 +110,7 @@ function HostAPI() {
         <div>
           <h2 className="text-xl font-semibold mb-4">My Blueprints</h2>
           {loading ? (
-            <p>Loading...</p>
+            <BigLoader />
           ) : blueprints.length === 0 ? (
             <p className="text-gray-400">No blueprints found.</p>
           ) : (
