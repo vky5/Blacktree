@@ -6,6 +6,10 @@ import RepositorySelect from "./RepositorySelect";
 import { useAuth } from "@/context/AuthContext";
 import React, { useState } from "react";
 
+interface IntegrationStep1Props {
+  onSuccessRedirectToTab2: () => void;
+}
+
 interface FormData {
   repo: string;
   branch: string;
@@ -19,7 +23,7 @@ interface FormData {
   envVars: Record<string, string>;
 }
 
-function IntegrationStep1({}: {}) {
+function IntegrationStep1({ onSuccessRedirectToTab2 }: IntegrationStep1Props) {
   const { userData } = useAuth();
   const [formData, setFormData] = useState<FormData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,9 +49,10 @@ function IntegrationStep1({}: {}) {
         },
         {
           withCredentials: true,
-        }
+        },
       );
       console.log("Deployment submitted:", res.data);
+      onSuccessRedirectToTab2();
     } catch (error) {
       console.error("Submission error:", error);
     } finally {
@@ -70,7 +75,10 @@ function IntegrationStep1({}: {}) {
 
       {userData?.github_connect === true && (
         <div>
-          <RepositorySelect onSubmit={handleFormSubmit} isSubmitting={isSubmitting} />
+          <RepositorySelect
+            onSubmit={handleFormSubmit}
+            isSubmitting={isSubmitting}
+          />
         </div>
       )}
     </div>

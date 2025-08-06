@@ -49,7 +49,7 @@ function HostAPI() {
       try {
         const res = await axios.get(
           process.env.NEXT_PUBLIC_BACKEND_URL + "/deployment/user", // Change if your endpoint differs
-          { withCredentials: true }
+          { withCredentials: true },
         );
 
         const data = res.data;
@@ -76,7 +76,7 @@ function HostAPI() {
     };
 
     fetchBlueprints();
-  }, []);
+  }, [activeTab]);
 
   return (
     <div className="bg-[#030712] min-h-screen p-6 text-white">
@@ -96,7 +96,7 @@ function HostAPI() {
       {activeTab === 1 && (
         <div>
           <h2 className="text-xl font-semibold mb-4">Create a New Blueprint</h2>
-          <IntegrationStep1 />
+          <IntegrationStep1 onSuccessRedirectToTab2={() => setActiveTab(2)} />
         </div>
       )}
 

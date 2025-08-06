@@ -12,6 +12,7 @@ import { AuthService } from 'src/modules/users/auth.service';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from 'src/modules/users/users.service';
 import { DeploymentVersion } from '../entities/deployment-version.entity';
+import { repoNameFormatter } from 'src/utils/repoNameFormatter';
 
 @Injectable()
 export class DeploymentService {
@@ -30,8 +31,6 @@ export class DeploymentService {
     deploymentData: CreateDeploymentDTO,
     userId: string,
   ): Promise<Deployment> {
-    console.log('creating deployment , ' + deploymentData.repository);
-
     const existingDeployment = await this.deploymentRepo.findOne({
       where: {
         branch: deploymentData.branch,
@@ -58,16 +57,21 @@ export class DeploymentService {
       );
     }
 
+    const formattedRepoName = repoNameFormatter(
+      userInfo.githubUsername,
+      deploymentData.repository,
+    );
+
     try {
       const webhookInfo = (await this.authService.createWebhookForRepo(
-        deploymentData.repository,
+        formattedRepoName,
         webhookUrl,
         userInfo.token,
       )) as { id: number };
 
       const newDeployment = this.deploymentRepo.create({
         name: deploymentData.name,
-        repository: deploymentData.repository,
+        repository: formattedRepoName,
         dockerFilePath: deploymentData.dockerFilePath,
         branch: deploymentData.branch,
         contextDir: deploymentData.contextDir,
