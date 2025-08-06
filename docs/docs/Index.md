@@ -12,6 +12,8 @@ Browse topics:
 - [Architecture](Architecture/overivew.md)
 - [Authentication](Authentication/overview.md)
 - [CI/CD Integration](CI-CD/overview.md)
-- [Job Orchestration](Job-Orchestration/overview.md)
+- [Message Queue](Message-Queue/overview.md)
+- [Orchestrator](Orchestrator/overview.md)
+- [Workers](Workers/overview.md)
 - [Implementation Guides](implementation/overview.md)
 
