@@ -39,7 +39,7 @@ export const useSyncUser = () => {
               "Content-Type": "application/json",
             },
             withCredentials: true, // send cookies
-          }
+          },
         );
 
         // Optional: log response for debugging
@@ -51,7 +51,7 @@ export const useSyncUser = () => {
         // Fetch the synced user from your backend and store in context
         await fetchUser();
 
-        console.log("saved state : " + userData)
+        console.log("saved state : " + userData);
       } catch (err) {
         console.error("Error syncing user:", err);
       }

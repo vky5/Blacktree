@@ -18,7 +18,10 @@ export default function DeploymentsPage() {
     const getAllDeployments = async () => {
       try {
         const res = await axios.get(
-          process.env.NEXT_PUBLIC_BACKEND_URL + "/hosted"
+          process.env.NEXT_PUBLIC_BACKEND_URL + "/hosted",
+          {
+            withCredentials: true,
+          },
         );
         setDeployments(res.data); // assumes it's an array
       } catch (err) {
