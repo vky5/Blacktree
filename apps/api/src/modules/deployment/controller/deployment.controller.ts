@@ -18,6 +18,7 @@ import { RequestWithUser } from 'src/utils/types/RequestWithUser.interface';
 import { Serialize } from 'src/interceptors/serialize-interceptor';
 import { OwnershipGuard } from 'src/guards/ownership.guard';
 import { CheckOwnership } from 'src/guards/check-ownership.decorator';
+import { ShowDeploymentDTO } from '../dto/show-deployment.dto';
 
 @UseGuards(JWTClerkGuard, OwnershipGuard) // for restricting all routes guard access to authenticated users
 @Controller('deployment')
@@ -26,14 +27,14 @@ export class DeploymentController {
 
   @Get('/user')
   @HttpCode(HttpStatus.OK)
-  @Serialize(CreateDeploymentDTO)
+  @Serialize(ShowDeploymentDTO)
   getUsersDeployment(@Req() req: RequestWithUser) {
     return this.deploymentService.getDeploymentsCreatedByUser(req.user.id);
   }
 
   @Get('/public')
   @HttpCode(HttpStatus.OK)
-  @Serialize(CreateDeploymentDTO)
+  @Serialize(ShowDeploymentDTO)
   getAllPublicDeployments() {
     return this.deploymentService.getAllPublicDeployment();
   }

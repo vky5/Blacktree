@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import Tabs from "@/components/Dashboard/SelectionButton";
 import { PackagePlus, Package } from "lucide-react";
@@ -13,25 +13,45 @@ function HostAPI() {
   const [blueprints, setBlueprints] = useState<BlueprintCardProps[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Delete function to delete the blueprint
+  const deleteBlueprint = useCallback(async (id: string) => {
+    try {
+      const res = await axios.delete(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/deployment/${id}`,
+        { withCredentials: true }
+      );
+      if (res.status === 204) {
+        setBlueprints((prev) => prev.filter((bp) => bp.id !== id));
+        alert(`Blueprint ${id} deleted successfully.`);
+      }
+    } catch (error) {
+      console.log("Failed to delete blueprint:", error);
+      alert(`Failed to delete blueprint ${id}. Please try again.`);
+    }
+  }, []);
+
+  // tab options
   const tabOptions = [
     { id: 1, label: "Create Blueprint", icon: PackagePlus },
     { id: 2, label: "My Blueprints", icon: Package },
   ];
 
   interface BlueprintCardProps {
+    id: string;
     name: string;
-    description: string;
-    version: string;
-    updatedAt: string;
-    deployments: number;
-    stars: number;
-    isPublic: boolean;
+    repository: string;
+    dockerFilePath: string;
+    contextDir: string;
+    branch: string;
+    resourceVersion: string;
+    private: boolean;
     onEdit: () => void;
     onDeploy: () => void;
-    onView: () => void;
+    onDelete: () => void;
   }
 
   interface BlueprintResponse {
+    id: string;
     name: string;
     repository: string;
     dockerFilePath: string;
@@ -43,44 +63,43 @@ function HostAPI() {
     private: boolean;
   }
 
+  const fetchBlueprints = async () => {
+    if (activeTab !== 2) return;
+    setLoading(true);
+    try {
+      const res = await axios.get(
+        process.env.NEXT_PUBLIC_BACKEND_URL + "/deployment/user",
+        { withCredentials: true }
+      );
+
+      const data = res.data;
+
+      const transformed: BlueprintCardProps[] = data.map(
+        (item: BlueprintResponse) => ({
+          id: item.id,
+          name: item.name,
+          repository: item.repository || "unknown/repo",
+          dockerFilePath: item.dockerFilePath || "",
+          contextDir: item.contextDir || "",
+          branch: item.branch || "main",
+          resourceVersion: item.resourceVersion || "v1.0.0",
+          private: item.private,
+          onEdit: () => alert(`Edit ${item.name}`),
+          onDeploy: () => alert(`Deploy ${item.name}`),
+          onDelete: () => deleteBlueprint(item.id), // ⬅️ notice this change
+        })
+      );
+
+      setBlueprints(transformed);
+    } catch (error) {
+      console.error("Failed to fetch blueprints:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // to refresh the blueprints when the active tab changes
   useEffect(() => {
-    const fetchBlueprints = async () => {
-      setLoading(true);
-      try {
-        const res = await axios.get(
-          process.env.NEXT_PUBLIC_BACKEND_URL + "/deployment/user",
-          { withCredentials: true },
-        );
-
-        const data = res.data;
-
-        const transformed = data.map((item: BlueprintResponse) => {
-          if (!item.repository) {
-            console.warn("Missing repository in blueprint:", item);
-          }
-
-          return {
-            name: item.name,
-            repository: item.repository || "unknown/repo",
-            dockerFilePath: item.dockerFilePath || "",
-            contextDir: item.contextDir || "",
-            branch: item.branch || "main",
-            resourceVersion: item.resourceVersion || "v1.0.0",
-            private: item.private,
-            onEdit: () => alert(`Edit ${item.name}`),
-            onDeploy: () => alert(`Deploy ${item.name}`),
-            onDelete: () => alert(`View ${item.name}`),
-          };
-        });
-
-        setBlueprints(transformed);
-      } catch (error) {
-        console.error("Failed to fetch blueprints:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchBlueprints();
   }, [activeTab]);
 
@@ -93,12 +112,10 @@ function HostAPI() {
         </p>
       </div>
 
-      {/* Tab Selector */}
       <div className="mb-8">
         <Tabs tabs={tabOptions} onTabChange={setActiveTab} initialTabId={1} />
       </div>
 
-      {/* Content Switch */}
       {activeTab === 1 && (
         <div>
           <h2 className="text-xl font-semibold mb-4">Create a New Blueprint</h2>
@@ -114,7 +131,7 @@ function HostAPI() {
           ) : blueprints.length === 0 ? (
             <p className="text-gray-400">No blueprints found.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {blueprints.map((bp, index) => (
                 <BlueprintCard key={index} {...bp} />
               ))}

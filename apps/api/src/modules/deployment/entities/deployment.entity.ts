@@ -34,6 +34,9 @@ export class Deployment {
   @Column({ type: 'varchar', nullable: false, default: '.' })
   contextDir: string; // Context directory for Docker build
 
+  @Column()
+  userId: string; // even tho userId was defined through JoinColumn but to make it explicit that this entity has it we did this
+
   @ManyToOne(() => User, (user) => user.deployments, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' }) // it means create a foregin key of userId and typeorm by default uses uuid as foreign key that referes to primary key (here the primary key is user's uuid)
   user: User;

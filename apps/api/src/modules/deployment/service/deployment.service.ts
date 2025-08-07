@@ -129,6 +129,12 @@ export class DeploymentService {
   findById(deploymentId: string) {
     return this.deploymentRepo.findOne({
       where: { id: deploymentId },
+      select: {
+        id: true,
+        name: true,
+        repository: true,
+        userId: true,
+      },
     });
   }
 

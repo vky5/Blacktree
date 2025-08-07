@@ -97,19 +97,19 @@ const BlueprintCard: React.FC<BlueprintCardProps> = ({
         <div className="grid grid-cols-3 gap-3 mt-6">
           <Button
             onClick={onEdit}
-            className="bg-zinc-800 text-white hover:bg-zinc-700 flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-base font-medium h-auto"
+            className="bg-zinc-800 text-white hover:bg-zinc-700 flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-base font-medium h-auto hover:cursor-pointer"
           >
             <FaPencilAlt className="text-sm" /> Edit
           </Button>
           <Button
             onClick={onDeploy}
-            className="bg-emerald-500 text-black hover:bg-emerald-400 hover:text-black flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-base font-medium h-auto transition-colors"
+            className="bg-emerald-500 text-black hover:bg-emerald-400 hover:text-black flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-base font-medium h-auto transition-colors hover:cursor-pointer"
           >
             <FaRocket className="text-sm" /> Deploy
           </Button>
           <Button
             onClick={onDelete}
-            className="bg-red-700 text-white hover:bg-red-800 flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-base font-medium h-auto"
+            className="bg-red-700 text-white hover:bg-red-800 flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-base font-medium h-auto hover:cursor-pointer"
           >
             <FaTrash className="text-sm" /> Delete
           </Button>

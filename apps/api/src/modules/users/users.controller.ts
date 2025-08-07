@@ -34,7 +34,6 @@ export class UsersController {
   @UseGuards(JWTClerkGuard)
   me(@Req() req: RequestWithUser) {
     // Return the user object from the request
-    console.log('User from request:', req.user.id);
     return req.user;
   }
 
