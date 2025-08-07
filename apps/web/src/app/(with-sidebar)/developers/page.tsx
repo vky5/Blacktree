@@ -7,6 +7,7 @@ import { PackagePlus, Package } from "lucide-react";
 import IntegrationStep1 from "@/components/Developers/IntegrationStep1.1";
 import BlueprintCard from "@/components/Deployments/BlueprintCard";
 import BigLoader from "@/components/ui/BigLoader";
+import {toast} from "sonner"
 
 function HostAPI() {
   const [activeTab, setActiveTab] = useState(1);
@@ -22,11 +23,11 @@ function HostAPI() {
       );
       if (res.status === 204) {
         setBlueprints((prev) => prev.filter((bp) => bp.id !== id));
-        alert(`Blueprint ${id} deleted successfully.`);
+        toast.success(`Blueprint ${id} deleted successfully.`);
       }
     } catch (error) {
       console.log("Failed to delete blueprint:", error);
-      alert(`Failed to delete blueprint ${id}. Please try again.`);
+      toast.error(`Failed to delete blueprint ${id}. Please try again.`);
     }
   }, []);
 
@@ -93,6 +94,8 @@ function HostAPI() {
       setBlueprints(transformed);
     } catch (error) {
       console.error("Failed to fetch blueprints:", error);
+      toast.error("Failed to fetch blueprints. Please try again later.");
+      setBlueprints([]);
     } finally {
       setLoading(false);
     }
