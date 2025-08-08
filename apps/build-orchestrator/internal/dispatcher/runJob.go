@@ -8,8 +8,6 @@ import (
 	jobpb "github.com/Blacktreein/Blacktree/apps/shared/proto/job"
 	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/queue"
 	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/workerman"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 // to run the RPC from the worker
@@ -19,13 +17,17 @@ func ExecuteRunJobRPC(wm *workerman.WorkerManager, w *workerman.Worker, msg *que
 
 	wm.SetWorkerState(w.Info.Id, "busy")
 
-	conn, err := grpc.NewClient(w.Info.Ip, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Printf("❌ Failed to dial worker %s: %v", w.Info.Id, err)
-		wm.SetWorkerState(w.Info.Id, "dead")
-		return err
-	}
-	defer conn.Close()
+	// we are gonna keep persistent connection between orchestrator and workers and this will be unary grpc
+	// conn, err := grpc.NewClient(w.Info.Ip, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// if err != nil {
+	// 	log.Printf("❌ Failed to dial worker %s: %v", w.Info.Id, err)
+	// 	wm.SetWorkerState(w.Info.Id, "dead")
+	// 	return err
+	// }
+	// defer conn.Close()
+
+
+	conn := w.GrpcConn;
 
 	client := jobpb.NewJobServiceClient(conn)
 

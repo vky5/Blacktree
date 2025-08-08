@@ -2,9 +2,13 @@
 
 package main
 
-import "github.com/Blacktreein/Blacktree/build-orchestrator/internal/queue"
+import (
+	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/queue"
+	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/workerman"
+)
 
-
-func shutdownGracefully(){
+func shutdownGracefully(manager *workerman.WorkerManager) {
 	queue.Close() // shutting down queue
+
+	manager.CloseGRPCAll()
 }

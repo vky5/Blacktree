@@ -7,7 +7,7 @@ import { PackagePlus, Package } from "lucide-react";
 import IntegrationStep1 from "@/components/Developers/IntegrationStep1.1";
 import BlueprintCard from "@/components/Deployments/BlueprintCard";
 import BigLoader from "@/components/ui/BigLoader";
-import {toast} from "sonner"
+import { toast } from "sonner";
 
 function HostAPI() {
   const [activeTab, setActiveTab] = useState(1);
@@ -28,6 +28,23 @@ function HostAPI() {
     } catch (error) {
       console.log("Failed to delete blueprint:", error);
       toast.error(`Failed to delete blueprint ${id}. Please try again.`);
+    }
+  }, []);
+
+  // deploy the blueprint
+  const deployBlueprint = useCallback(async (id: string) => {
+    try {
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/deployment/${id}/build`,
+        {},
+        { withCredentials: true }
+      );
+      if (res.status === 200) {
+        toast.success(`Blueprint ${id} deployed successfully.`);
+      }
+    } catch (error) {
+      console.error("Failed to deploy blueprint:", error);
+      toast.error(`Failed to deploy blueprint ${id}. Please try again.`);
     }
   }, []);
 
@@ -86,7 +103,7 @@ function HostAPI() {
           resourceVersion: item.resourceVersion || "v1.0.0",
           private: item.private,
           onEdit: () => alert(`Edit ${item.name}`),
-          onDeploy: () => alert(`Deploy ${item.name}`),
+          onDeploy: () => deployBlueprint(item.id),
           onDelete: () => deleteBlueprint(item.id), // ⬅️ notice this change
         })
       );

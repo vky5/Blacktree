@@ -24,7 +24,7 @@ import (
 
 func main() {
 	log.Println("🔄 Starting orchestrator")
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background()) // creating a main context for the orchestrator to close everything at once
 	defer cancel()
 
 	if err := run(ctx); err != nil {
@@ -34,12 +34,10 @@ func main() {
 }
 
 func run(ctx context.Context) error {
-	// Load env variables
+	// ------ Load environment variables ------
 	if err := utils.EnvInit("./.env"); err != nil {
 		return fmt.Errorf("failed to load env variables: %w", err)
 	}
-
-	defer shutdownGracefully()
 
 	log.Println("✅ Environment variables loaded successfully")
 
@@ -48,6 +46,7 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("MQ_URL environment variable not set")
 	}
 
+	// ------ Connect to RabbitMQ ------
 	_, err := queue.Connect(mqURL) // connecting to the
 	if err != nil {
 		return fmt.Errorf("failed to connect to messaging queue: %w", err)
@@ -88,6 +87,7 @@ func run(ctx context.Context) error {
 		}
 	}()
 
+	defer shutdownGracefully(manager) // ensure graceful shutdown on exit
 	return nil
 
 }

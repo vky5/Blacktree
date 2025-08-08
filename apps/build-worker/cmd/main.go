@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
+	workerpb "github.com/Blacktreein/Blacktree/apps/shared/proto/worker"
 	"github.com/Blacktreein/Blacktree/build-worker/internal/grpc"
 	"github.com/Blacktreein/Blacktree/build-worker/internal/utils"
-	workerpb "github.com/Blacktreein/Blacktree/apps/shared/proto/worker"
 
 	grpc2 "google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -64,6 +64,7 @@ func registerWithOrchestrator(id, orchestratorAddress, ip string, port int, regi
 		Port:   int32(port),
 		Region: region,
 	})
+
 	if err != nil {
 		log.Printf("❌ Registration failed: %v", err)
 		return false

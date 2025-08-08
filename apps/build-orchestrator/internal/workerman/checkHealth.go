@@ -9,8 +9,6 @@ import (
 	"time"
 
 	jobpb "github.com/Blacktreein/Blacktree/apps/shared/proto/job"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 func (wm *WorkerManager) StartHealthChecker(ctx context.Context, interval time.Duration) {
@@ -45,7 +43,7 @@ func (wm *WorkerManager) CheckHealthForAll() error {
 	wm.mu.Unlock()
 
 	for _, worker := range workersCopy {
-		wg.Add(1) // wg.Add(1) is like saying i + 1 to number of goroutin
+		wg.Add(1) // wg.Add(1) is like saying i + 1 to number of goroutin to wait for
 
 		go func(w *Worker) { // defining the func
 
@@ -61,17 +59,20 @@ func (wm *WorkerManager) CheckHealthForAll() error {
 }
 
 func (wm *WorkerManager) pingWorker(w *Worker) *Worker {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second) // wait for 3 seconds for the worker to respond
 	defer cancel()
 
-	//  each worker stores its address in Info
-	conn, err := grpc.NewClient(w.Info.Ip, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Printf("Failed to dial worker %s: %v", w.Info.Id, err)
-		wm.SetWorkerState(w.Info.Id, "dead")
-		return nil
-	}
-	defer conn.Close() // to close the connection at the end
+	// ---- Old method of non persistent connection. Since I am gonna make connection persistent after the worker registers it is gonna send their IP as well which we will then use to open the connection no need to store the IP address ( or maybe if you want to retry connection if closes accidently) no let's keep the IP thingy
+	// //  each worker stores its address in Info
+	// conn, err := grpc.NewClient(w.Info.Ip, grpc.WithTransportCredentials(insecure.NewCredentials())) // create a new grpc connection to the worker
+	// if err != nil {
+	// 	log.Printf("Failed to dial worker %s: %v", w.Info.Id, err)
+	// 	wm.SetWorkerState(w.Info.Id, "dead")
+	// 	return nil
+	// }
+	// defer conn.Close() // to close the connection at the end
+
+	conn := w.GrpcConn;
 
 	// create client from generated GRPC code
 	client := jobpb.NewJobServiceClient(conn)
