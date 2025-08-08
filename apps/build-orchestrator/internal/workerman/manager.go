@@ -24,7 +24,6 @@ type Worker struct {
 type WorkerManager struct {
 	mu            sync.Mutex // so that when a type (example a varible w Workermanager, w.Worker is updated no other goroutine intefres with it)
 	workers       map[string]*Worker
-	roundRobinIdx int
 	FreeWorkers   chan *Worker // channel to hold free workers
 }
 

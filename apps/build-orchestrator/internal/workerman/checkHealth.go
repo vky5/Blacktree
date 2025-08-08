@@ -30,7 +30,6 @@ func (wm *WorkerManager) StartHealthChecker(ctx context.Context, interval time.D
 	}
 }
 
-
 func (wm *WorkerManager) CheckHealthForAll() error {
 
 	// this func is gonna create multiple goroutine each goroutine asking for the
@@ -38,8 +37,12 @@ func (wm *WorkerManager) CheckHealthForAll() error {
 	var wg sync.WaitGroup // we wait for the goroutine to finish its task before calling wg.Done()
 
 	wm.mu.Lock()
-	workersCopy := make([]*Worker, len(wm.workers))
-	copy(workersCopy, wm.workers)
+	workersCopy := make([]*Worker, 0, len(wm.workers)) // preallocate with expected size
+
+	for _, worker := range wm.workers {
+		workersCopy = append(workersCopy, worker)
+	}
+
 	wm.mu.Unlock()
 
 	for _, worker := range workersCopy {
@@ -72,7 +75,7 @@ func (wm *WorkerManager) pingWorker(w *Worker) *Worker {
 	// }
 	// defer conn.Close() // to close the connection at the end
 
-	conn := w.GrpcConn;
+	conn := w.GrpcConn
 
 	// create client from generated GRPC code
 	client := jobpb.NewJobServiceClient(conn)
