@@ -60,20 +60,23 @@ func run(ctx context.Context) error {
 
 	log.Printf("🎧 Listening on queue: %s", consumer.QueueName)
 
-	// start listening in a loop
+	// ------- Initialize Worker Manager and Dispatcher State ------
 	jobs := make(chan *queue.DeploymentMessage) // creating an unbuffered channel
-
 	manager := workerman.NewWorkerManager(10)
+
+	log.Println("🛠️ Worker manager initialized with 10 Free Worker Channels")
 	go manager.StartHealthChecker(ctx, 2*time.Minute) // this will periodically check health in every 2 minutes
+	log.Println("🩺 Health checker started for workers")
 
 	ds := dispatcher.NewDispatcherState(jobs, manager)
 
-	// start the gRPC server to acccept worker registration
-	go grpc.StartGRPCServer(5051, manager)
+	go grpc.StartGRPCServer(5051, manager) // start the gRPC server to acccept worker registration
 
 	errChan := make(chan error, 1)
 
 	// listening to the messags from the queue taking in control of the speed the message is coming
+	drainAllMessages(*consumer)
+
 	go func() {
 		if err := messageFromQueue(ctx, jobs, *consumer); err != nil {
 			errChan <- err
@@ -88,7 +91,17 @@ func run(ctx context.Context) error {
 	}()
 
 	defer shutdownGracefully(manager) // ensure graceful shutdown on exit
-	return nil
+	
+	
+	// ❗BLOCK HERE until error or termination
+	select {
+	case err := <-errChan:
+		shutdownGracefully(manager)
+		return err
+	case <-ctx.Done():
+		shutdownGracefully(manager)
+		return nil
+	}
 
 }
 

@@ -68,3 +68,29 @@ msg.Ack(false) means that this one particular msg is acknowledged and can be rem
 msg.Ack(true) means that all the messages are acknowledged and can be removed even the untracked one
 
 */
+
+func drainAllMessages(consumer queue.Consumer) error {
+	fmt.Println("🧹 Draining all messages from queue:", consumer.QueueName)
+
+	for {
+		msg, err := consumer.ConsumeOne()
+		if err := utils.FailedOnError("drain", err, "failed to consume message"); err != nil {
+			return err
+		}
+
+		if msg == nil {
+			fmt.Println("✅ Queue is empty. Done.")
+			break
+		}
+
+		// Optional: display the message
+		fmt.Printf("📩 %s\n", string(msg.Body))
+
+		// Acknowledge the message to remove it from the queue
+		if err := msg.Ack(false); err != nil {
+			log.Printf("⚠️ Failed to ack message: %v", err)
+		}
+	}
+
+	return nil
+}

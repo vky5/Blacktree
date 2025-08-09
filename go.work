@@ -1,6 +1,4 @@
-go 1.23.11
-
-toolchain go1.23.11
+go 1.24.6
 
 use (
 	./apps/build-orchestrator
