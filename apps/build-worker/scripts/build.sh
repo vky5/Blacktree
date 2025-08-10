@@ -10,7 +10,7 @@ DOCKERFILE_PATH=$3
 FOLDER_NAME=$4
 
 # Validate input
-if [ -z "$IMAGE_NAME" ] || [ -z "$CONTEXT_DIR" ] || [ -z "$DOCKERFILE_PATH"|| -z "$FOLDER_NAME" ]; then
+if [ -z "$IMAGE_NAME" ] || [ -z "$CONTEXT_DIR" ] || [ -z "$DOCKERFILE_PATH" ] || [ -z "$FOLDER_NAME" ]; then
   echo "❌ Missing arguments."
   echo "Usage: ./scripts/build.sh <image-name> <context-dir> <dockerfile-path> <folder-name>"
   exit 1
@@ -20,7 +20,7 @@ fi
 export DOCKER_BUILDKIT=1 # this env variable tells the docker CLI to use the buildkit backend instead of legacy builder
 
 # CD to that directory
-cd "FOLDER_NAME"
+cd "$FOLDER_NAME"
 
 # Run the build
 docker build \

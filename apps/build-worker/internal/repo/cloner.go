@@ -24,7 +24,7 @@ type CloneRepoInput struct {
 func CloneRepo(opt CloneRepoInput) (*string, error) {
 	// Inject token if present
 	if opt.Token != nil {
-		opt.RepoURL = utils.InjectTokesInUrl(opt.RepoURL, opt.Token)
+		opt.RepoURL = utils.InjectTokenInURL(opt.RepoURL, opt.Token)
 	}
 
 	// cloning the repository

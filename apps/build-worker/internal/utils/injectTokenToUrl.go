@@ -1,13 +1,14 @@
 package utils
 
-import (
-	"fmt"
-	"strings"
-)
+import "fmt"
 
-
-func InjectTokesInUrl(repoUrl string, token *string) string {
-	strippedURL := strings.TrimPrefix(repoUrl, "https://") // stripping https:// otherwise it will be added twice
-	return  fmt.Sprintf("https://%s@%s", *token, strippedURL) // both %s acts as placeholders for the token and the stripped URL
+// InjectTokenInURL builds a full HTTPS GitHub repo URL with an optional token.
+// Example:
+//   owner/repo + token → https://<token>@github.com/owner/repo.git
+//   owner/repo + nil   → https://github.com/owner/repo.git
+func InjectTokenInURL(repoPath string, token *string) string {
+	if token != nil && *token != "" {
+		return fmt.Sprintf("https://%s@github.com/%s.git", *token, repoPath)
+	}
+	return fmt.Sprintf("https://github.com/%s.git", repoPath)
 }
-// used to inject the token into the url for cloning the repo and make repo url like this: https://<token>@github.com/vky5/RaktConnect.git

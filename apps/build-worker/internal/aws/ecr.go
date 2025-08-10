@@ -26,9 +26,17 @@ var Credentials *registry.AuthConfig // need for docker beacause read the docker
 // create a cron like job for refreshing the token in every 12 hours
 func LoginDockerToAWS() error {
 	ctx := context.Background() // no cancellation needed
+	// AWS SDK v2 already checks environment variables before falling back to the ~/.aws/credentials file.
+	awsRegion := os.Getenv("AWS_REGION")
+	if awsRegion == "" {
+		return fmt.Errorf("AWS_REGION not set")
+	}
+	if os.Getenv("AWS_ACCESS_KEY_ID") == "" || os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
+		return fmt.Errorf("AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY not set") // return no reliance on ~/.aws/credentials file.
+	}
 
 	// load AWS config from ~/.aws/credentials // FIXME remember that the base image of worker should include the aws credentials
-	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(os.Getenv("AWS_REGION")))
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(awsRegion))
 	if err != nil {
 		return fmt.Errorf("failed to load AWS config: %v", err)
 
