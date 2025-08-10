@@ -6,7 +6,7 @@ require (
 	github.com/Blacktreein/Blacktree/apps/shared v0.0.0-20250808070339-3c1265051286
 	github.com/joho/godotenv v1.5.1
 	github.com/rabbitmq/amqp091-go v1.10.0
-	google.golang.org/grpc v1.73.0
+	google.golang.org/grpc v1.74.2
 )
 
 require (

@@ -10,23 +10,26 @@ import (
 	"sync"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	jobpb "github.com/Blacktreein/Blacktree/apps/shared/proto/job"
 )
 
 type WorkerGRPCServer struct {
 	jobpb.UnimplementedJobServiceServer
-	mu     sync.Mutex
-	isBusy bool
+	mu       sync.Mutex
+	isBusy   bool
 	workerId string
 }
 
 // NewServer creates and returns a new gRPC server instance
 func NewServer(workerid string) *grpc.Server {
-	server := grpc.NewServer()                                  // creating a new gRPC server
+	server := grpc.NewServer() // creating a new gRPC server
 	jobpb.RegisterJobServiceServer(server, &WorkerGRPCServer{
 		workerId: workerid,
 	}) // register custom job service after implementation
+
+	reflection.Register(server) // TODO remove this reflection
 	return server
 }
 
@@ -49,18 +52,17 @@ func StartGRPCServer(port int, workerid string) {
 	}
 }
 
-
 // we are checking if the worker is free or not and if it is free then only we are assigning it the taask
 func (w *WorkerGRPCServer) RunJob(ctx context.Context, req *jobpb.JobRequest) (*jobpb.JobResponse, error) {
 	w.mu.Lock()
-	if w.isBusy{
+	if w.isBusy {
 		w.mu.Unlock()
-		return nil, fmt.Errorf("Worker is currently busy")
+		return nil, fmt.Errorf("worker is currently busy")
 	}
 	w.isBusy = true
 	w.mu.Unlock()
 
-	defer func(){
+	defer func() {
 		w.mu.Lock()
 		w.isBusy = false
 		w.mu.Unlock()
@@ -69,8 +71,7 @@ func (w *WorkerGRPCServer) RunJob(ctx context.Context, req *jobpb.JobRequest) (*
 	return RunJobLogic(ctx, req)
 }
 
-
-func (w *WorkerGRPCServer) Ping(ctx context.Context, _ *jobpb.PingRequest) (*jobpb.PingResponse, error){
+func (w *WorkerGRPCServer) Ping(ctx context.Context, _ *jobpb.PingRequest) (*jobpb.PingResponse, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -80,7 +81,7 @@ func (w *WorkerGRPCServer) Ping(ctx context.Context, _ *jobpb.PingRequest) (*job
 		status = jobpb.WorkerStatus_BUSY
 	}
 
-return &jobpb.PingResponse{
+	return &jobpb.PingResponse{
 		WorkerId: w.workerId,
 		Status:   status,
 	}, nil

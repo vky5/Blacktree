@@ -96,6 +96,7 @@ func (wm *WorkerManager) pingWorker(w *Worker) *Worker {
 		wm.SetWorkerState(w.Info.Id, "busy")
 
 	case jobpb.WorkerStatus_FREE:
+		log.Printf("Worker %s is free and ready for job: %v", w.Info.Id, resp.Status)
 		wm.SetWorkerState(w.Info.Id, "free")
 
 	default:

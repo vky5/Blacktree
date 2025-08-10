@@ -5,8 +5,6 @@ package queue
 
 import (
 	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/utils"
-	"log"
-	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -46,8 +44,10 @@ func (c *Consumer) ConsumeOne() (*amqp.Delivery, error) {
 		}
 		return &msg, nil
 
-	case <-time.After(30 * time.Second):
-		log.Println("⌛ No message received in 30 seconds") // TODO comment this in production don't wanna ruin the fun
+	// case <-time.After(30 * time.Second):
+	// 	log.Println("⌛ No message received in 30 seconds") // TODO comment this in production don't wanna ruin the fun
+	// 	return nil, nil
+	default:
 		return nil, nil
 	}
 }

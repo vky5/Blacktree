@@ -4,6 +4,7 @@ package workerman
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -13,26 +14,30 @@ import (
 )
 
 func (wm *WorkerManager) RegisterWorker(ctx context.Context, info *workerpb.WorkerInfo) error {
+	// Store worker struct without connection first
 	wm.mu.Lock()
-	defer wm.mu.Unlock()
-
 	wm.workers[info.Id] = &Worker{
 		Info:     info,
 		LastSeen: time.Now(),
 		state:    "registering",
 		GrpcConn: nil,
 	}
+	wm.mu.Unlock()
 
-	// setup unary connection between worker and orchestrator here on every new registration of worker
-	conn, err := grpc.NewClient(info.Ip, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// ---- Connect outside the lock ----
+	conn, err := grpc.NewClient(fmt.Sprintf("%s:%d", info.Ip, info.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Printf("❌ Failed to dial worker %s: %v", info.Id, err)
 		wm.SetWorkerState(info.Id, "dead")
 		return err
 	}
 
+	wm.mu.Lock()
 	wm.workers[info.Id].GrpcConn = conn
-	wm.SetWorkerState(info.Id, "free") // set state to free and put it in free channel
+	wm.mu.Unlock()
+
+	wm.SetWorkerState(info.Id, "free")
+	log.Printf("✅ New Worker registered with ID: %s", info.Id)
 
 	return nil
 }
