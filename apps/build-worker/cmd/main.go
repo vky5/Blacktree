@@ -35,9 +35,13 @@ func main() {
 	}
 
 	port := 6000 // Default port for worker to listen to grpc connection
-	ip := "localhost"
+	ip := utils.GetLocalIP()
+	if ip == "" {
+		log.Fatal("Could not determine local IP address")
+	}
+	fmt.Print(ip)
 
-	// Step 1: Start worker's gRPC server on different goroutine and contine to listen 
+	// Step 1: Start worker's gRPC server on different goroutine and contine to listen
 	go grpc.StartGRPCServer(port, workerID)
 	time.Sleep(500 * time.Millisecond)
 
@@ -46,8 +50,8 @@ func main() {
 	if !success {
 		log.Fatal("❌ Registration with orchestrator failed, exiting...")
 	}
-	select{} // blocks forever and wow it doesnt consumes cpu
-	
+	select {} // blocks forever and wow it doesnt consumes cpu
+
 }
 
 // registerWithOrchestrator lets the worker register itself with the orchestrator
