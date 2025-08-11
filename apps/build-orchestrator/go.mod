@@ -19,3 +19,5 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 )
+
+replace github.com/Blacktreein/Blacktree/apps/shared => ../shared // tells that everywhere you see that, instead of looking for in the cloud search for ../shared folder and also during build

@@ -28,3 +28,15 @@ clean:
 	@echo "Cleaning generated files..."
 	@find $(PROTO_DIR) -name "*.pb.go" -type f -delete
 	@find $(PROTO_DIR) -name "*_grpc.pb.go" -type f -delete
+
+
+
+
+# Building docker images
+docker-build-orchestrator:
+	docker build -t blacktree/orchestrator:latest -f ./apps/build-orchestrator/Dockerfile ./apps
+
+docker-build-worker:
+	docker build -t blacktree/worker:latest -f ./apps/build-worker/Dockerfile ./apps
+
+
