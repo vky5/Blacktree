@@ -35,11 +35,13 @@ func main() {
 
 func run(ctx context.Context) error {
 	// ------ Load environment variables ------
-	if err := utils.EnvInit("./.env"); err != nil {
-		return fmt.Errorf("failed to load env variables: %w", err)
-	}
 
-	log.Println("✅ Environment variables loaded successfully")
+	// TODO No need for this in docker env
+	// if err := utils.EnvInit("./.env"); err != nil {
+	// 	return fmt.Errorf("failed to load env variables: %w", err)
+	// }
+
+	// log.Println("✅ Environment variables loaded successfully")
 
 	mqURL := os.Getenv("MQ_URL")
 	if mqURL == "" {
@@ -47,9 +49,21 @@ func run(ctx context.Context) error {
 	}
 
 	// ------ Connect to RabbitMQ ------
-	_, err := queue.Connect(mqURL) // connecting to the
+	const maxRetries = 10
+	const retryInterval = 3 * time.Second
+
+	var err error
+	for i := 0; i < maxRetries; i++ {
+		_, err = queue.Connect(mqURL)
+		if err == nil {
+			break // connected successfully
+		}
+		fmt.Printf("RabbitMQ not ready, retrying in %v... (%d/%d)\n", retryInterval, i+1, maxRetries)
+		time.Sleep(retryInterval)
+	}
+
 	if err != nil {
-		return fmt.Errorf("failed to connect to messaging queue: %w", err)
+		return fmt.Errorf("failed to connect to messaging queue after %d retries: %w", maxRetries, err)
 	}
 
 	// consumer logic for queue
@@ -91,8 +105,7 @@ func run(ctx context.Context) error {
 	}()
 
 	defer shutdownGracefully(manager) // ensure graceful shutdown on exit
-	
-	
+
 	// ❗BLOCK HERE until error or termination
 	select {
 	case err := <-errChan:

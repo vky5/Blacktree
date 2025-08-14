@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"os"
@@ -19,17 +21,14 @@ import (
 func main() {
 	log.Println("🛠️ Starting build worker")
 
-	if err := utils.EnvInit("./.env"); err != nil {
-		log.Fatalf("❌ Failed to load env variables: %v", err)
-	}
+	// TODO No need for this in docker env
+	// if err := utils.EnvInit("./.env"); err != nil {
+	// 	log.Fatalf("❌ Failed to load env variables: %v", err)
+	// }
 
-	workerID := os.Getenv("WORKER_ID")
-	if workerID == "" {
-		workerID = "worker-" + time.Now().Format("150405")
-		fmt.Printf("Worker Id is : %s\n", workerID)
-	}
 
 	orchestratorAddr := os.Getenv("ORCHESTRATOR_ADDR") // e.g. "localhost:9000"
+	workerID := generateWorkerID()
 	if orchestratorAddr == "" {
 		log.Fatal("❌ ORCHESTRATOR_ADDR not set")
 	}
@@ -40,6 +39,8 @@ func main() {
 		log.Fatal("Could not determine local IP address")
 	}
 	fmt.Print(ip)
+
+
 
 	// Step 1: Start worker's gRPC server on different goroutine and contine to listen
 	go grpc.StartGRPCServer(port, workerID)
@@ -87,4 +88,22 @@ func registerWithOrchestrator(id, orchestratorAddress, ip string, port int, regi
 
 	log.Printf("✅ Registered with orchestrator: %s", res)
 	return res.Success
+}
+
+
+func generateWorkerID() string {
+    // Check if WORKER_ID is provided via env
+    workerID := os.Getenv("WORKER_ID")
+    if workerID != "" {
+        return workerID
+    }
+
+    // Use container hostname (unique per container) + timestamp + random suffix
+    hostname, _ := os.Hostname()
+    timestamp := time.Now().UnixNano()
+    randBytes := make([]byte, 4)
+    _, _ = rand.Read(randBytes) // generate 4 random bytes
+    randHex := hex.EncodeToString(randBytes)
+
+    return fmt.Sprintf("worker-%s-%d-%s", hostname, timestamp, randHex)
 }

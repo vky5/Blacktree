@@ -40,3 +40,8 @@ docker-build-worker:
 	docker build -t blacktree/worker:latest -f ./apps/build-worker/Dockerfile ./apps
 
 
+# Running docker compose
+Run-Compose:
+	cd docker-compose/
+	docker compose up
+

@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+
+  blt-rabbitmq:
+    image: rabbitmq:4-management
+    container_name: blt-rabbitmq
+    ports:
+      - "5672:5672"   # RabbitMQ default port
+      - "15672:15672" # RabbitMQ management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+    networks:
+      blacktree-net:
+        ipv4_address: 172.20.0.10
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      retries: 5
+      timeout: 5s
+      start_period: 5s
+
+  orchestrator:
+    image: blacktree/orchestrator:latest
+    container_name: blacktree_orchestrator
+    ports:
+      - "${ORCHESTRATOR_GRPC_PORT}:${ORCHESTRATOR_GRPC_PORT}"
+    env_file:
+      - .env
+    depends_on:
+      - blt-rabbitmq
+    networks:
+      blacktree-net:
+        ipv4_address: 172.20.0.2
+    restart: unless-stopped
+
+  worker:
+    image: blacktree/worker:latest
+    deploy:
+      replicas: 5
+    env_file:
+      - .env
+    depends_on:
+      - orchestrator
+    networks:
+      - blacktree-net
+
+    restart: unless-stopped
+
+networks:
+  blacktree-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  rabbitmq_data:
