@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlackTree Orchestrator Flow</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f0f23, #1a1a2e);
+            color: #e2e8f0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow-x: auto;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(15, 15, 35, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 15px;
+            letter-spacing: -0.025em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .control-btn {
+            background: rgba(148, 163, 184, 0.1);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(148, 163, 184, 0.15);
+            border-color: rgba(148, 163, 184, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .control-btn.primary {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+        }
+
+        .control-btn.primary:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .control-btn.danger {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .control-btn.danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 90px);
+        }
+
+        .flow-area {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            padding: 40px;
+        }
+
+        .logs-panel {
+            width: 380px;
+            background: rgba(15, 15, 35, 0.8);
+            backdrop-filter: blur(10px);
+            border-left: 1px solid rgba(148, 163, 184, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logs-header {
+            background: rgba(15, 15, 35, 0.95);
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+            font-weight: 600;
+            color: #f8fafc;
+            font-size: 14px;
+        }
+
+        .logs-container {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .log-entry {
+            margin-bottom: 6px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            opacity: 0;
+            animation: fadeIn 0.3s ease forwards;
+            border-left: 2px solid transparent;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .log-info {
+            background: rgba(59, 130, 246, 0.08);
+            border-left-color: rgba(59, 130, 246, 0.4);
+            color: #93c5fd;
+        }
+
+        .log-success {
+            background: rgba(34, 197, 94, 0.08);
+            border-left-color: rgba(34, 197, 94, 0.4);
+            color: #86efac;
+        }
+
+        .log-warning {
+            background: rgba(245, 158, 11, 0.08);
+            border-left-color: rgba(245, 158, 11, 0.4);
+            color: #fde047;
+        }
+
+        .log-error {
+            background: rgba(239, 68, 68, 0.08);
+            border-left-color: rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+        }
+
+        .component {
+            position: absolute;
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: left;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(148, 163, 184, 0.15);
+        }
+
+        .rabbitmq {
+            top: 60px;
+            left: 60px;
+            width: 280px;
+            height: 200px;
+            background: rgba(99, 102, 241, 0.1);
+            border-color: rgba(99, 102, 241, 0.2);
+        }
+
+        .orchestrator {
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 280px;
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .workers {
+            top: 60px;
+            right: 60px;
+            width: 280px;
+            height: 380px;
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .ecr {
+            bottom: 60px;
+            right: 60px;
+            width: 280px;
+            height: 140px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(251, 191, 36, 0.08));
+            border-color: rgba(245, 158, 11, 0.25);
+            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.1);
+        }
+
+        .component-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 8px;
+            letter-spacing: -0.01em;
+        }
+
+        .component-subtitle {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 16px;
+        }
+
+        .queue-display {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            height: 120px;
+            overflow-y: auto;
+        }
+
+        .queue-empty {
+            text-align: center;
+            color: #64748b;
+            font-size: 12px;
+            margin-top: 40px;
+        }
+
+        .queue-job {
+            background: rgba(148, 163, 184, 0.08);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin: 6px 0;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .queue-job:hover {
+            background: rgba(148, 163, 184, 0.12);
+        }
+
+        .job-id {
+            font-weight: 600;
+            color: #e2e8f0;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .job-type {
+            font-size: 10px;
+            color: #94a3b8;
+            background: rgba(148, 163, 184, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .orchestrator-modules {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .module {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 11px;
+            color: #cbd5e1;
+        }
+
+        .worker-list {
+            height: 280px;
+            overflow-y: auto;
+            margin-top: 4px;
+        }
+
+        .worker-node {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+        }
+
+        .worker-node:hover {
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .worker-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .worker-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .status-alive {
+            background: #22c55e;
+            box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
+        }
+
+        .status-busy {
+            background: #f59e0b;
+            box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+        }
+
+        .status-dead {
+            background: #ef4444;
+            box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
+        }
+
+        .worker-details {
+            flex: 1;
+        }
+
+        .worker-name {
+            font-weight: 600;
+            font-size: 12px;
+            color: #f8fafc;
+            margin-bottom: 2px;
+        }
+
+        .worker-job {
+            font-size: 10px;
+            color: #94a3b8;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .connection-line {
+            position: absolute;
+            background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.2), transparent);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .connection-line::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -30px;
+            width: 60px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.8), rgba(16, 185, 129, 0.4), transparent);
+            animation: dataFlow 2.5s infinite linear;
+            border-radius: 2px;
+        }
+
+        @keyframes dataFlow {
+            0% { transform: translateX(-120px); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateX(350px); opacity: 0; }
+        }
+
+        .line1 {
+            top: 160px;
+            left: 340px;
+            width: 180px;
+            height: 2px;
+        }
+
+        .line2 {
+            top: 220px;
+            right: 340px;
+            width: 180px;
+            height: 2px;
+        }
+
+        .line3 {
+            bottom: 180px;
+            right: 200px;
+            width: 2px;
+            height: 100px;
+        }
+
+        .line3::after {
+            width: 100%;
+            height: 60px;
+            left: 0;
+            top: -30px;
+            background: linear-gradient(180deg, transparent, rgba(245, 158, 11, 0.8), rgba(245, 158, 11, 0.4), transparent);
+            animation: dataFlowVertical 2.5s infinite linear;
+        }
+
+        @keyframes dataFlowVertical {
+            0% { transform: translateY(-80px); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(180px); opacity: 0; }
+        }
+
+        .ecr-status {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(245, 158, 11, 0.15);
+            border-radius: 8px;
+            font-size: 12px;
+            color: #cbd5e1;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .ecr-status.uploading {
+            border-color: rgba(245, 158, 11, 0.4);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(251, 191, 36, 0.1));
+            color: #fbbf24;
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
+        }
+
+        .timestamp {
+            color: #64748b;
+            font-size: 10px;
+            margin-right: 8px;
+        }
+
+        /* Scrollbar styling */
+        .logs-container::-webkit-scrollbar,
+        .queue-display::-webkit-scrollbar,
+        .worker-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .logs-container::-webkit-scrollbar-track,
+        .queue-display::-webkit-scrollbar-track,
+        .worker-list::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+        }
+
+        .logs-container::-webkit-scrollbar-thumb,
+        .queue-display::-webkit-scrollbar-thumb,
+        .worker-list::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 2px;
+        }
+
+        .logs-container::-webkit-scrollbar-thumb:hover,
+        .queue-display::-webkit-scrollbar-thumb:hover,
+        .worker-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.5);
+        }
+
+        .queue-count {
+            display: inline-block;
+            background: rgba(99, 102, 241, 0.2);
+            color: #a5b4fc;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">BlackTree Orchestrator</div>
+        <div class="controls">
+            <button class="control-btn primary" onclick="addJob()">Add Job</button>
+            <button class="control-btn" onclick="addWorker()">Add Worker</button>
+            <button class="control-btn danger" onclick="killWorker()">Kill Worker</button>
+            <button class="control-btn" onclick="pauseSimulation()" id="pauseBtn">Pause</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="flow-area">
+            <!-- Connection Lines -->
+            <div class="connection-line line1"></div>
+            <div class="connection-line line2"></div>
+            <div class="connection-line line3"></div>
+
+            <!-- Components -->
+            <div class="component rabbitmq">
+                <div class="component-title">
+                    RabbitMQ 
+                    <span class="queue-count" id="queueCount">0</span>
+                </div>
+                <div class="component-subtitle">Message Queue</div>
+                <div class="queue-display" id="queueDisplay">
+                    <div class="queue-empty">Queue is empty</div>
+                </div>
+            </div>
+
+            <div class="component orchestrator">
+                <div class="component-title">Orchestrator</div>
+                <div class="component-subtitle">Central Control System</div>
+                <div class="orchestrator-modules">
+                    <div class="module">Dispatcher</div>
+                    <div class="module">Worker Manager</div>
+                    <div class="module">Health Checker</div>
+                    <div class="module">Result Handler</div>
+                </div>
+            </div>
+
+            <div class="component workers">
+                <div class="component-title">Worker Nodes</div>
+                <div class="component-subtitle">Processing Units</div>
+                <div class="worker-list" id="workerList">
+                    <div style="text-align: center; color: #64748b; margin-top: 100px; font-size: 12px;">
+                        No workers registered
+                    </div>
+                </div>
+            </div>
+
+            <div class="component ecr">
+                <div class="component-title">ECR</div>
+                <div class="component-subtitle">Container Registry</div>
+                <div class="ecr-status" id="ecrStatus">
+                    Idle
+                </div>
+            </div>
+        </div>
+
+        <div class="logs-panel">
+            <div class="logs-header">System Logs</div>
+            <div class="logs-container" id="logContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        let workers = [];
+        let jobQueue = [];
+        let jobCounter = 1;
+        let workerCounter = 1;
+        let isSimulationRunning = true;
+        
+        const logContainer = document.getElementById('logContainer');
+        const workerList = document.getElementById('workerList');
+        const queueDisplay = document.getElementById('queueDisplay');
+        const queueCount = document.getElementById('queueCount');
+        const ecrStatus = document.getElementById('ecrStatus');
+
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.innerHTML = `
+                <span class="timestamp">[${timestamp}]</span>${message}
+            `;
+            
+            logContainer.appendChild(logEntry);
+            
+            setTimeout(() => {
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }, 50);
+            
+            if (logContainer.children.length > 100) {
+                logContainer.removeChild(logContainer.firstChild);
+            }
+        }
+
+        function updateWorkerDisplay() {
+            if (workers.length === 0) {
+                workerList.innerHTML = '<div style="text-align: center; color: #64748b; margin-top: 100px; font-size: 12px;">No workers registered</div>';
+                return;
+            }
+
+            workerList.innerHTML = '';
+            workers.forEach(worker => {
+                const workerDiv = document.createElement('div');
+                workerDiv.className = 'worker-node';
+                
+                const statusText = worker.status === 'busy' ? 
+                    worker.currentJob : 
+                    worker.status.charAt(0).toUpperCase() + worker.status.slice(1);
+                
+                workerDiv.innerHTML = `
+                    <div class="worker-info">
+                        <span class="worker-status status-${worker.status}"></span>
+                        <div class="worker-details">
+                            <div class="worker-name">Worker ${worker.id}</div>
+                            <div class="worker-job">${statusText}</div>
+                        </div>
+                    </div>
+                `;
+                workerList.appendChild(workerDiv);
+            });
+        }
+
+        function updateQueueDisplay() {
+            queueCount.textContent = jobQueue.length;
+            
+            if (jobQueue.length === 0) {
+                queueDisplay.innerHTML = '<div class="queue-empty">Queue is empty</div>';
+                return;
+            }
+            
+            queueDisplay.innerHTML = '';
+            jobQueue.forEach(job => {
+                const jobDiv = document.createElement('div');
+                jobDiv.className = 'queue-job';
+                jobDiv.innerHTML = `
+                    <span class="job-id">${job.id}</span>
+                    <span class="job-type">${job.type.replace('_', ' ')}</span>
+                `;
+                queueDisplay.appendChild(jobDiv);
+            });
+        }
+
+        function addWorker() {
+            const worker = {
+                id: workerCounter++,
+                status: 'alive',
+                currentJob: null,
+                lastPing: Date.now()
+            };
+            
+            addLog(`Worker ${worker.id} initializing`, 'info');
+            addLog(`Worker ${worker.id} sending registration request`, 'info');
+            
+            setTimeout(() => {
+                addLog(`Registration received from Worker ${worker.id}`, 'success');
+                addLog(`Establishing gRPC connection to Worker ${worker.id}`, 'info');
+                
+                setTimeout(() => {
+                    workers.push(worker);
+                    addLog(`Worker ${worker.id} registered successfully`, 'success');
+                    updateWorkerDisplay();
+                    processPendingJobs();
+                }, 600);
+            }, 800);
+        }
+
+        function killWorker() {
+            if (workers.length === 0) {
+                addLog('No workers available to terminate', 'warning');
+                return;
+            }
+            
+            const workerIndex = Math.floor(Math.random() * workers.length);
+            const worker = workers[workerIndex];
+            
+            addLog(`Worker ${worker.id} connection lost`, 'error');
+            addLog(`Health check failed for Worker ${worker.id}`, 'error');
+            
+            if (worker.status === 'busy' && worker.currentJob) {
+                const jobType = ['build_image', 'build_image', 'deploy_service', 'run_tests'][Math.floor(Math.random() * 4)];
+                jobQueue.push({ id: worker.currentJob, type: jobType });
+                addLog(`Job ${worker.currentJob} returned to queue`, 'warning');
+                updateQueueDisplay();
+            }
+            
+            worker.status = 'dead';
+            updateWorkerDisplay();
+            
+            setTimeout(() => {
+                workers.splice(workerIndex, 1);
+                addLog(`Worker ${worker.id} removed from pool`, 'warning');
+                updateWorkerDisplay();
+            }, 1500);
+        }
+
+        function addJob() {
+            const jobId = `job_${jobCounter++}`;
+            const jobTypes = ['build_image', 'build_image', 'build_image', 'deploy_service', 'run_tests'];
+            const jobType = jobTypes[Math.floor(Math.random() * jobTypes.length)];
+            
+            const job = { id: jobId, type: jobType };
+            jobQueue.push(job);
+            
+            addLog(`New job submitted: ${jobId}`, 'info');
+            addLog(`Job added to RabbitMQ queue`, 'info');
+            
+            updateQueueDisplay();
+            setTimeout(() => processPendingJobs(), 300);
+        }
+
+        function processPendingJobs() {
+            if (jobQueue.length === 0) return;
+            
+            const availableWorkers = workers.filter(w => w.status === 'alive');
+            
+            while (jobQueue.length > 0 && availableWorkers.length > 0) {
+                const job = jobQueue.shift();
+                const worker = availableWorkers.shift();
+                assignJobToWorker(job, worker);
+            }
+            
+            updateQueueDisplay();
+        }
+
+        function assignJobToWorker(job, worker) {
+            worker.status = 'busy';
+            worker.currentJob = job.id;
+            
+            addLog(`Assigning ${job.id} to Worker ${worker.id}`, 'success');
+            addLog(`Sending gRPC request to Worker ${worker.id}`, 'info');
+            
+            updateWorkerDisplay();
+            
+            const processingTime = Math.random() * 3000 + 2000;
+            
+            setTimeout(() => {
+                const success = Math.random() > 0.2;
+                
+                if (success) {
+                    addLog(`Worker ${worker.id} completed ${job.id}`, 'success');
+                    addLog(`Success response received from Worker ${worker.id}`, 'success');
+                    
+                    if (job.type === 'build_image') {
+                        setTimeout(() => {
+                            ecrStatus.textContent = 'Uploading image...';
+                            ecrStatus.className = 'ecr-status uploading';
+                            addLog(`Worker ${worker.id} uploading image to ECR`, 'info');
+                            
+                            setTimeout(() => {
+                                const uploadSuccess = Math.random() > 0.1;
+                                ecrStatus.textContent = 'Idle';
+                                ecrStatus.className = 'ecr-status';
+                                
+                                if (uploadSuccess) {
+                                    addLog(`Image uploaded to ECR successfully`, 'success');
+                                } else {
+                                    addLog(`ECR upload failed, retrying...`, 'error');
+                                    setTimeout(() => {
+                                        addLog(`Image upload retry successful`, 'success');
+                                    }, 1500);
+                                }
+                            }, 2000);
+                        }, 400);
+                    }
+                } else {
+                    addLog(`Worker ${worker.id} job failed`, 'error');
+                    addLog(`Failure response received from Worker ${worker.id}`, 'error');
+                }
+                
+                worker.status = 'alive';
+                worker.currentJob = null;
+                updateWorkerDisplay();
+                
+                setTimeout(() => processPendingJobs(), 800);
+                
+            }, processingTime);
+        }
+
+        function healthCheck() {
+            if (!isSimulationRunning) return;
+            
+            workers.forEach(worker => {
+                if (worker.status !== 'dead') {
+                    addLog(`Health check: Worker ${worker.id}`, 'info');
+                    
+                    if (Math.random() < 0.02) {
+                        addLog(`Worker ${worker.id} timeout, retrying...`, 'warning');
+                        setTimeout(() => {
+                            addLog(`Worker ${worker.id} health check recovered`, 'success');
+                        }, 1500);
+                    }
+                    
+                    worker.lastPing = Date.now();
+                }
+            });
+        }
+
+        function pauseSimulation() {
+            isSimulationRunning = !isSimulationRunning;
+            const pauseBtn = document.getElementById('pauseBtn');
+            
+            if (isSimulationRunning) {
+                pauseBtn.textContent = 'Pause';
+                addLog('Simulation resumed', 'info');
+            } else {
+                pauseBtn.textContent = 'Resume';
+                addLog('Simulation paused', 'warning');
+            }
+        }
+
+        function initializeSystem() {
+            addLog('BlackTree Orchestrator starting', 'success');
+            addLog('Initializing worker management', 'info');
+            addLog('RabbitMQ connection established', 'info');
+            addLog('gRPC server listening on :50051', 'info');
+            
+            setTimeout(() => addWorker(), 1000);
+            setTimeout(() => addWorker(), 1800);
+            setTimeout(() => addJob(), 2500);
+            setTimeout(() => addJob(), 3200);
+        }
+
+        setInterval(() => {
+            if (isSimulationRunning) healthCheck();
+        }, 15000);
+
+        setInterval(() => {
+            if (isSimulationRunning && Math.random() < 0.35) {
+                addJob();
+            }
+        }, 7000);
+
+        setInterval(() => {
+            if (isSimulationRunning && workers.length > 1 && Math.random() < 0.06) {
+                killWorker();
+            }
+        }, 25000);
+
+        initializeSystem();
+        updateQueueDisplay();
+    </script>
+</body>
+</html>

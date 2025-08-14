@@ -42,6 +42,5 @@ docker-build-worker:
 
 # Running docker compose
 Run-Compose:
-	cd docker-compose/
-	docker compose up
+	cd docker-compose && docker compose up
 
