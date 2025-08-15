@@ -1,45 +1,110 @@
-(🚧 work in progress Please wait)
-
 # Blacktree
-# Introduction
-Blacktree is where backend APIs become plug-and-play — for yourself, your team, or anyone on the internet. It lets you deploy your microservice, web server, or any kind of backend service with just a Dockerfile — no server setup, no YAML, no DevOps hassle.
 
-Whether it's a personal API, a SaaS backend, or an internal tool, Blacktree makes it instantly live, scalable, and sharable.
+**Blacktree** is a distributed build and deployment orchestrator designed to streamline Docker image creation, deployment, and execution across multiple workers with robust concurrency and failure handling. Built with **Go**, **FastAPI**, **RabbitMQ**, and **Docker**, Blacktree enables developers to deploy code efficiently while maintaining full observability and control.
 
 ---
 
-##  Key Features
-#### Click Deployment from GitHub
-Just push code to your repository — Blacktree automatically builds and deploys it.
+## Table of Contents
 
-#### CI/CD Built-in
-Webhook-based CI triggers builds on every push. You get seamless auto-redeploys for updated code.
+1. [Motivation]()
+2. [Architecture](#)
+3. [Core Components](#core-components)
+4. [Features](#features)
+5. [Getting Started](#getting-started)
+6. [Usage](#usage)
+7. [Contributing](#contributing)
+8. [License](#license)
 
-#### Docker-Native
-Build any language or framework. If it runs in Docker, it runs on Blacktree.
+---
 
-#### Autoscaling Worker System
-Deployments are handled by a dynamic pool of workers that build images using BuildKit and push them to ECR. They automatically register to orchestrator when scalling up. 
+## Motivation
 
-#### Serverless Deployment via AWS ECS Fargate
-Your services run on secure, scalable infrastructure — no server management required.
+Managing builds and deployments in a microservices environment can be tedious and error-prone. Blacktree automates this process by orchestrating worker nodes that handle building Docker images, running containers, and reporting their status back to the orchestrator. It’s designed to be **resilient, observable, and easy to integrate** into any development workflow.
 
-#### Real-time Logs and Status (logs coming soon)
-Monitor deployments, view logs, and get live feedback directly from your dashboard.
+---
 
-#### Private or Public Deployments 
-Choose to keep your service internal or expose it to the internet with a secure, sharable URL.
+## Architecture
 
-#### Secure Authentication 
-Built-in support for GitHub OAuth and Clerk-based user sessions for access control.
+Blacktree follows a **central orchestrator + distributed worker model**:
 
-#### API Analytics (Coming Soon)
-Usage metrics, request logs, error rates — all visualized.
+* **Orchestrator**:
+  Handles job scheduling, worker registration, health checks, and deployment monitoring.
+* **Workers**:
+  Execute build jobs, push images to ECR or any registry, and report status back to the orchestrator.
+* **Message Queue**:
+  RabbitMQ is used to send real-time updates between orchestrator and workers.
+* **Docker Integration**:
+  Each worker builds Docker images in isolation and runs containers dynamically.
+* **Logging & Observability**:
+  Every event—from worker registration to build failure—is logged and can be monitored live.
 
-#### Custom Environment Variables
-Configure your deployment with secrets and runtime variables.
+---
+
+## Core Components
+
+| Component        | Responsibility                                                   |
+| ---------------- | ---------------------------------------------------------------- |
+| **Orchestrator** | Job scheduling, worker health checks, logging                    |
+| **Worker**       | Build Docker images, run containers, send status                 |
+| **RabbitMQ**         | Event-based communication between orchestrator & workers         |
+| **Docker**       | Image building and container orchestration                       |
+| **NestJS**  | Exposes endpoints for job submission, status checks, and metrics |
+
+---
+
+## Features
+
+* **Dynamic worker scaling**
+* **Concurrent builds with safe cancellation**
+* **Automatic retry and error handling**
+* **Push-to-ECR integration**
+* **Context-aware job cancellation**
+* **Real-time logging of builds and deployments**
+
+---
+
+## Getting Started
+
+**Prerequisites:**
+
+* Go >= 1.21
+* Docker >= 24
+* RabbitMQ
+* NodeJS
+
+**Steps:**
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/<username>/blacktree.git
+   cd blacktree
+   ```
+
+2. Create the docker images
+
+   ```bash
+   make docker-build-orchestrator
+   make docker-build-worker
+   ```
+
+3. Run the RabbitMQ, Worker & Orchestrator
+
+   ```bash
+   make Run-Compose
+   ```
+
+---
 
 
 
-# Components 
-- 
+## Contributing
+
+Blacktree is open for contributions! You can:
+
+* Add new worker integrations
+* Improve orchestrator scheduling algorithms
+* Enhance logging and observability
+* Submit PRs and open issues
+
+

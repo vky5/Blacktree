@@ -39,6 +39,89 @@
             display: flex;
             gap: 12px;
             justify-content: center;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .controls-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.4);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+        }
+
+        .toggle-switch.active {
+            background: rgba(34, 197, 94, 0.3);
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            background: #e2e8f0;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(20px);
+            background: #22c55e;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .speed-slider {
+            width: 80px;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(148, 163, 184, 0.2);
+            outline: none;
+            cursor: pointer;
+            -webkit-appearance: none;
+        }
+
+        .speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .speed-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .control-label {
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 500;
         }
 
         .control-btn {
@@ -278,6 +361,16 @@
             padding: 8px;
             font-size: 11px;
             color: #cbd5e1;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .module.active {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1));
+            border-color: rgba(16, 185, 129, 0.4);
+            color: #6ee7b7;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+            transform: scale(1.02);
         }
 
         .worker-list {
@@ -478,10 +571,26 @@
     <div class="header">
         <div class="title">BlackTree Orchestrator</div>
         <div class="controls">
-            <button class="control-btn primary" onclick="addJob()">Add Job</button>
-            <button class="control-btn" onclick="addWorker()">Add Worker</button>
-            <button class="control-btn danger" onclick="killWorker()">Kill Worker</button>
-            <button class="control-btn" onclick="pauseSimulation()" id="pauseBtn">Pause</button>
+            <div class="controls-group">
+                <button class="control-btn primary" onclick="addJob()">Add Job</button>
+                <button class="control-btn" onclick="addWorker()">Add Worker</button>
+                <button class="control-btn danger" onclick="killWorker()">Kill Worker</button>
+                <button class="control-btn" onclick="pauseSimulation()" id="pauseBtn">Pause</button>
+            </div>
+            
+            <div class="controls-group">
+                <span class="control-label">Auto Jobs</span>
+                <div class="toggle-switch" id="autoJobToggle" onclick="toggleAutoJobs()"></div>
+            </div>
+            
+            <div class="controls-group">
+                <span class="control-label">Speed</span>
+                <div class="speed-control">
+                    <span style="font-size: 10px; color: #64748b;">Slow</span>
+                    <input type="range" min="1" max="5" value="3" class="speed-slider" id="speedSlider" oninput="updateSpeed()">
+                    <span style="font-size: 10px; color: #64748b;">Fast</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -508,10 +617,10 @@
                 <div class="component-title">Orchestrator</div>
                 <div class="component-subtitle">Central Control System</div>
                 <div class="orchestrator-modules">
-                    <div class="module">Dispatcher</div>
-                    <div class="module">Worker Manager</div>
-                    <div class="module">Health Checker</div>
-                    <div class="module">Result Handler</div>
+                    <div class="module" id="dispatcher">Dispatcher</div>
+                    <div class="module" id="workerManager">Worker Manager</div>
+                    <div class="module" id="healthChecker">Health Checker</div>
+                    <div class="module" id="resultHandler">Result Handler</div>
                 </div>
             </div>
 
@@ -546,12 +655,26 @@
         let jobCounter = 1;
         let workerCounter = 1;
         let isSimulationRunning = true;
+        let autoJobsEnabled = true;
+        let jobSpeed = 7000; // milliseconds
+        let autoJobInterval;
         
         const logContainer = document.getElementById('logContainer');
         const workerList = document.getElementById('workerList');
         const queueDisplay = document.getElementById('queueDisplay');
         const queueCount = document.getElementById('queueCount');
         const ecrStatus = document.getElementById('ecrStatus');
+
+        // Module highlighting functions
+        function highlightModule(moduleId, duration = 1500) {
+            const module = document.getElementById(moduleId);
+            if (module) {
+                module.classList.add('active');
+                setTimeout(() => {
+                    module.classList.remove('active');
+                }, duration);
+            }
+        }
 
         function addLog(message, type = 'info') {
             const timestamp = new Date().toLocaleTimeString();
@@ -628,6 +751,7 @@
                 lastPing: Date.now()
             };
             
+            highlightModule('workerManager', 2000);
             addLog(`Worker ${worker.id} initializing`, 'info');
             addLog(`Worker ${worker.id} sending registration request`, 'info');
             
@@ -691,6 +815,7 @@
         function processPendingJobs() {
             if (jobQueue.length === 0) return;
             
+            highlightModule('dispatcher', 1200);
             const availableWorkers = workers.filter(w => w.status === 'alive');
             
             while (jobQueue.length > 0 && availableWorkers.length > 0) {
@@ -715,6 +840,8 @@
             
             setTimeout(() => {
                 const success = Math.random() > 0.2;
+                
+                highlightModule('resultHandler', 1000);
                 
                 if (success) {
                     addLog(`Worker ${worker.id} completed ${job.id}`, 'success');
@@ -759,6 +886,8 @@
         function healthCheck() {
             if (!isSimulationRunning) return;
             
+            highlightModule('healthChecker', 2000);
+            
             workers.forEach(worker => {
                 if (worker.status !== 'dead') {
                     addLog(`Health check: Worker ${worker.id}`, 'info');
@@ -773,6 +902,54 @@
                     worker.lastPing = Date.now();
                 }
             });
+        }
+
+        function toggleAutoJobs() {
+            autoJobsEnabled = !autoJobsEnabled;
+            const toggle = document.getElementById('autoJobToggle');
+            
+            if (autoJobsEnabled) {
+                toggle.classList.add('active');
+                startAutoJobs();
+                addLog('Automatic job generation enabled', 'success');
+            } else {
+                toggle.classList.remove('active');
+                clearInterval(autoJobInterval);
+                addLog('Automatic job generation disabled', 'warning');
+            }
+        }
+
+        function updateSpeed() {
+            const slider = document.getElementById('speedSlider');
+            const speedValue = parseInt(slider.value);
+            
+            // Convert slider value to milliseconds (1=slow, 5=fast)
+            const speeds = {
+                1: 6000, // 12 seconds
+                2: 4000,  // 9 seconds  
+                3: 2000,  // 7 seconds
+                4: 1000,  // 4 seconds
+                5: 500   // 2 seconds
+            };
+            
+            jobSpeed = speeds[speedValue];
+            
+            if (autoJobsEnabled) {
+                clearInterval(autoJobInterval);
+                startAutoJobs();
+            }
+            
+            addLog(`Job generation speed updated to level ${speedValue}`, 'info');
+        }
+
+        function startAutoJobs() {
+            if (autoJobInterval) clearInterval(autoJobInterval);
+            
+            autoJobInterval = setInterval(() => {
+                if (isSimulationRunning && autoJobsEnabled && Math.random() < 0.4) {
+                    addJob();
+                }
+            }, jobSpeed);
         }
 
         function pauseSimulation() {
@@ -794,6 +971,10 @@
             addLog('RabbitMQ connection established', 'info');
             addLog('gRPC server listening on :50051', 'info');
             
+            // Initialize controls
+            document.getElementById('autoJobToggle').classList.add('active');
+            startAutoJobs();
+            
             setTimeout(() => addWorker(), 1000);
             setTimeout(() => addWorker(), 1800);
             setTimeout(() => addJob(), 2500);
@@ -803,12 +984,6 @@
         setInterval(() => {
             if (isSimulationRunning) healthCheck();
         }, 15000);
-
-        setInterval(() => {
-            if (isSimulationRunning && Math.random() < 0.35) {
-                addJob();
-            }
-        }, 7000);
 
         setInterval(() => {
             if (isSimulationRunning && workers.length > 1 && Math.random() < 0.06) {
