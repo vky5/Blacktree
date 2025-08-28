@@ -1,22 +1,28 @@
 "use Client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { LuGithub } from "react-icons/lu";
 import { useAuth } from "@/context/AuthContext";
 
 function GithubConnect() {
   const [repoVerified, setRepoVerified] = useState(false);
   const { userData, fetchUser } = useAuth();
-  useEffect(() => {
+
+  // call fetchUser safely
+  const refreshUser = useCallback(() => {
     fetchUser();
-  }, []);
+  }, [fetchUser]);
+
+  useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
 
   // Update repoVerified when userData is fetched/updated
   useEffect(() => {
     if (userData?.github_connect) {
       setRepoVerified(true);
     }
-  }, [fetchUser]);
+  }, [userData?.github_connect]);
 
   // importing environment variables
   const GITHUB_CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID!;

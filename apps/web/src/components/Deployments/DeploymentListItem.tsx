@@ -2,8 +2,6 @@
 
 import { cn } from "@/lib/utils";
 import {
-  Globe,
-  Lock,
   CheckCircle,
   XCircle,
   Clock,
@@ -20,12 +18,12 @@ import {
 import React, { useState } from "react";
 import VisibilityBadge from "@/components/Deployments/visibilityBadge";
 
-type DeploymentStatus = "Running" | "Building" | "Failed";
-type Visibility = "Public" | "Private";
+export type DeploymentStatus = "Running" | "Building" | "Failed" | "Unknown";
+export type Visibility = "Public" | "Private";
 
 interface DeploymentProps {
   name: string;
-  status: DeploymentStatus;
+  status?: string; // from backend, will map to DeploymentStatus
   visibility: Visibility;
   branch: string;
   commit: string;
@@ -68,12 +66,23 @@ export default function DeploymentListItem({
   requests,
   uptime,
   updatedAt,
-  framework,
-  region,
-  buildTime,
   visitUrl,
 }: DeploymentProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Map backend string to DeploymentStatus
+  const mapStatus = (s?: string): DeploymentStatus => {
+    switch (s) {
+      case "Running":
+      case "Building":
+      case "Failed":
+        return s;
+      default:
+        return "Unknown";
+    }
+  };
+
+  const finalStatus = mapStatus(status);
 
   const statusConfig = {
     Running: {
@@ -91,24 +100,23 @@ export default function DeploymentListItem({
       icon: <XCircle size={14} className="text-red-400" />,
       className: "bg-red-900 text-red-400 border border-red-600",
     },
+    Unknown: {
+      label: "Unknown",
+      icon: <XCircle size={14} className="text-gray-400" />,
+      className: "bg-gray-800 text-gray-400 border border-gray-600",
+    },
   };
 
-  const config = statusConfig[status] ?? {
-  label: "Unknown",
-  icon: <XCircle size={14} className="text-gray-400" />,
-  className: "bg-gray-800 text-gray-400 border border-gray-600",
-};
-
+  const config = statusConfig[finalStatus];
 
   return (
     <div className="bg-[#0B0F19] rounded-xl border border-[#1a1f2e] px-5 py-4 flex flex-col gap-2 w-full">
-      {/* Header Row */}
+      {/* Header */}
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-3">
           {config.icon}
           <h3 className="text-white font-medium text-lg">{name}</h3>
         </div>
-
         <div className="relative">
           <button
             className="text-gray-400 hover:text-gray-300 p-1"
@@ -116,7 +124,6 @@ export default function DeploymentListItem({
           >
             <MoreHorizontal size={16} />
           </button>
-
           {menuOpen && (
             <div className="absolute right-0 mt-2 w-40 bg-[#0D1224] border border-white/5 rounded-md shadow-lg z-10">
               <ul className="py-1 text-sm text-gray-300">
@@ -144,7 +151,7 @@ export default function DeploymentListItem({
         </div>
       </div>
 
-      {/* Status and Visibility Badges */}
+      {/* Status & Visibility */}
       <div className="flex items-center gap-3 mb-4">
         <span
           className={cn(
@@ -154,11 +161,10 @@ export default function DeploymentListItem({
         >
           {config.label}
         </span>
-
         <VisibilityBadge type={visibility} />
       </div>
 
-      {/* Branch and Commit Info */}
+      {/* Branch & Commit */}
       <div className="flex items-center gap-4 mb-4 text-sm">
         <div className="flex items-center gap-1.5 text-gray-300">
           <GitBranch size={14} />
@@ -168,7 +174,7 @@ export default function DeploymentListItem({
         </div>
       </div>
 
-      {/* Stats Row */}
+      {/* Stats */}
       <div className="flex items-center justify-between text-sm">
         <div className="flex items-center gap-4 text-gray-400">
           <div className="flex items-center gap-1">
@@ -178,7 +184,6 @@ export default function DeploymentListItem({
           <span>•</span>
           <span>{uptime} uptime</span>
         </div>
-
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1 text-gray-400">
             <Clock size={14} />

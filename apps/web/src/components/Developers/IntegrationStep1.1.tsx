@@ -25,16 +25,14 @@ interface FormData {
 
 function IntegrationStep1({ onSuccessRedirectToTab2 }: IntegrationStep1Props) {
   const { userData } = useAuth();
-  const [formData, setFormData] = useState<FormData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFormSubmit = async (data: FormData) => {
-    setFormData(data);
     setIsSubmitting(true);
 
     try {
       const res = await axios.post(
-        process.env.NEXT_PUBLIC_BACKEND_URL + "/deployment",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/deployment`,
         {
           name: data.name,
           repository: data.repo,
@@ -47,10 +45,9 @@ function IntegrationStep1({ onSuccessRedirectToTab2 }: IntegrationStep1Props) {
           private: !data.visibility,
           description: data.description,
         },
-        {
-          withCredentials: true,
-        },
+        { withCredentials: true }
       );
+
       console.log("Deployment submitted:", res.data);
       onSuccessRedirectToTab2();
     } catch (error) {

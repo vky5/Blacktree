@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useSignIn } from '@clerk/nextjs';
-import { OAuthStrategy } from '@clerk/types';
+import { useSignIn } from "@clerk/nextjs";
+import { OAuthStrategy } from "@clerk/types";
 
 export function useOAuthSignIn() {
   const { signIn } = useSignIn();
 
   const handleOAuthSignIn = async (
     strategy: OAuthStrategy,
-    redirectPath: string = '/'
+    redirectPath: string = "/"
   ) => {
     if (!signIn) {
       console.error("SignIn instance not initialized.");
@@ -16,16 +16,26 @@ export function useOAuthSignIn() {
     }
 
     try {
-      // Remove the redirectUrl parameter completely
-      const result = await signIn.authenticateWithRedirect({
+      await signIn.authenticateWithRedirect({
         strategy,
         redirectUrl: "/sso-callback",
         redirectUrlComplete: redirectPath,
       });
-
-      console.log("OAuth redirect initiated:", result);
-    } catch (error: any) {
-      console.error("OAuth SignIn Error:", error?.errors || error);
+    } catch (error: unknown) {
+      // Safely check for errors property
+      if (
+        error &&
+        typeof error === "object" &&
+        "errors" in error &&
+        Array.isArray((error as { errors: unknown[] }).errors)
+      ) {
+        console.error(
+          "OAuth SignIn Error:",
+          (error as { errors: unknown[] }).errors
+        );
+      } else {
+        console.error("OAuth SignIn Error:", error);
+      }
     }
   };
 

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
 import { useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const SettingsPage = () => {
   const { userData } = useAuth();
@@ -14,7 +15,6 @@ const SettingsPage = () => {
   const [email, setEmail] = useState("");
   const [bio, setBio] = useState("");
   const [isDirty, setIsDirty] = useState(false);
-  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -74,10 +74,12 @@ const SettingsPage = () => {
       <div className="flex items-center gap-6 mb-6">
         <div className="w-20 h-20 bg-zinc-700 rounded-full flex items-center justify-center text-sm text-zinc-400 overflow-hidden">
           {imagePreview ? (
-            <img
-              src={imagePreview}
+            <Image
+              src={imagePreview || "/fallback-profile.png"} // fallback if needed
               alt="Profile Preview"
               className="object-cover w-full h-full"
+              width={80} // match your container size
+              height={80}
             />
           ) : (
             <span>Photo</span>

@@ -1,77 +1,158 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useSyncUser } from "@/utils/clerk/userSync";
-import { useUser } from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
-import { StatCard } from "@/components/Dashboard/statCard";
-import DeploymentHeading from "@/components/Deployments/DeploymentPageHeading";
-import DeploymentListItem from "@/components/Deployments/DeploymentListItem";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import Tabs from "@/components/Dashboard/SelectionButton";
+import { PackagePlus, Package } from "lucide-react";
+import IntegrationStep1 from "@/components/Developers/IntegrationStep1.1";
+import BlueprintCard from "@/components/Deployments/BlueprintCard";
+import BigLoader from "@/components/ui/BigLoader";
+import { toast } from "sonner";
 
-export default function DeploymentsPage() {
-  useSyncUser();
-  const { user, isLoaded } = useUser();
-  const [deployments, setDeployments] = useState([]);
+interface BlueprintCardProps {
+  id: string;
+  name: string;
+  repository: string;
+  dockerFilePath: string;
+  contextDir: string;
+  branch: string;
+  resourceVersion: string;
+  private: boolean;
+  onEdit: () => void;
+  onDeploy: () => void;
+  onDelete: () => void;
+}
 
-  useEffect(() => {
-    const getAllDeployments = async () => {
-      try {
-        const res = await axios.get(
-          process.env.NEXT_PUBLIC_BACKEND_URL + "/hosted",
-          {
-            withCredentials: true,
-          },
-        );
-        setDeployments(res.data); // assumes it's an array
-      } catch (err) {
-        console.error("Error fetching deployments:", err);
+interface BlueprintResponse {
+  id: string;
+  name: string;
+  repository: string;
+  dockerFilePath: string;
+  contextDir: string;
+  portNumber: number | null;
+  branch: string;
+  envVars: Record<string, string> | null;
+  resourceVersion: string;
+  private: boolean;
+}
+
+export default function HostAPI() {
+  const [activeTab, setActiveTab] = useState(1);
+  const [blueprints, setBlueprints] = useState<BlueprintCardProps[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const deleteBlueprint = useCallback(async (id: string) => {
+    try {
+      const res = await axios.delete(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/deployment/${id}`,
+        { withCredentials: true }
+      );
+      if (res.status === 204) {
+        setBlueprints((prev) => prev.filter((bp) => bp.id !== id));
+        toast.success(`Blueprint ${id} deleted successfully.`);
       }
-    };
-
-    getAllDeployments();
+    } catch (error) {
+      console.error("Failed to delete blueprint:", error);
+      toast.error(`Failed to delete blueprint ${id}. Please try again.`);
+    }
   }, []);
 
-  if (!isLoaded) return <div>Loading...</div>;
+  const deployBlueprint = useCallback(async (id: string) => {
+    try {
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/deployment/${id}/build`,
+        {},
+        { withCredentials: true }
+      );
+      if (res.status === 200) {
+        toast.success(`Blueprint ${id} deployed successfully.`);
+      }
+    } catch (error) {
+      console.error("Failed to deploy blueprint:", error);
+      toast.error(`Failed to deploy blueprint ${id}. Please try again.`);
+    }
+  }, []);
+
+  const fetchBlueprints = useCallback(async () => {
+    if (activeTab !== 2) return;
+    setLoading(true);
+    try {
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/deployment/user`,
+        { withCredentials: true }
+      );
+
+      const data: BlueprintResponse[] = res.data;
+
+      const transformed: BlueprintCardProps[] = data.map((item) => ({
+        id: item.id,
+        name: item.name,
+        repository: item.repository || "unknown/repo",
+        dockerFilePath: item.dockerFilePath || "",
+        contextDir: item.contextDir || "",
+        branch: item.branch || "main",
+        resourceVersion: item.resourceVersion || "v1.0.0",
+        private: item.private,
+        onEdit: () => alert(`Edit ${item.name}`),
+        onDeploy: () => deployBlueprint(item.id),
+        onDelete: () => deleteBlueprint(item.id),
+      }));
+
+      setBlueprints(transformed);
+    } catch (error) {
+      console.error("Failed to fetch blueprints:", error);
+      toast.error("Failed to fetch blueprints. Please try again later.");
+      setBlueprints([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeTab, deployBlueprint, deleteBlueprint]);
+
+  useEffect(() => {
+    fetchBlueprints();
+  }, [fetchBlueprints]);
+
+  const tabOptions = [
+    { id: 1, label: "Create Blueprint", icon: PackagePlus },
+    { id: 2, label: "My Blueprints", icon: Package },
+  ];
 
   return (
-    <div className="min-h-screen bg-[#030712] text-white py-12 px-6">
-      <div className="flex justify-between items-center mb-10">
-        <DeploymentHeading />
-        <Button className="bg-[#33CF96] hover:bg-[#2dbd85] text-black">
-          + Deploy New API
-        </Button>
+    <div className="bg-[#030712] min-h-screen p-6 text-white">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Create & Deploy</h1>
+        <p className="text-gray-400">
+          Create blueprints or deploy from the marketplace
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <StatCard label="Public APIs" value={2} color="green" />
-        <StatCard label="Private APIs" value={5} color="amber" />
-        <StatCard label="Total Requests" value="1.2k" color="blue" />
+      <div className="mb-8">
+        <Tabs tabs={tabOptions} onTabChange={setActiveTab} initialTabId={1} />
       </div>
 
-      <div className="space-y-5">
-        {deployments.map((item: any, idx: number) => {
-          const d = item.deployment;
+      {activeTab === 1 && (
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Create a New Blueprint</h2>
+          <IntegrationStep1 onSuccessRedirectToTab2={() => setActiveTab(2)} />
+        </div>
+      )}
 
-          return (
-            <DeploymentListItem
-              key={item.id || idx}
-              name={d?.name || "Untitled API"}
-              status={item.deploymentStatus || "Unknown"}
-              visibility={d?.private ? "Private" : "Public"}
-              branch={d?.branch || "main"}
-              commit={"N/A"} // You can fill this later with real commit if available
-              requests={"N/A"} // Replace with real data if available
-              uptime={"N/A"} // Replace with uptime if you track it
-              updatedAt={d?.updatedAt || d?.createdAt || null}
-              framework={"Unknown"} // Update if framework detection is added
-              region={"us-east-1"} // Static for now unless tracked
-              buildTime={"N/A"} // Fill if available
-              visitUrl={item.deploymentUrl || "#"}
-            />
-          );
-        })}
-      </div>
+      {activeTab === 2 && (
+        <div>
+          <h2 className="text-xl font-semibold mb-4">My Blueprints</h2>
+          {loading ? (
+            <BigLoader />
+          ) : blueprints.length === 0 ? (
+            <p className="text-gray-400">No blueprints found.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {blueprints.map((bp, index) => (
+                <BlueprintCard key={bp.id || index} {...bp} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

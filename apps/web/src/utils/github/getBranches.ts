@@ -1,5 +1,4 @@
 import axios from "axios";
-import { get } from "http";
 
 export default async function getBranches(url: string, token?: string) {
     const headers: Record<string, string> = {

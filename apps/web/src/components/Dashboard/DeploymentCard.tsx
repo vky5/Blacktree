@@ -6,14 +6,6 @@ import PrivacyLabel from "./privacyLabel";
 const deploymentName = "user-auth-service";
 const status: "building" | "active" | "failed" = "building";
 const timestamp = "5 minutes ago";
-const isPrivate = true;
-
-type props = {
-  deploymentname: string;
-  status: "building" | "active" | "failed";
-  timeStamp: string;
-  isPrivate: boolean;
-};
 
 export default function DeploymentCard() {
   return (

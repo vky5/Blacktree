@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { LayoutDashboard, Rocket, Plus, Search, Settings } from "lucide-react";
 import clsx from "clsx";
 import Link from "next/link";
@@ -31,9 +31,13 @@ export default function Sidebar({
   const [expanded, setExpanded] = useState(false);
   const pathname = usePathname();
 
-  useEffect(() => {
+  const handleExpandChange = useCallback(() => {
     onExpandChange?.(expanded);
-  }, [expanded]);
+  }, [expanded, onExpandChange]);
+
+  useEffect(() => {
+    handleExpandChange();
+  }, [handleExpandChange]);
 
   const isActive = (url: string) => pathname === url;
 
@@ -53,12 +57,12 @@ export default function Sidebar({
         <div className="flex flex-col space-y-1 px-3 mb-8">
           <div
             className={clsx(
-              "flex items-center px-3 py-3 rounded-lg transition-all duration-200",
+              "flex items-center px-3 py-3 rounded-lg transition-all duration-200"
               // expanded ? "bg-[#05191D]" : ""
             )}
           >
             {/* Green dot */}
-            
+
             <div className="relative w-3 h-3">
               <div className="absolute inset-0 rounded-sm bg-[#33CF96] opacity-75 animate-ping" />
               <div className="relative w-3 h-3 rounded-sm bg-[#33CF96]" />

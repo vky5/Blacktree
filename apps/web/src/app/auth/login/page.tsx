@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import { useOAuthSignIn } from "@/utils/clerk/oauth";
 import axios from "axios";
 
-function page() {
+function LoginPage() {
   // defining all hooks
   const { isLoaded, signIn, setActive } = useSignIn();
   const router = useRouter();
@@ -59,7 +59,9 @@ function page() {
       if (signInAttempt.status === "complete") {
         await setActive({ session: signInAttempt.createdSessionId });
         // call the /api/set-token route to set the token in the httpOnly cookie
-        const response = await axios.get(process.env.NEXT_PUBLIC_API_URL + "/auth/set-token");
+        const response = await axios.get(
+          process.env.NEXT_PUBLIC_API_URL + "/auth/set-token"
+        );
 
         if (response.status !== 200) {
           console.error("Error setting token in cookie");
@@ -72,10 +74,14 @@ function page() {
         // complete further steps.
         console.error(JSON.stringify(signInAttempt, null, 2));
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
-      console.error(JSON.stringify(err, null, 2));
+      if (err instanceof Error) {
+        console.error(err.message);
+      } else {
+        console.error(JSON.stringify(err, null, 2));
+      }
     }
   };
 
@@ -164,7 +170,8 @@ function page() {
 
             {/* Sign-up link for new users */}
             <div>
-              <p className="text-sm text-center">Don't have an account?{" "}
+              <p className="text-sm text-center">
+                Don&apos;t have an account?{" "}
                 <Link
                   href="/auth/signup"
                   className="text-emerald-600 font-medium hover:underline"
@@ -180,7 +187,7 @@ function page() {
   );
 }
 
-export default page;
+export default LoginPage;
 
 // TODO implement good error handling
 

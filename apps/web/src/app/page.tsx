@@ -432,8 +432,9 @@ export default function LandingPage() {
                     )}
                   </div>
                   <blockquote className="text-xl md:text-2xl text-gray-300 mb-6 leading-relaxed">
-                    "{testimonials[currentTestimonial].content}"
+                    &quot;{testimonials[currentTestimonial].content}&quot;
                   </blockquote>
+
                   <div className="flex items-center justify-center gap-4">
                     <motion.div
                       whileHover={{ scale: 1.1 }}
@@ -490,8 +491,8 @@ export default function LandingPage() {
               Ready to Ship Faster?
             </h2>
             <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-              Join the developer platform that's redefining how APIs are built
-              and deployed. Start building today.
+              Join the developer platform that&apos;s redefining how APIs are
+              built and deployed. Start building today.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

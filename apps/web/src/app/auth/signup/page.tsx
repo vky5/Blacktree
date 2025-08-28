@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { useOAuthSignIn } from "@/utils/clerk/oauth";
 import axios from "axios";
 
-function page() {
+function SignupPage() {
   const { handleOAuthSignIn } = useOAuthSignIn();
 
   // clerk injects a lot of things so it is better to wait until it is loaded that is what isLoaded for 
@@ -235,4 +235,4 @@ function page() {
   );
 }
 
-export default page;
+export default SignupPage;

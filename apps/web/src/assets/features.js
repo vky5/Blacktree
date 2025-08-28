@@ -1,6 +1,6 @@
 import { Wallet, Globe, Lock, BarChart2, Code, Server } from "lucide-react";
 
-export default [
+const arr = [
   {
     id: 1,
     heading: "Monetize Your Code",
@@ -44,3 +44,5 @@ export default [
     icon: Server,
   },
 ];
+
+export default arr;

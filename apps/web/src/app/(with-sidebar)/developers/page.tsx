@@ -14,7 +14,7 @@ function HostAPI() {
   const [blueprints, setBlueprints] = useState<BlueprintCardProps[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Delete function to delete the blueprint
+  // Stable callbacks for deploy and delete
   const deleteBlueprint = useCallback(async (id: string) => {
     try {
       const res = await axios.delete(
@@ -31,7 +31,6 @@ function HostAPI() {
     }
   }, []);
 
-  // deploy the blueprint
   const deployBlueprint = useCallback(async (id: string) => {
     try {
       const res = await axios.post(
@@ -48,7 +47,7 @@ function HostAPI() {
     }
   }, []);
 
-  // tab options
+  // Tab options
   const tabOptions = [
     { id: 1, label: "Create Blueprint", icon: PackagePlus },
     { id: 2, label: "My Blueprints", icon: Package },
@@ -81,19 +80,21 @@ function HostAPI() {
     private: boolean;
   }
 
-  const fetchBlueprints = async () => {
+  // Fetch blueprints inside useEffect to avoid missing dependency warning
+  useEffect(() => {
     if (activeTab !== 2) return;
-    setLoading(true);
-    try {
-      const res = await axios.get(
-        process.env.NEXT_PUBLIC_BACKEND_URL + "/deployment/user",
-        { withCredentials: true }
-      );
 
-      const data = res.data;
+    const fetchBlueprints = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/deployment/user`,
+          { withCredentials: true }
+        );
 
-      const transformed: BlueprintCardProps[] = data.map(
-        (item: BlueprintResponse) => ({
+        const data: BlueprintResponse[] = res.data;
+
+        const transformed: BlueprintCardProps[] = data.map((item) => ({
           id: item.id,
           name: item.name,
           repository: item.repository || "unknown/repo",
@@ -104,24 +105,21 @@ function HostAPI() {
           private: item.private,
           onEdit: () => alert(`Edit ${item.name}`),
           onDeploy: () => deployBlueprint(item.id),
-          onDelete: () => deleteBlueprint(item.id), // ⬅️ notice this change
-        })
-      );
+          onDelete: () => deleteBlueprint(item.id),
+        }));
 
-      setBlueprints(transformed);
-    } catch (error) {
-      console.error("Failed to fetch blueprints:", error);
-      toast.error("Failed to fetch blueprints. Please try again later.");
-      setBlueprints([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+        setBlueprints(transformed);
+      } catch (error) {
+        console.error("Failed to fetch blueprints:", error);
+        toast.error("Failed to fetch blueprints. Please try again later.");
+        setBlueprints([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // to refresh the blueprints when the active tab changes
-  useEffect(() => {
     fetchBlueprints();
-  }, [activeTab]);
+  }, [activeTab, deployBlueprint, deleteBlueprint]);
 
   return (
     <div className="bg-[#030712] min-h-screen p-6 text-white">
@@ -152,8 +150,8 @@ function HostAPI() {
             <p className="text-gray-400">No blueprints found.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {blueprints.map((bp, index) => (
-                <BlueprintCard key={index} {...bp} />
+              {blueprints.map((bp) => (
+                <BlueprintCard key={bp.id} {...bp} />
               ))}
             </div>
           )}

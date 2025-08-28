@@ -3,9 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
-function DeploymentMetaForm({
-  onChange,
-}: {
+interface DeploymentMetaFormProps {
   onChange: (data: {
     name: string;
     port: number;
@@ -15,7 +13,9 @@ function DeploymentMetaForm({
     description: string;
     visibility: "public" | "private";
   }) => void;
-}) {
+}
+
+function DeploymentMetaForm({ onChange }: DeploymentMetaFormProps) {
   const [name, setName] = useState("");
   const [port, setPort] = useState<number | "">("");
   const [autoDeploy, setAutoDeploy] = useState(true);
@@ -25,9 +25,10 @@ function DeploymentMetaForm({
   const [description, setDescription] = useState("");
   const [visibility, setVisibility] = useState<"public" | "private">("private");
 
-  // Update parent when all required fields are filled
+  // Update parent when required fields are filled
   useEffect(() => {
-    const isValid = name.trim() !== "" && port !== "" && contextDir.trim() !== "";
+    const isValid =
+      name.trim() !== "" && port !== "" && contextDir.trim() !== "";
     if (isValid) {
       onChange({
         name: name.trim(),
@@ -39,11 +40,23 @@ function DeploymentMetaForm({
         visibility,
       });
     }
-  }, [name, port, autoDeploy, contextDir, tags, description, visibility]);
+  }, [
+    name,
+    port,
+    autoDeploy,
+    contextDir,
+    tags,
+    description,
+    visibility,
+    onChange,
+  ]);
 
   const handleAddTag = () => {
     const trimmed = tagInput.trim();
-    if (trimmed && !tags.map((t) => t.toLowerCase()).includes(trimmed.toLowerCase())) {
+    if (
+      trimmed &&
+      !tags.map((t) => t.toLowerCase()).includes(trimmed.toLowerCase())
+    ) {
       setTags([...tags, trimmed]);
       setTagInput("");
     }
@@ -104,7 +117,9 @@ function DeploymentMetaForm({
 
         {/* Context Directory */}
         <div className="sm:col-span-2">
-          <label className="text-sm text-gray-300 mb-1 block">Context Directory *</label>
+          <label className="text-sm text-gray-300 mb-1 block">
+            Context Directory *
+          </label>
           <input
             value={contextDir}
             onChange={(e) => setContextDir(e.target.value)}
@@ -116,7 +131,9 @@ function DeploymentMetaForm({
 
       {/* Tags */}
       <div className="mb-6">
-        <label className="text-sm text-gray-300 mb-1 block">Tags (Optional)</label>
+        <label className="text-sm text-gray-300 mb-1 block">
+          Tags (Optional)
+        </label>
         <div className="flex items-center gap-2 mb-2">
           <input
             value={tagInput}
@@ -152,7 +169,9 @@ function DeploymentMetaForm({
 
       {/* Description */}
       <div className="mb-6">
-        <label className="text-sm text-gray-300 mb-1 block">Description (Optional)</label>
+        <label className="text-sm text-gray-300 mb-1 block">
+          Description (Optional)
+        </label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -164,7 +183,9 @@ function DeploymentMetaForm({
 
       {/* Visibility */}
       <div className="mb-2">
-        <label className="text-sm text-gray-300 mb-2 block">API Visibility *</label>
+        <label className="text-sm text-gray-300 mb-2 block">
+          API Visibility *
+        </label>
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2 text-sm text-white">
             <input
