@@ -10,25 +10,14 @@ import (
 	"github.com/Blacktreein/Blacktree/build-orchestrator/internal/workerman"
 )
 
-// to run the RPC from the worker
+// ExecuteRunJobRPC triggers a worker to build the job and publishes the result
 func ExecuteRunJobRPC(wm *workerman.WorkerManager, w *workerman.Worker, msg *queue.DeploymentMessage) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	wm.SetWorkerState(w.Info.Id, "busy")
 
-	// we are gonna keep persistent connection between orchestrator and workers and this will be unary grpc
-	// conn, err := grpc.NewClient(w.Info.Ip, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	// if err != nil {
-	// 	log.Printf("❌ Failed to dial worker %s: %v", w.Info.Id, err)
-	// 	wm.SetWorkerState(w.Info.Id, "dead")
-	// 	return err
-	// }
-	// defer conn.Close()
-
-
-	conn := w.GrpcConn;
-
+	conn := w.GrpcConn
 	client := jobpb.NewJobServiceClient(conn)
 
 	resp, err := client.RunJob(ctx, &jobpb.JobRequest{
@@ -41,20 +30,36 @@ func ExecuteRunJobRPC(wm *workerman.WorkerManager, w *workerman.Worker, msg *que
 		GithubToken:    msg.Token,
 	})
 
-	// Free the worker regardless of success/failure
 	wm.SetWorkerState(w.Info.Id, "free")
 
 	if err != nil {
 		log.Printf("❌ RunJob RPC failed for worker %s: %v", w.Info.Id, err)
-		// Don't requeue dead worker
+		// Publish failed response to backend
+		queue.PublishResponse(queue.ResultRoutingKey, queue.Response{
+			DeploymentID: msg.DeploymentID,
+			Success:      false,
+			Logs:         "",
+			Error:        err.Error(),
+			ImageURL:     "",
+		})
 		return err
 	}
 
+	// Log job result
 	if resp.Success {
 		log.Printf("✅ Job %s built successfully by Worker %s\nLogs: %s\nImage URL: %s", resp.JobId, w.Info.Id, resp.Logs, resp.ImageUrl)
 	} else {
 		log.Printf("❌ Job %s failed on Worker %s. Error: %s", resp.JobId, w.Info.Id, resp.Error)
 	}
+
+	// Publish success/failure response to backend
+	queue.PublishResponse(queue.ResultRoutingKey, queue.Response{
+		DeploymentID: resp.JobId,
+		Success:      resp.Success,
+		Logs:         resp.Logs,
+		Error:        resp.Error,
+		ImageURL:     resp.ImageUrl, // ECR address
+	})
 
 	return nil
 }

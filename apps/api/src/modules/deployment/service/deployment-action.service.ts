@@ -12,6 +12,7 @@ import { Repository } from 'typeorm';
 import { DeploymentStatus } from 'src/utils/enums/deployment-status.enum';
 import { AwsService } from 'src/modules/aws/aws.service';
 import { DeploymentVersion } from '../entities/deployment-version.entity';
+import { MQResponseDTO } from 'src/modules/response-handler/mq-response.dto';
 
 @Injectable()
 export class DeploymentActionService {
@@ -77,7 +78,6 @@ export class DeploymentActionService {
       contextDir: deployment.contextDir,
       createdAt: new Date().toISOString(),
     };
-    console.log(message);
     this.messageingQueueService.publishMessage('worker.execute', message);
   }
 
@@ -267,6 +267,55 @@ export class DeploymentActionService {
       undefined, // no new userId needed
       deploymentVersion.id, // reuse this deployment version
     );
+  }
+
+  async handleJobResult(msg: MQResponseDTO) {
+    // 1. Find the deployment version by deployment ID
+    const depVersion = await this.deploymentVersionRepo.findOne({
+      where: { id: msg.DeploymentID },
+      relations: ['deployment', 'user'],
+    });
+
+    if (!depVersion) {
+      console.error(`Deployment version not found for ID: ${msg.DeploymentID}`);
+      return;
+    }
+
+    if (!msg.ImageURL) {
+      throw new InternalServerErrorException('Image URL is not present');
+    }
+
+    // 2. Update status based on success/failure
+    if (msg.Success) {
+      depVersion.deploymentStatus = DeploymentStatus.BUILT;
+      depVersion.imageUrl = msg.ImageURL; // save ECR image URL
+    } else {
+      depVersion.deploymentStatus = DeploymentStatus.FAILED;
+    }
+
+    // 3. Save logs
+    depVersion.buildLogsUrl = msg.Logs || null;
+
+    // 4. Optionally save error message if failed
+    if (!msg.Success && msg.Error) {
+      depVersion.buildLogsUrl = msg.Error; // you may need to add this field in entity
+    }
+
+    await this.deploymentVersionRepo.save(depVersion);
+
+    // 5. Optional: auto-trigger deployment if build succeeded
+    if (msg.Success) {
+      try {
+        await this.triggerDeployment(depVersion.id);
+      } catch (err) {
+        console.error(
+          `Failed to trigger deployment for version ${depVersion.id}`,
+          err,
+        );
+      }
+    }
+
+    console.log(`Handled job result for deployment version ${depVersion.id}`);
   }
 
   private createDeploymnetVersion(deploymentId: string, userId: string) {

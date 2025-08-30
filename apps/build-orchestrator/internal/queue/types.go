@@ -11,18 +11,21 @@ type Consumer struct {
 }
 
 type DeploymentMessage struct { // this is the message that is recieved from the backend
-	DeploymentID    string `json:"deploymentId"`
-	Token           string `json:"token"`
-	Repository      string `json:"repository"`
-	Branch          string `json:"branch"`
-	DockerfilePath  string `json:"dockerFilePath"`
-	ContextDir      string `json:"contextDir"`
-	CreatedAt       string `json:"createdAt"`
-	AutoDeploy      bool
+	DeploymentID   string `json:"deploymentId"`
+	Token          string `json:"token"`
+	Repository     string `json:"repository"`
+	Branch         string `json:"branch"`
+	DockerfilePath string `json:"dockerFilePath"`
+	ContextDir     string `json:"contextDir"`
+	CreatedAt      string `json:"createdAt"`
+	AutoDeploy     bool
 }
 
-
-// Respose from orchestrator to backend to update the status
+// response sent over messaging queue
 type Response struct {
-
+	DeploymentID string `json:"deploymentId"` // ID of the deployment/job
+	ImageURL     string `json:"imageUrl"`     // Full ECR image URL
+	Success      bool   `json:"success"`      // Job success status
+	Logs         string `json:"logs"`         // Build logs
+	Error        string `json:"error"`        // Error message if any
 }

@@ -18,6 +18,7 @@ import { Endpoint } from 'src/modules/deployment/entities/endpoint.entity';
 import { DeploymentVersion } from 'src/modules/deployment/entities/deployment-version.entity';
 import { AwsModule } from 'src/modules/aws/aws.module';
 import { CoreModule } from 'src/modules/coreModule/core.module';
+import { ResponseHandlerModule } from 'src/modules/response-handler/response-handler.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { CoreModule } from 'src/modules/coreModule/core.module';
     MessagingQueueModule,
     AwsModule,
     CoreModule,
+    ResponseHandlerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

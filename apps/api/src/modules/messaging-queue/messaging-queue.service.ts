@@ -2,6 +2,7 @@ import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Channel, ChannelModel, connect } from 'amqplib';
 import { PublishDeploymentMessageDto } from './dto/publish-message.dto';
+import { MQResponseDTO } from '../response-handler/mq-response.dto';
 
 @Injectable()
 export class MessagingQueueService implements OnModuleInit, OnModuleDestroy {
@@ -10,6 +11,9 @@ export class MessagingQueueService implements OnModuleInit, OnModuleDestroy {
   private readonly exchange = 'blacktree.direct'; // implementing direct exchange
   private readonly queue = 'execute.queue'; // implementing queue
   private readonly routingKey = 'worker.execute'; // implementing routing key
+
+  private readonly resultQueue = 'status.queue';
+  private readonly resultRoutingKey = 'api.result';
 
   constructor(private readonly configService: ConfigService) {}
 
@@ -36,6 +40,16 @@ export class MessagingQueueService implements OnModuleInit, OnModuleDestroy {
 
       // setting up binding rules and routing key to the queue in the exchange
       await this.channel?.bindQueue(this.queue, this.exchange, this.routingKey);
+
+      // Bind status.queue for results once during init
+
+      await this.channel.assertQueue(this.resultQueue, { durable: true });
+      await this.channel.bindQueue(
+        this.resultQueue,
+        this.exchange,
+        this.resultRoutingKey,
+      );
+
       // console.log(
       //   'Connected to RabbitMQ and exchange/queue are set up successfully',
       // );
@@ -53,7 +67,6 @@ export class MessagingQueueService implements OnModuleInit, OnModuleDestroy {
       throw new Error('RabbitMQ channel is not initialized');
     }
 
-    console.log('this is key : ', routingKey);
     try {
       const buffer = Buffer.from(JSON.stringify(message));
       const published = this.channel.publish(
@@ -88,5 +101,30 @@ export class MessagingQueueService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       console.error('Error closing RabbitMQ connection:', error);
     }
+  }
+
+  async consumeMessages(queueName: string, onMessage: (msg: any) => void) {
+    if (!this.channel) {
+      throw new Error('RabbitMQ channel is not initialized');
+    }
+
+    console.log(`Listening to messages on queue: "${queueName}"`);
+
+    // Start consuming messages
+    await this.channel.consume(
+      queueName,
+      (msg) => {
+        if (!msg) return;
+        const content = msg.content.toString();
+        try {
+          const parsed = JSON.parse(content) as MQResponseDTO;
+          onMessage(parsed);
+        } catch (err) {
+          console.error('Failed to parse message', err);
+        }
+        this.channel?.ack(msg);
+      },
+      { noAck: false },
+    );
   }
 }
