@@ -48,12 +48,22 @@ export const useSyncUser = () => {
       console.log("User sync response:", res.data);
 
       // Trigger your backend to set HttpOnly cookies (e.g., JWT)
-      const token = await getJWT();
-      await axios.post(
-        process.env.NEXT_PUBLIC_BACKEND_URL + "/users/set-token",
+      // Get token from API
+      const tokenRes = await axios.get(
+        `${process.env.NEXT_PUBLIC_API}/get-token`,
         {
-          jwt: token,
+          withCredentials: true,
         }
+      );
+      const jwtToken = tokenRes.data.token; // <-- this is the actual JWT
+
+      // Send to backend to set HttpOnly cookie
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/set-token`,
+        {
+          jwt: jwtToken,
+        },
+        { withCredentials: true }
       );
 
       // Fetch the synced user from your backend and store in context

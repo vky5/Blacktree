@@ -14,7 +14,6 @@ import { useSignUp } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useOAuthSignIn } from "@/utils/clerk/oauth";
 import axios from "axios";
-import { getJWT } from "@/utils/getToken";
 
 function SignupPage() {
   const { handleOAuthSignIn } = useOAuthSignIn();
@@ -79,16 +78,23 @@ function SignupPage() {
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
 
-        const token = await getJWT();
-        const response = await axios.post(
-          process.env.NEXT_PUBLIC_BACKEND_URL + "/users/set-token",
+        // Get token from API
+        const tokenRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_API}/get-token`,
           {
-            jwt: token,
+            withCredentials: true,
           }
         );
-        if (response.status !== 200) {
-          console.error("Error setting token in cookie");
-        }
+        const jwtToken = tokenRes.data.token; // <-- this is the actual JWT
+
+        // Send to backend to set HttpOnly cookie
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/set-token`,
+          {
+            jwt: jwtToken,
+          },
+          { withCredentials: true }
+        );
 
         router.push("/"); // redirect to home page
       } else {
