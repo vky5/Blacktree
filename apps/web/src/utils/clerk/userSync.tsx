@@ -49,7 +49,7 @@ export const useSyncUser = () => {
       // Trigger your backend to set HttpOnly cookies (e.g., JWT)
       // Get token from API
       const tokenRes = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/get-token`,
+        `${process.env.NEXT_PUBLIC_API}/auth/get-token`,
         {
           withCredentials: true,
         }

@@ -62,7 +62,7 @@ function LoginPage() {
 
         // Get token from API
         const tokenRes = await axios.get(
-          `${process.env.NEXT_PUBLIC_API}/get-token`,
+          `${process.env.NEXT_PUBLIC_API}/auth/get-token`,
           {
             withCredentials: true,
           }
