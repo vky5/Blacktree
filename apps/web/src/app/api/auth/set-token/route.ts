@@ -29,12 +29,12 @@ export async function GET() {
     name: "jwt",
     value: jwtToken,
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: true,
+    sameSite: "none",
     path: "/",
     maxAge: 60 * 60 * 24 * 90,
   });
-  
+
   console.log(response);
 
   return response;

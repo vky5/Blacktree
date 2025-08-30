@@ -11,8 +11,6 @@ async function bootstrap() {
     logger: ['log', 'error', 'warn', 'debug', 'verbose'],
   }); // Enable logging at different levels
 
-  app.use(cookieparser());
-
   app.enableCors({
     origin: process.env.FRONTEND_URL,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
