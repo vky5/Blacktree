@@ -112,7 +112,7 @@ export class UsersController {
     res.cookie('jwt', jwtToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // true in production
-      sameSite: 'lax', // or 'none' if cross-origin
+      sameSite: 'none',
       maxAge: 60 * 60 * 24 * 90 * 1000, // 90 days in ms
       path: '/',
     });
