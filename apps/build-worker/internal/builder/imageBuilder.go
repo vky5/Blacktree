@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 // buildImageOptions contains input for building the docker image
@@ -25,7 +26,9 @@ func BuildImage(opt BuildImageOptions, folderName string) error {
 
 	// shell script to use buildkit to create the docker image
 
-	cmd := exec.Command("./scripts/build.sh", opt.ImageName, opt.ContextDir, opt.DockerfilePath, folderName)
+	dockerfileFullPath := filepath.Join(opt.ContextDir, opt.DockerfilePath)
+	cmd := exec.Command("./scripts/build.sh", opt.ImageName, opt.ContextDir, dockerfileFullPath, folderName)
+
 	cmd.Stdout = os.Stdout //  Redirect stdout to terminall
 	cmd.Stderr = os.Stderr // Redirect stderr to terminal
 

@@ -72,7 +72,8 @@ func LoginDockerToAWS() error {
 	parts := strings.Split(string(decoded), ":")
 	username := parts[0]
 	password := parts[1]
-	RegistryURL = authData.ProxyEndpoint // already a pointer
+	trimmed := strings.TrimPrefix(*authData.ProxyEndpoint, "https://")
+	RegistryURL = &trimmed
 
 	fmt.Println("ECR Registry: ", *RegistryURL)
 

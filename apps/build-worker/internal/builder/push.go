@@ -20,9 +20,10 @@ import (
 
 func TagAndPushImage(ctx context.Context, dockerCli *client.Client, imageName string, credentials registry.AuthConfig) error {
 	// compose the full ECR tag by prepending the registry URL from credentials
-	fullECRTag := fmt.Sprintf("%s/%s", strings.TrimSuffix(credentials.ServerAddress, "/"), imageName)
-
-	fmt.Println("Tagging local image", imageName, "as", fullECRTag)
+	// AWS ECR only allows one level of repo, so "blacktree" must exist and imageName will be the tag
+	repoName := "blacktree"                            // existing repo in ECR
+	tag := strings.TrimPrefix(imageName, "blacktree/") // remove "blacktree/" if it exists
+	fullECRTag := fmt.Sprintf("%s/%s:%s", strings.TrimSuffix(credentials.ServerAddress, "/"), repoName, tag)
 
 	// tag the image
 	if err := dockerCli.ImageTag(ctx, imageName, fullECRTag); err != nil {

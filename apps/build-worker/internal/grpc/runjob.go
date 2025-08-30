@@ -8,6 +8,7 @@ import (
 	jobpb "github.com/Blacktreein/Blacktree/apps/shared/proto/job"
 	"github.com/Blacktreein/Blacktree/build-worker/internal/aws"
 	"github.com/Blacktreein/Blacktree/build-worker/internal/builder"
+	dirman "github.com/Blacktreein/Blacktree/build-worker/internal/dirManager"
 	"github.com/Blacktreein/Blacktree/build-worker/internal/repo"
 )
 
@@ -35,6 +36,16 @@ func RunJobLogic(ctx context.Context, req *jobpb.JobRequest) (*jobpb.JobResponse
 			}, err
 		}
 
+		// Step 3: Login to ECR
+		err = aws.LoginDockerToAWS()
+		if err != nil {
+			return &jobpb.JobResponse{
+				JobId:   req.JobId,
+				Success: false,
+				Error:   "Failed to authenticate Docker with AWS",
+			}, err
+		}
+
 		// Step 2: Build Docker image
 		err = builder.BuildImage(builder.BuildImageOptions{
 			ImageName:      req.ImageName,
@@ -46,16 +57,6 @@ func RunJobLogic(ctx context.Context, req *jobpb.JobRequest) (*jobpb.JobResponse
 				JobId:   req.JobId,
 				Success: false,
 				Error:   fmt.Sprintf("Failed to build Docker image: %v", err),
-			}, err
-		}
-
-		// Step 3: Login to ECR
-		err = aws.LoginDockerToAWS()
-		if err != nil {
-			return &jobpb.JobResponse{
-				JobId:   req.JobId,
-				Success: false,
-				Error:   "Failed to authenticate Docker with AWS",
 			}, err
 		}
 
@@ -72,6 +73,10 @@ func RunJobLogic(ctx context.Context, req *jobpb.JobRequest) (*jobpb.JobResponse
 		// Step 5: Return success response
 		reg := strings.TrimPrefix(*aws.RegistryURL, "https://") // clean URL
 		ecrURL := fmt.Sprintf("%s/%s", reg, req.ImageName)
+
+		// cleaning everything
+		dirman.DeleteFolder(*folder)
+		builder.DeleteImage(req.ImageName)
 
 		return &jobpb.JobResponse{
 			JobId:    req.JobId,
