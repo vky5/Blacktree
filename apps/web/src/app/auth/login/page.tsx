@@ -13,6 +13,7 @@ import { useSignIn } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useOAuthSignIn } from "@/utils/clerk/oauth";
 import axios from "axios";
+import { getJWT } from "@/utils/getToken";
 
 function LoginPage() {
   // defining all hooks
@@ -59,8 +60,13 @@ function LoginPage() {
       if (signInAttempt.status === "complete") {
         await setActive({ session: signInAttempt.createdSessionId });
         // call the /api/set-token route to set the token in the httpOnly cookie
-        const response = await axios.get(
-          process.env.NEXT_PUBLIC_API_URL + "/auth/set-token"
+
+        const token = await getJWT();
+        const response = await axios.post(
+          process.env.NEXT_PUBLIC_BACKEND_URL + "/users/set-token",
+          {
+            jwt: token,
+          }
         );
 
         if (response.status !== 200) {

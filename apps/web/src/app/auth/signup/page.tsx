@@ -14,11 +14,12 @@ import { useSignUp } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useOAuthSignIn } from "@/utils/clerk/oauth";
 import axios from "axios";
+import { getJWT } from "@/utils/getToken";
 
 function SignupPage() {
   const { handleOAuthSignIn } = useOAuthSignIn();
 
-  // clerk injects a lot of things so it is better to wait until it is loaded that is what isLoaded for 
+  // clerk injects a lot of things so it is better to wait until it is loaded that is what isLoaded for
   const { isLoaded, signUp, setActive } = useSignUp();
   const router = useRouter();
 
@@ -32,7 +33,8 @@ function SignupPage() {
   const [verifiying, setVerifying] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
 
-  if (!isLoaded) { // waiting for clerk to complete loading
+  if (!isLoaded) {
+    // waiting for clerk to complete loading
     return <>add loading screen please</>;
   }
 
@@ -40,7 +42,8 @@ function SignupPage() {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isLoaded) { // Check if the sign-up object is loaded
+    if (!isLoaded) {
+      // Check if the sign-up object is loaded
       return;
     }
 
@@ -76,7 +79,13 @@ function SignupPage() {
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
 
-        const response = await axios.get(process.env.NEXT_PUBLIC_API_URL + "/auth/set-token");
+        const token = await getJWT();
+        const response = await axios.post(
+          process.env.NEXT_PUBLIC_BACKEND_URL + "/users/set-token",
+          {
+            jwt: token,
+          }
+        );
         if (response.status !== 200) {
           console.error("Error setting token in cookie");
         }

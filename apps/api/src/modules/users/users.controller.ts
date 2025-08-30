@@ -102,4 +102,21 @@ export class UsersController {
       user: safeNewUser,
     });
   }
+  @Post('/set-token')
+  setToken(@Body('jwt') jwtToken: string, @Res() res: Response) {
+    if (!jwtToken) {
+      return res.status(400).json({ error: 'JWT token is required' });
+    }
+
+    // Set the JWT as an HttpOnly cookie
+    res.cookie('jwt', jwtToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // true in production
+      sameSite: 'lax', // or 'none' if cross-origin
+      maxAge: 60 * 60 * 24 * 90 * 1000, // 90 days in ms
+      path: '/',
+    });
+
+    return res.status(200).json({ message: 'Token set successfully' });
+  }
 }
