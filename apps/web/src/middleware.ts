@@ -4,13 +4,22 @@ import { NextResponse } from 'next/server';
 const isPublicRoute = createRouteMatcher(['/auth(.*)', '/', '/sso-callback']);
 
 export default clerkMiddleware(async (auth, req) => {
+  // Log the path being requested
+  console.log('Middleware triggered for path:', req.nextUrl.pathname);
+
   const { userId } = await auth();
+
+  // Log the userId returned by Clerk
+  console.log('User ID from auth():', userId);
 
   if (!userId && !isPublicRoute(req)) {
     const signUpUrl = new URL('/auth/signup', req.url);
+    // Log the redirect URL
+    console.log('Redirecting to signup page:', signUpUrl.toString());
     return NextResponse.redirect(signUpUrl);
   }
 
+  console.log('Middleware allowing access to path:', req.nextUrl.pathname);
   return NextResponse.next();
 });
 
