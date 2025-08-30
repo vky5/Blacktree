@@ -2,7 +2,6 @@ import { useEffect, useCallback, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
-import { getJWT } from "../getToken";
 
 export const useSyncUser = () => {
   const { user, isSignedIn } = useUser();

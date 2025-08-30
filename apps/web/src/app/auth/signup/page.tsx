@@ -88,7 +88,7 @@ function SignupPage() {
         const jwtToken = tokenRes.data.token; // <-- this is the actual JWT
 
         // Send to backend to set HttpOnly cookie
-        const response = await axios.post(
+         await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/set-token`,
           {
             jwt: jwtToken,
