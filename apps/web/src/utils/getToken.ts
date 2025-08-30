@@ -1,3 +1,5 @@
+'use client';
+
 import { auth, clerkClient } from "@clerk/nextjs/server";
 
 export async function getJWT() {
