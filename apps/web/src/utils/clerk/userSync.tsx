@@ -2,6 +2,7 @@ import { useEffect, useCallback, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
+import { getJWT } from "../getToken";
 
 export const useSyncUser = () => {
   const { user, isSignedIn } = useUser();
@@ -47,7 +48,13 @@ export const useSyncUser = () => {
       console.log("User sync response:", res.data);
 
       // Trigger your backend to set HttpOnly cookies (e.g., JWT)
-      await axios.get("/api/auth/set-token");
+      const token = await getJWT();
+      await axios.post(
+        process.env.NEXT_PUBLIC_BACKEND_URL + "/users/set-token",
+        {
+          jwt: token,
+        }
+      );
 
       // Fetch the synced user from your backend and store in context
       await fetchUser();
