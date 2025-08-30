@@ -40,6 +40,7 @@ export default function HostAPI() {
   const [activeTab, setActiveTab] = useState(1);
   const [blueprints, setBlueprints] = useState<BlueprintCardProps[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasFetchedBlueprints, setHasFetchedBlueprints] = useState(false); // track fetch
 
   const deleteBlueprint = useCallback(async (id: string) => {
     try {
@@ -74,7 +75,6 @@ export default function HostAPI() {
   }, []);
 
   const fetchBlueprints = useCallback(async () => {
-    if (activeTab !== 2) return;
     setLoading(true);
     try {
       const res = await axios.get(
@@ -99,6 +99,7 @@ export default function HostAPI() {
       }));
 
       setBlueprints(transformed);
+      setHasFetchedBlueprints(true); // mark fetched
     } catch (error) {
       console.error("Failed to fetch blueprints:", error);
       toast.error("Failed to fetch blueprints. Please try again later.");
@@ -106,11 +107,14 @@ export default function HostAPI() {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, deployBlueprint, deleteBlueprint]);
+  }, [deployBlueprint, deleteBlueprint]);
 
   useEffect(() => {
-    fetchBlueprints();
-  }, [fetchBlueprints]);
+    // Only fetch when tab 2 is active and we haven't fetched yet
+    if (activeTab === 2 && !hasFetchedBlueprints) {
+      fetchBlueprints();
+    }
+  }, [activeTab, hasFetchedBlueprints, fetchBlueprints]);
 
   const tabOptions = [
     { id: 1, label: "Create Blueprint", icon: PackagePlus },
