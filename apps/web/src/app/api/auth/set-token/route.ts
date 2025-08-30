@@ -34,6 +34,8 @@ export async function GET() {
     path: "/",
     maxAge: 60 * 60 * 24 * 90,
   });
+  
+  console.log(response);
 
   return response;
 }
