@@ -1,14 +1,15 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 
 export const useSyncUser = () => {
   const { user, isSignedIn } = useUser();
-  const { fetchUser, userData } = useAuth();
+  const { fetchUser } = useAuth();
+  const syncedRef = useRef(false); // prevent multiple syncs
 
   const sync = useCallback(async () => {
-    if (!user) return;
+    if (!user || syncedRef.current) return;
 
     type DbUser = {
       email: string;
@@ -30,6 +31,7 @@ export const useSyncUser = () => {
     }
 
     try {
+      console.log("Syncing user with backend..."); // debug log
       const res = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/clerk-sync`,
         dbObj,
@@ -50,14 +52,15 @@ export const useSyncUser = () => {
       // Fetch the synced user from your backend and store in context
       await fetchUser();
 
-      console.log("saved state : " + userData);
+      syncedRef.current = true; // mark synced
     } catch (err) {
       console.error("Error syncing user:", err);
     }
-  }, [user, fetchUser, userData]);
+  }, [user, fetchUser]);
 
   useEffect(() => {
     if (isSignedIn) {
+      console.log("User is signed in, starting sync..."); // debug log
       sync();
     }
   }, [isSignedIn, sync]);
