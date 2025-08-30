@@ -67,7 +67,7 @@ function LoginPage() {
             withCredentials: true,
           }
         );
-        const jwtToken = tokenRes.data.token; // <-- this is the actual JWT
+        const jwtToken = tokenRes.data.jwt; // <-- this is the actual JWT
 
         // Send to backend to set HttpOnly cookie
         const response = await axios.post(

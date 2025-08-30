@@ -54,8 +54,8 @@ export const useSyncUser = () => {
           withCredentials: true,
         }
       );
-      const jwtToken = tokenRes.data.token; // <-- this is the actual JWT
-
+  
+      const jwtToken = tokenRes.data.jwt; // <-- this is the actual JWT
       // Send to backend to set HttpOnly cookie
       await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/set-token`,
