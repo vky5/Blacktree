@@ -77,7 +77,7 @@ export class DeploymentActionService {
       contextDir: deployment.contextDir,
       createdAt: new Date().toISOString(),
     };
-
+    console.log(message);
     this.messageingQueueService.publishMessage('blacktree.routingKey', message);
   }
 

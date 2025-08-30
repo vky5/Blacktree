@@ -33,6 +33,7 @@ export class DeploymentActionsController {
     @Param('deploymentId') deploymentId: string,
     @Req() req: RequestWithUser,
   ) {
+    console.log(deploymentId, req.user.id);
     return this.deploymentActionService.buildDeployment(
       deploymentId,
       req.user.id,
