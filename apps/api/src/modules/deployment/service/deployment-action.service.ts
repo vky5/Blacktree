@@ -78,7 +78,7 @@ export class DeploymentActionService {
       createdAt: new Date().toISOString(),
     };
     console.log(message);
-    this.messageingQueueService.publishMessage('blacktree.routingKey', message);
+    this.messageingQueueService.publishMessage('worker.execute', message);
   }
 
   async triggerDeployment(deploymentVersionId: string) {

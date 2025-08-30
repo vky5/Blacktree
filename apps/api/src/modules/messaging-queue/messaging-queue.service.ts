@@ -52,6 +52,8 @@ export class MessagingQueueService implements OnModuleInit, OnModuleDestroy {
     if (!this.channel) {
       throw new Error('RabbitMQ channel is not initialized');
     }
+
+    console.log('this is key : ', routingKey);
     try {
       const buffer = Buffer.from(JSON.stringify(message));
       const published = this.channel.publish(
