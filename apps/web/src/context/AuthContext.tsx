@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useState, useContext, useEffect } from "react";
+import { createContext, useState, useContext, useEffect, useRef } from "react";
 import axios from "axios";
 
 type User = {
@@ -21,17 +21,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [userData, setUserData] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const fetchedRef = useRef(false); // Track if fetchUser already ran
 
   const fetchUser = async () => {
+    if (fetchedRef.current) return; // Prevent multiple fetches
+    fetchedRef.current = true;
+
     try {
-      // set loading true only if first time, not on every fetch
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/me`,
-        {
-          withCredentials: true,
-        }
+        { withCredentials: true }
       );
-
       setUserData(response.data);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // fetch user once on mount to prevent infinite loop
+  // Run fetchUser only once on mount
   useEffect(() => {
     fetchUser();
   }, []);
