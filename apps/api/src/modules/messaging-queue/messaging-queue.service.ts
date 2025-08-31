@@ -103,14 +103,17 @@ export class MessagingQueueService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async consumeMessages(queueName: string, onMessage: (msg: any) => void) {
+  async consumeMessages(
+    queueName: string,
+    onMessage: (msg: MQResponseDTO) => void,
+  ) {
     if (!this.channel) {
       throw new Error('RabbitMQ channel is not initialized');
     }
 
     console.log(`Listening to messages on queue: "${queueName}"`);
 
-    // Start consuming messages
+    // Start consuming messages (queue is already bound in onModuleInit)
     await this.channel.consume(
       queueName,
       (msg) => {
