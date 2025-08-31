@@ -112,11 +112,24 @@ export class UsersController {
     res.cookie('jwt', jwtToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // true in production
-      sameSite: 'none',
+      sameSite: process.env.NODE_ENV === 'development' ? 'lax' : 'none',
       maxAge: 60 * 60 * 24 * 90 * 1000, // 90 days in ms
       path: '/',
     });
 
     return res.status(200).json({ message: 'Token set successfully' });
+  }
+  @Post('/logout')
+  logout(@Res() res: Response) {
+    // Clear the JWT cookie by setting it to empty and expiring it
+    res.cookie('jwt', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // match set-token
+      sameSite: process.env.NODE_ENV === 'development' ? 'lax' : 'none',
+      expires: new Date(0), // set expiry in the past
+      path: '/',
+    });
+
+    return res.status(200).json({ message: 'Logged out successfully' });
   }
 }

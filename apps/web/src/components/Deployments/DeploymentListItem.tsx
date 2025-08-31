@@ -7,33 +7,35 @@ import {
   Clock,
   GitBranch,
   ExternalLink,
-  MoreHorizontal,
-  TrendingUp,
-  BarChart2,
   RefreshCw,
-  Settings,
-  Download,
   Trash,
+  Container,
+  FolderOpen,
+  Settings,
+  Zap,
+  FileCode
 } from "lucide-react";
-import React, { useState } from "react";
-import VisibilityBadge from "@/components/Deployments/visibilityBadge";
+import React from "react";
 
-export type DeploymentStatus = "Running" | "Building" | "Failed" | "Unknown";
+export type DeploymentStatus = "Pending" | "Running" | "Failed" | "Unknown";
 export type Visibility = "Public" | "Private";
 
-interface DeploymentProps {
+interface DeploymentListItemProps {
   name: string;
-  status?: string; // from backend, will map to DeploymentStatus
+  status?: DeploymentStatus;
   visibility: Visibility;
   branch: string;
-  commit: string;
-  requests: string;
-  uptime: string;
   updatedAt: string;
-  framework: string;
-  region: string;
-  buildTime: string;
-  visitUrl: string;
+  visitUrl?: string | null;
+  onRedeploy?: () => void;
+  onDelete?: () => void;
+  // New props to fill middle area
+  repository?: string;
+  contextDir?: string;
+  resourceVersion?: string;
+  autoDeploy?: boolean;
+  dockerFilePath?: string;
+  description?: string;
 }
 
 const CircularLoader = () => (
@@ -57,25 +59,39 @@ const CircularLoader = () => (
   </div>
 );
 
+const VisibilityBadge = ({ type }: { type: Visibility }) => {
+  return (
+    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+      type === 'Public' 
+        ? 'bg-blue-900 text-blue-200 border border-blue-700' 
+        : 'bg-purple-900 text-purple-200 border border-purple-700'
+    }`}>
+      {type}
+    </span>
+  );
+};
+
 export default function DeploymentListItem({
   name,
   status,
   visibility,
   branch,
-  commit,
-  requests,
-  uptime,
   updatedAt,
   visitUrl,
-}: DeploymentProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  // Map backend string to DeploymentStatus
+  onRedeploy,
+  onDelete,
+  repository,
+  contextDir,
+  resourceVersion,
+  autoDeploy,
+  dockerFilePath,
+  description,
+}: DeploymentListItemProps) {
   const mapStatus = (s?: string): DeploymentStatus => {
     switch (s) {
       case "Running":
-      case "Building":
       case "Failed":
+      case "Pending":
         return s;
       default:
         return "Unknown";
@@ -85,15 +101,15 @@ export default function DeploymentListItem({
   const finalStatus = mapStatus(status);
 
   const statusConfig = {
+    Pending: {
+      label: "Pending",
+      icon: <CircularLoader />,
+      className: "bg-yellow-800 text-yellow-300 border border-yellow-500",
+    },
     Running: {
       label: "Running",
       icon: <CheckCircle size={14} className="text-green-400" />,
       className: "bg-green-900 text-green-400 border border-green-600",
-    },
-    Building: {
-      label: "Building",
-      icon: <CircularLoader />,
-      className: "bg-yellow-800 text-yellow-300 border border-yellow-500",
     },
     Failed: {
       label: "Failed",
@@ -110,94 +126,111 @@ export default function DeploymentListItem({
   const config = statusConfig[finalStatus];
 
   return (
-    <div className="bg-[#0B0F19] rounded-xl border border-[#1a1f2e] px-5 py-4 flex flex-col gap-2 w-full">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-2">
+    <div className="bg-[#0B0F19] rounded-xl border border-[#1a1f2e] p-4 w-full hover:border-[#2a2f3e] transition-colors">
+      {/* Header Row */}
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          {config.icon}
+          <Container className="w-5 h-5 text-gray-400" />
           <h3 className="text-white font-medium text-lg">{name}</h3>
         </div>
-        <div className="relative">
-          <button
-            className="text-gray-400 hover:text-gray-300 p-1"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            <MoreHorizontal size={16} />
-          </button>
-          {menuOpen && (
-            <div className="absolute right-0 mt-2 w-40 bg-[#0D1224] border border-white/5 rounded-md shadow-lg z-10">
-              <ul className="py-1 text-sm text-gray-300">
-                <li className="flex items-center gap-2 px-4 py-2 hover:bg-white/5 cursor-pointer">
-                  <ExternalLink size={14} /> View Live
-                </li>
-                <li className="flex items-center gap-2 px-4 py-2 hover:bg-white/5 cursor-pointer">
-                  <BarChart2 size={14} /> View Logs
-                </li>
-                <li className="flex items-center gap-2 px-4 py-2 hover:bg-white/5 cursor-pointer">
-                  <RefreshCw size={14} /> Redeploy
-                </li>
-                <li className="flex items-center gap-2 px-4 py-2 hover:bg-white/5 cursor-pointer">
-                  <Settings size={14} /> Settings
-                </li>
-                <li className="flex items-center gap-2 px-4 py-2 hover:bg-white/5 cursor-pointer">
-                  <Download size={14} /> Download
-                </li>
-                <li className="flex items-center gap-2 px-4 py-2 hover:bg-white/10 text-red-400 cursor-pointer">
-                  <Trash size={14} /> Delete
-                </li>
-              </ul>
-            </div>
-          )}
+        
+        <div className="flex items-center gap-2">
+          <span className={cn("px-2.5 py-1 text-xs font-semibold rounded-full flex items-center gap-1.5", config.className)}>
+            {config.icon}
+            {config.label}
+          </span>
+          <VisibilityBadge type={visibility} />
         </div>
       </div>
 
-      {/* Status & Visibility */}
-      <div className="flex items-center gap-3 mb-4">
-        <span
-          className={cn(
-            "px-2.5 py-1 text-xs font-semibold rounded-full flex items-center gap-1.5",
-            config.className
-          )}
-        >
-          {config.label}
-        </span>
-        <VisibilityBadge type={visibility} />
-      </div>
-
-      {/* Branch & Commit */}
-      <div className="flex items-center gap-4 mb-4 text-sm">
-        <div className="flex items-center gap-1.5 text-gray-300">
-          <GitBranch size={14} />
-          <span>{branch}</span>
+      {/* Repository and Branch Info */}
+      <div className="flex items-center gap-4 mb-3 text-sm">
+        <div className="flex items-center gap-2 text-gray-300">
+          <GitBranch className="w-4 h-4" />
+          <span>{repository || 'Unknown repo'}</span>
           <span className="text-gray-500">•</span>
-          <span className="text-green-400 font-mono">{commit}</span>
+          <span className="px-2 py-0.5 bg-gray-800 rounded text-xs">{branch}</span>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="flex items-center justify-between text-sm">
-        <div className="flex items-center gap-4 text-gray-400">
-          <div className="flex items-center gap-1">
-            <TrendingUp size={14} />
-            <span>{requests}</span>
+      {/* Details Grid - This fills the middle area */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4 text-sm">
+        <div className="flex items-center gap-2">
+          <FolderOpen className="w-4 h-4 text-gray-400" />
+          <div>
+            <div className="text-gray-400 text-xs">Context</div>
+            <div className="text-gray-200">{contextDir || 'Root'}</div>
           </div>
-          <span>•</span>
-          <span>{uptime} uptime</span>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1 text-gray-400">
-            <Clock size={14} />
-            <span>Updated {updatedAt}</span>
+        
+        <div className="flex items-center gap-2">
+          <Settings className="w-4 h-4 text-gray-400" />
+          <div>
+            <div className="text-gray-400 text-xs">Resource</div>
+            <div className="text-gray-200 capitalize">{resourceVersion || 'Basic'}</div>
           </div>
-          <a
-            href={visitUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-green-400 hover:text-green-300 flex items-center gap-1 font-medium transition-colors"
-          >
-            <ExternalLink size={14} />
-            Visit
-          </a>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Zap className="w-4 h-4 text-gray-400" />
+          <div>
+            <div className="text-gray-400 text-xs">Auto Deploy</div>
+            <div className={autoDeploy ? 'text-green-400' : 'text-red-400'}>
+              {autoDeploy ? 'Enabled' : 'Disabled'}
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <FileCode className="w-4 h-4 text-gray-400" />
+          <div>
+            <div className="text-gray-400 text-xs">Dockerfile</div>
+            <div className="text-gray-200 text-xs truncate">{dockerFilePath || 'Default'}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Description if available */}
+      {description && (
+        <div className="mb-3 p-2 bg-gray-800/50 rounded text-sm text-gray-300">
+          {description}
+        </div>
+      )}
+
+      {/* Footer Row */}
+      <div className="flex items-center justify-between pt-3 border-t border-gray-700">
+        <div className="flex items-center gap-1 text-xs text-gray-400">
+          <Clock className="w-3 h-3" />
+          <span>Updated {new Date(updatedAt).toLocaleString()}</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {visitUrl && (
+            <a
+              href={visitUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 px-2 py-1 bg-[#0D1224] text-green-400 hover:text-green-300 rounded border border-white/5 text-xs font-medium transition-colors"
+            >
+              <ExternalLink size={12} /> Visit
+            </a>
+          )}
+          {onRedeploy && (
+            <button
+              onClick={onRedeploy}
+              className="flex items-center gap-1 px-2 py-1 bg-[#0D1224] text-blue-400 hover:text-blue-300 rounded border border-white/5 text-xs font-medium transition-colors"
+            >
+              <RefreshCw size={12} /> Redeploy
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={onDelete}
+              className="flex items-center gap-1 px-2 py-1 bg-[#0D1224] text-red-400 hover:text-red-300 rounded border border-white/5 text-xs font-medium transition-colors"
+            >
+              <Trash size={12} /> Delete
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import axios from "axios";
 
 const SettingsPage = () => {
   const { userData } = useAuth();
@@ -22,6 +23,13 @@ const SettingsPage = () => {
   const router = useRouter();
 
   const handleSignOut = async () => {
+    await axios.post(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/logout`,
+      {},
+      {
+        withCredentials: true,
+      }
+    );
     await signOut();
     router.push("/");
   };

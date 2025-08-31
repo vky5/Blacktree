@@ -1,162 +1,112 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useEffect, useState } from "react";
+import { useSyncUser } from "@/utils/clerk/userSync";
+import { useUser } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
+import { StatCard } from "@/components/Dashboard/statCard";
+import DeploymentHeading from "@/components/Deployments/DeploymentPageHeading";
+import DeploymentListItem from "@/components/Deployments/DeploymentListItem";
 import axios from "axios";
-import Tabs from "@/components/Dashboard/SelectionButton";
-import { PackagePlus, Package } from "lucide-react";
-import IntegrationStep1 from "@/components/Developers/IntegrationStep1.1";
-import BlueprintCard from "@/components/Deployments/BlueprintCard";
 import BigLoader from "@/components/ui/BigLoader";
-import { toast } from "sonner";
 
-interface BlueprintCardProps {
-  id: string;
-  name: string;
-  repository: string;
-  dockerFilePath: string;
-  contextDir: string;
-  branch: string;
-  resourceVersion: string;
-  private: boolean;
-  onEdit: () => void;
-  onDeploy: () => void;
-  onDelete: () => void;
-}
-
-interface BlueprintResponse {
-  id: string;
-  name: string;
-  repository: string;
-  dockerFilePath: string;
-  contextDir: string;
-  portNumber: number | null;
-  branch: string;
-  envVars: Record<string, string> | null;
-  resourceVersion: string;
-  private: boolean;
-}
-
-export default function HostAPI() {
-  const [activeTab, setActiveTab] = useState(1);
-  const [blueprints, setBlueprints] = useState<BlueprintCardProps[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [hasFetchedBlueprints, setHasFetchedBlueprints] = useState(false); // track fetch
-
-  const deleteBlueprint = useCallback(async (id: string) => {
-    try {
-      const res = await axios.delete(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/deployment/${id}`,
-        { withCredentials: true }
-      );
-      if (res.status === 204) {
-        setBlueprints((prev) => prev.filter((bp) => bp.id !== id));
-        toast.success(`Blueprint ${id} deleted successfully.`);
-      }
-    } catch (error) {
-      console.error("Failed to delete blueprint:", error);
-      toast.error(`Failed to delete blueprint ${id}. Please try again.`);
-    }
-  }, []);
-
-  const deployBlueprint = useCallback(async (id: string) => {
-    try {
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/deployment/${id}/build`,
-        {},
-        { withCredentials: true }
-      );
-      if (res.status === 200) {
-        toast.success(`Blueprint ${id} deployed successfully.`);
-      }
-    } catch (error) {
-      console.error("Failed to deploy blueprint:", error);
-      toast.error(`Failed to deploy blueprint ${id}. Please try again.`);
-    }
-  }, []);
-
-  const fetchBlueprints = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/deployment/user`,
-        { withCredentials: true }
-      );
-
-      const data: BlueprintResponse[] = res.data;
-
-      const transformed: BlueprintCardProps[] = data.map((item) => ({
-        id: item.id,
-        name: item.name,
-        repository: item.repository || "unknown/repo",
-        dockerFilePath: item.dockerFilePath || "",
-        contextDir: item.contextDir || "",
-        branch: item.branch || "main",
-        resourceVersion: item.resourceVersion || "v1.0.0",
-        private: item.private,
-        onEdit: () => alert(`Edit ${item.name}`),
-        onDeploy: () => deployBlueprint(item.id),
-        onDelete: () => deleteBlueprint(item.id),
-      }));
-
-      setBlueprints(transformed);
-      setHasFetchedBlueprints(true); // mark fetched
-    } catch (error) {
-      console.error("Failed to fetch blueprints:", error);
-      toast.error("Failed to fetch blueprints. Please try again later.");
-      setBlueprints([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [deployBlueprint, deleteBlueprint]);
+export default function DeploymentsPage() {
+  useSyncUser();
+  const { isLoaded } = useUser();
+  const [deployments, setDeployments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Only fetch when tab 2 is active and we haven't fetched yet
-    if (activeTab === 2 && !hasFetchedBlueprints) {
-      fetchBlueprints();
-    }
-  }, [activeTab, hasFetchedBlueprints, fetchBlueprints]);
+    const fetchDeployments = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(
+          process.env.NEXT_PUBLIC_BACKEND_URL + "/hosted",
+          { withCredentials: true }
+        );
+        setDeployments(res.data);
+      } catch (err) {
+        console.error("Error fetching deployments:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const tabOptions = [
-    { id: 1, label: "Create Blueprint", icon: PackagePlus },
-    { id: 2, label: "My Blueprints", icon: Package },
-  ];
+    fetchDeployments(); // only once
+  }, []);
+
+  if (!isLoaded || loading) return <BigLoader />;
 
   return (
-    <div className="bg-[#030712] min-h-screen p-6 text-white">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Create & Deploy</h1>
-        <p className="text-gray-400">
-          Create blueprints or deploy from the marketplace
-        </p>
+    <div className="min-h-screen bg-[#030712] text-white py-12 px-6">
+      <div className="flex justify-between items-center mb-10">
+        <DeploymentHeading />
+        <Button className="bg-[#33CF96] hover:bg-[#2dbd85] text-black">
+          + Deploy New API
+        </Button>
       </div>
 
-      <div className="mb-8">
-        <Tabs tabs={tabOptions} onTabChange={setActiveTab} initialTabId={1} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <StatCard label="Public APIs" value={2} color="green" />
+        <StatCard label="Private APIs" value={5} color="amber" />
+        <StatCard label="Total Requests" value="1.2k" color="blue" />
       </div>
 
-      {activeTab === 1 && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Create a New Blueprint</h2>
-          <IntegrationStep1 onSuccessRedirectToTab2={() => setActiveTab(2)} />
-        </div>
-      )}
+      {/* Fixed container width to prevent excessive stretching */}
+      <div className="max-w-8xl mx-auto space-y-4">
+        {deployments.map((item: any, idx: number) => {
+          const d = item.deployment;
 
-      {activeTab === 2 && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">My Blueprints</h2>
-          {loading ? (
-            <BigLoader />
-          ) : blueprints.length === 0 ? (
-            <p className="text-gray-400">No blueprints found.</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {blueprints.map((bp, index) => (
-                <BlueprintCard key={bp.id || index} {...bp} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+          return (
+            <DeploymentListItem
+              key={item.id || idx}
+              name={d?.name || "Untitled API"}
+              status={
+                item.deploymentStatus?.toLowerCase() === "pending"
+                  ? "Pending"
+                  : item.deploymentStatus?.toLowerCase() === "running"
+                  ? "Running"
+                  : item.deploymentStatus?.toLowerCase() === "failed"
+                  ? "Failed"
+                  : "Unknown"
+              }
+              visibility={d?.private ? "Private" : "Public"}
+              branch={d?.branch || "main"}
+              updatedAt={
+                d?.updatedAt || d?.createdAt || new Date().toISOString()
+              }
+              visitUrl={item.deploymentUrl || null}
+              // New props to fill middle area with non-sensitive data
+              repository={d?.repository}
+              contextDir={d?.contextDir}
+              resourceVersion={d?.resourceVersion}
+              autoDeploy={item.autoDeploy}
+              dockerFilePath={d?.dockerFilePath}
+              description={d?.description}
+              onRedeploy={() => {
+                // Call your redeploy API here
+                console.log("Redeploy", item.id);
+              }}
+              onDelete={() => {
+                // Call your delete API here
+                console.log("Delete", item.id);
+              }}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }
+
+/*
+first flow of the code is that 
+
+sbse phele user jb deploy pr ek baar bhi click krta hai to yha deployversion bn jayega hme bs vohi version chaiye 
+
+hm kisi bhi user ke sari deployversion dundenge aur uska status print kr denge.... this is good 
+
+
+and jb koi user kisi deployment pr click krega tb use logs mei show kr denge ki kya chl rha hai...
+
+*/

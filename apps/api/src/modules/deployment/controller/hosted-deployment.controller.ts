@@ -19,6 +19,8 @@ export default class HostedDeploymentController {
   getAllDeployedInstanes(@Req() req: RequestWithUser) {
     // get all the deployed instances of a user
     console.log(req.user.id);
-    return this.deploymentService.getAllDeploymnetVersions(req.user.id);
+    return this.deploymentService.getAllLatestDeploymentVersionOfProject(
+      req.user.id,
+    );
   }
 }

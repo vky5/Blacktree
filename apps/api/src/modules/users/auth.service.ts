@@ -61,7 +61,7 @@ export class AuthService {
       email: string | null;
       name: string | null;
     }
-    
+
     const res = await axios.get('http://api.github.com/user', {
       headers: {
         Authorization: `Bearer ${token}`,

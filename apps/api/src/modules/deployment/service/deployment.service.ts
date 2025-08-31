@@ -174,6 +174,26 @@ export class DeploymentService {
     });
   }
 
+  async getAllLatestDeploymentVersionOfProject(userId: string) {
+    // Fetch all deployment versions for this user including deployment relation
+    const allVersions = await this.deploymentVersionRepo.find({
+      where: { user: { id: userId } },
+      relations: ['deployment'],
+      order: { createdAt: 'DESC' }, // latest first
+    });
+
+    // Pick latest version per deployment
+    const latestVersionsMap = new Map<string, DeploymentVersion>();
+    allVersions.forEach((version) => {
+      const deploymentId = version.deployment.id;
+      if (!latestVersionsMap.has(deploymentId)) {
+        latestVersionsMap.set(deploymentId, version);
+      }
+    });
+
+    return Array.from(latestVersionsMap.values());
+  }
+
   getDeploymentsCreatedByUser(userId: string) {
     return this.deploymentRepo.find({
       where: { user: { id: userId } },
