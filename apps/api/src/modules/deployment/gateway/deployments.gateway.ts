@@ -40,6 +40,7 @@ export class DeploymentsGateway
   }
 
   sendLogLine(deploymentId: string, logLine: string) {
+    console.log('logLine : ', logLine);
     this.server.to(deploymentId).emit('newLogLine', logLine);
   }
 }
