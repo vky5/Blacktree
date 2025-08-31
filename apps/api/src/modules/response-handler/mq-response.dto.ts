@@ -4,12 +4,14 @@ export class MQResponseDTO {
   @IsString()
   DeploymentID: string;
 
+  @IsOptional()
   @IsString()
   ImageURL: string;
 
   @IsBoolean()
   Success: boolean;
 
+  @IsOptional()
   @IsString()
   Logs: string;
 

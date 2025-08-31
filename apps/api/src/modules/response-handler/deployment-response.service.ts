@@ -12,7 +12,7 @@ export class DeploymentResponseService implements OnModuleInit {
 
   async onModuleInit() {
     await this.messageingQueueService.consumeMessages(
-      'status.queue', // queueName
+      'api.result.queue', // queueName
       (msg: MQResponseDTO): void => {
         // Call your handler from DeploymentActionService
         this.deploymentActionService.handleJobResult(msg).catch((err) => {

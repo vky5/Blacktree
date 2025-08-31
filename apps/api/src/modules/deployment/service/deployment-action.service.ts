@@ -281,9 +281,9 @@ export class DeploymentActionService {
       return;
     }
 
-    if (!msg.ImageURL) {
-      throw new InternalServerErrorException('Image URL is not present');
-    }
+    // if (!msg.ImageURL) {
+    //   throw new InternalServerErrorException('Image URL is not present');
+    // }
 
     // 2. Update status based on success/failure
     if (msg.Success) {

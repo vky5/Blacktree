@@ -12,7 +12,7 @@ export class MessagingQueueService implements OnModuleInit, OnModuleDestroy {
   private readonly queue = 'execute.queue'; // implementing queue
   private readonly routingKey = 'worker.execute'; // implementing routing key
 
-  private readonly resultQueue = 'status.queue';
+  private readonly resultQueue = 'api.result.queue';
   private readonly resultRoutingKey = 'api.result';
 
   constructor(private readonly configService: ConfigService) {}
@@ -29,20 +29,19 @@ export class MessagingQueueService implements OnModuleInit, OnModuleDestroy {
       this.channel = await this.connection.createChannel();
 
       // setting up exchange, using direct exchange type
-      await this.channel?.assertExchange(this.exchange, 'direct', {
+      await this.channel.assertExchange(this.exchange, 'direct', {
         durable: true,
       });
 
       // setting up queue (using durable queue)
-      await this.channel?.assertQueue(this.queue, {
+      await this.channel.assertQueue(this.queue, {
         durable: true,
       });
 
       // setting up binding rules and routing key to the queue in the exchange
-      await this.channel?.bindQueue(this.queue, this.exchange, this.routingKey);
+      await this.channel.bindQueue(this.queue, this.exchange, this.routingKey);
 
       // Bind status.queue for results once during init
-
       await this.channel.assertQueue(this.resultQueue, { durable: true });
       await this.channel.bindQueue(
         this.resultQueue,
@@ -50,9 +49,7 @@ export class MessagingQueueService implements OnModuleInit, OnModuleDestroy {
         this.resultRoutingKey,
       );
 
-      // console.log(
-      //   'Connected to RabbitMQ and exchange/queue are set up successfully',
-      // );
+      console.log('✅ RabbitMQ exchange and queues are set up successfully');
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Unknown error occured';
@@ -87,7 +84,9 @@ export class MessagingQueueService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       console.log('Error publishing message:', error);
       throw new Error(
-        `Failed to publish message: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Failed to publish message: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
       );
     }
   }
@@ -108,26 +107,39 @@ export class MessagingQueueService implements OnModuleInit, OnModuleDestroy {
     onMessage: (msg: MQResponseDTO) => void,
   ) {
     if (!this.channel) {
+      console.error(
+        'RabbitMQ channel is NOT initialized when trying to consume messages!',
+      );
       throw new Error('RabbitMQ channel is not initialized');
     }
 
-    console.log(`Listening to messages on queue: "${queueName}"`);
+    console.log(`✅ Starting to listen for messages on queue: "${queueName}"`);
 
-    // Start consuming messages (queue is already bound in onModuleInit)
-    await this.channel.consume(
-      queueName,
-      (msg) => {
-        if (!msg) return;
-        const content = msg.content.toString();
-        try {
-          const parsed = JSON.parse(content) as MQResponseDTO;
-          onMessage(parsed);
-        } catch (err) {
-          console.error('Failed to parse message', err);
-        }
-        this.channel?.ack(msg);
-      },
-      { noAck: false },
-    );
+    try {
+      await this.channel.consume(
+        queueName,
+        (msg) => {
+          if (!msg) {
+            console.warn('⚠️ Received null/undefined message');
+            return;
+          }
+
+          try {
+            const parsed = JSON.parse(msg.content.toString()) as MQResponseDTO;
+
+            // Pass the parsed message to the handler
+            onMessage(parsed);
+
+            this.channel?.ack(msg);
+          } catch (err) {
+            console.error('❌ Failed to parse or handle message', err);
+            this.channel?.nack(msg, false, false); // optionally reject the message
+          }
+        },
+        { noAck: false },
+      );
+    } catch (err) {
+      console.error('❌ Error while attaching consumer to queue:', err);
+    }
   }
 }
