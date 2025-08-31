@@ -5,9 +5,13 @@ let socket: Socket | null = null;
 
 export const getSocket = (): Socket => {
   if (!socket) {
-    console.log("🔌 Creating new socket connection to:", `${process.env.NEXT_PUBLIC_BACKEND_URL}/deployments`);
+    // Fix namespace path - remove /api/v1 for WebSocket connection
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace('/api/v1', '') || '';
+    const socketUrl = `${backendUrl}/deployments`;
     
-    socket = io(`${process.env.NEXT_PUBLIC_BACKEND_URL}/deployments`, {
+    console.log("🔌 Creating new socket connection to:", socketUrl);
+    
+    socket = io(socketUrl, {
       transports: ["websocket", "polling"], // Allow fallback to polling
       timeout: 10000,
       forceNew: true,
@@ -43,7 +47,7 @@ export const getSocket = (): Socket => {
     });
 
     // Listen to ALL log events regardless of room
-    socket.onAny((eventName: string, ...args: unknown[]) => {
+    socket.onAny((eventName: string, ...args: any[]) => {
       console.log(`🌐 Global event received: ${eventName}`, args);
       
       // Specifically log newLogLine events
