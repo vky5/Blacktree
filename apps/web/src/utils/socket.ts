@@ -47,7 +47,7 @@ export const getSocket = (): Socket => {
     });
 
     // Listen to ALL log events regardless of room
-    socket.onAny((eventName: string, ...args: any[]) => {
+    socket.onAny((eventName: string, ...args: unknown[]) => {
       console.log(`🌐 Global event received: ${eventName}`, args);
       
       // Specifically log newLogLine events
