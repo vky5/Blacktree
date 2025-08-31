@@ -93,7 +93,7 @@ export default function DeploymentsPage() {
                 // Call your delete API here
                 console.log("Delete", item.id);
               }}
-              onClick={() => router.push(`/deployments/${item.id}`)} 
+              onClick={() => router.push(`/deployments/${d.id}`)} 
             />
           );
         })}
