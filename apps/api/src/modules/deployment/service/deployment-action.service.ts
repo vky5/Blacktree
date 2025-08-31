@@ -275,50 +275,49 @@ export class DeploymentActionService {
     console.log('handleJobResult triggered');
     console.log('Raw message received from queue:', msg);
     console.log('Stringified message:', JSON.stringify(msg, null, 2));
-    console.log('========================');
 
     // 1. Find the deployment version by deployment ID
     const depVersion = await this.deploymentVersionRepo.findOne({
-      where: { id: msg.DeploymentID },
+      where: { id: msg.deploymentId }, // lowercase
       relations: ['deployment', 'user'],
     });
 
     if (!depVersion) {
-      console.error(`Deployment version not found for ID: ${msg.DeploymentID}`);
+      console.error(`Deployment version not found for ID: ${msg.deploymentId}`);
       return;
     }
 
-    console.log(`Found deployment version:`, depVersion);
+    console.log('Found deployment version:', depVersion);
 
-    // 2. Update status based on success/failure
-    if (msg.Success) {
+    // 2. Update status and image URL
+    if (msg.success) {
+      console.log('Build succeeded, updating deployment version...');
       depVersion.deploymentStatus = DeploymentStatus.BUILT;
-      depVersion.imageUrl = msg.ImageURL;
-      console.log(`Build succeeded. Image URL set to: ${msg.ImageURL}`);
+      depVersion.imageUrl = msg.imageUrl ?? null;
+      console.log(`Image URL set to: ${depVersion.imageUrl}`);
     } else {
+      console.log('Build failed, marking deployment as FAILED');
       depVersion.deploymentStatus = DeploymentStatus.FAILED;
-      console.log(`Build failed. Error: ${msg.Error}`);
     }
 
     // 3. Save logs
-    depVersion.buildLogsUrl = msg.Logs || null;
-
-    console.log(`Build logs URL set to: ${depVersion.buildLogsUrl}`);
-
-    // 4. Optionally save error message if failed
-    if (!msg.Success && msg.Error) {
-      depVersion.buildLogsUrl = msg.Error;
-      console.log(`Error details saved to buildLogsUrl`);
+    depVersion.buildLogsUrl = msg.logs || null;
+    if (!msg.success && msg.error) {
+      console.log('Build error received:', msg.error);
+      depVersion.buildLogsUrl = msg.error;
     }
+    console.log('Build logs URL set to:', depVersion.buildLogsUrl);
 
-    await this.deploymentVersionRepo.save(depVersion);
-    console.log(`Deployment version ${depVersion.id} updated in DB`);
+    // 4. Persist changes in DB
+    const savedVersion = await this.deploymentVersionRepo.save(depVersion);
+    console.log(`Deployment version ${savedVersion.id} updated in DB`);
 
-    // 5. Optional: auto-trigger deployment if build succeeded
-    if (msg.Success) {
+    // 5. Auto-trigger deployment if build succeeded
+    if (msg.success) {
+      console.log('Attempting to trigger deployment...');
       try {
-        console.log(`Triggering deployment for version ${depVersion.id}...`);
-        await this.triggerDeployment(depVersion.id);
+        const triggerResult = await this.triggerDeployment(depVersion.id);
+        console.log('Deployment triggered successfully:', triggerResult);
       } catch (err) {
         console.error(
           `Failed to trigger deployment for version ${depVersion.id}`,
@@ -327,9 +326,7 @@ export class DeploymentActionService {
       }
     }
 
-    console.log(
-      `handleJobResult finished for deployment version ${depVersion.id}`,
-    );
+    console.log('========================\n');
   }
 
   private createDeploymnetVersion(deploymentId: string, userId: string) {

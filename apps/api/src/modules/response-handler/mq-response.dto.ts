@@ -2,22 +2,22 @@ import { IsBoolean, IsOptional, IsString } from 'class-validator';
 
 export class MQResponseDTO {
   @IsString()
-  DeploymentID: string;
+  deploymentId: string; // lowercase to match incoming message
 
   @IsOptional()
   @IsString()
-  ImageURL: string;
+  imageUrl?: string; // optional, lowercase
 
   @IsBoolean()
-  Success: boolean;
+  success: boolean; // lowercase
 
   @IsOptional()
   @IsString()
-  Logs: string;
+  logs?: string; // optional, lowercase
 
   @IsOptional()
   @IsString()
-  Error: string;
+  error?: string; // optional, lowercase
 }
 
 // type Response struct {
