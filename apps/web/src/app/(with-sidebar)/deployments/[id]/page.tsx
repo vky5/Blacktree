@@ -101,7 +101,7 @@ export default function DeploymentDetailsPage() {
       setSocketConnected(false);
     };
     
-    const handleError = (error: any) => {
+    const handleError = (error: unknown) => {
       console.error("🔥 Socket error:", error);
     };
 
