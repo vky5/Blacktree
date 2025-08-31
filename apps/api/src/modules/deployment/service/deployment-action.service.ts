@@ -5,14 +5,15 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Deployment } from '../entities/deployment.entity';
-import { PublishDeploymentMessageDto } from 'src/modules/messaging-queue/dto/publish-message.dto';
-import { MessagingQueueService } from 'src/modules/messaging-queue/messaging-queue.service';
 import { Repository } from 'typeorm';
-import { DeploymentStatus } from 'src/utils/enums/deployment-status.enum';
-import { AwsService } from 'src/modules/aws/aws.service';
+import { Deployment } from '../entities/deployment.entity';
 import { DeploymentVersion } from '../entities/deployment-version.entity';
+import { PublishDeploymentMessageDto } from 'src/modules/messaging-queue/dto/publish-message.dto';
 import { MQResponseDTO } from 'src/modules/response-handler/mq-response.dto';
+import { DeploymentStatus } from 'src/utils/enums/deployment-status.enum';
+import { MessagingQueueService } from 'src/modules/messaging-queue/messaging-queue.service';
+import { AwsService } from 'src/modules/aws/aws.service';
+import { DeploymentsGateway } from '../gateway/deployments.gateway';
 
 @Injectable()
 export class DeploymentActionService {
@@ -23,8 +24,9 @@ export class DeploymentActionService {
     @InjectRepository(DeploymentVersion)
     private readonly deploymentVersionRepo: Repository<DeploymentVersion>,
 
-    private readonly messageingQueueService: MessagingQueueService,
+    private readonly messagingQueueService: MessagingQueueService,
     private readonly awsService: AwsService,
+    private readonly deploymentGateway: DeploymentsGateway,
   ) {}
 
   // Builds image and uploads to ECR by publishing job to orchestrator
@@ -78,11 +80,20 @@ export class DeploymentActionService {
       contextDir: deployment.contextDir,
       createdAt: new Date().toISOString(),
     };
-    this.messageingQueueService.publishMessage('worker.execute', message);
+    this.messagingQueueService.publishMessage('worker.execute', message);
+
+    // Send info to frontend
+    this.examplePushLog(
+      existingVersionId,
+      'Build job published to orchestrator.',
+    );
   }
 
   async triggerDeployment(deploymentVersionId: string) {
-    console.log('Triggering Deployment for : ', deploymentVersionId);
+    this.examplePushLog(
+      deploymentVersionId,
+      `Triggering Deployment for : ${deploymentVersionId}`,
+    );
     try {
       // 1. Fetch deployment along with the latest version
       const deploymentHosted = await this.deploymentVersionRepo.findOne({
@@ -91,7 +102,9 @@ export class DeploymentActionService {
       });
 
       if (!deploymentHosted) {
-        throw new NotFoundException('no hosted deployemnt found');
+        const errMsg = 'No hosted deployment found';
+        this.examplePushLog(deploymentVersionId, errMsg);
+        throw new NotFoundException(errMsg);
       }
 
       // if taskarn is present
@@ -99,10 +112,9 @@ export class DeploymentActionService {
         try {
           await this.awsService.stopContainer(deploymentHosted.taskArn);
         } catch (error) {
-          console.log(error);
-          throw new InternalServerErrorException(
-            'Something went wrong with container stopping',
-          );
+          const errMsg = `Error stopping container: ${error}`;
+          this.examplePushLog(deploymentVersionId, errMsg);
+          throw new InternalServerErrorException(errMsg);
         }
       }
 
@@ -113,18 +125,17 @@ export class DeploymentActionService {
             deploymentHosted.taskDefinitionArn,
           );
         } catch (error) {
-          console.log(error);
-          throw new InternalServerErrorException(
-            'Something went wrong with task definition',
-          );
+          const errMsg = `Error deregistering task definition: ${error}`;
+          this.examplePushLog(deploymentVersionId, errMsg);
+          throw new InternalServerErrorException(errMsg);
         }
       }
 
       // checking if the imageUrl exists or not
       if (!deploymentHosted.imageUrl) {
-        throw new NotFoundException(
-          'Can not launch the deployment, no image url present',
-        );
+        const errMsg = 'Cannot launch deployment, no image URL present';
+        this.examplePushLog(deploymentVersionId, errMsg);
+        throw new NotFoundException(errMsg);
       }
 
       // 2. Register Task Definition on ECS with given config
@@ -134,9 +145,14 @@ export class DeploymentActionService {
         parseInt(deploymentHosted.deployment.portNumber || '3000'), // fallback port
         deploymentHosted.deployment.resourceVersion,
       );
+      this.examplePushLog(
+        deploymentVersionId,
+        `Task Definition registered: ${taskDefArn}`,
+      );
 
       // 4. Run the container based on the task definition
       const taskArn = await this.awsService.runContainer(taskDefArn);
+      this.examplePushLog(deploymentVersionId, `Container running: ${taskArn}`);
 
       // 5. Save taskArn (running instance) for future termination/tracking
       // 3. Save the registered Task Definition ARN in DB
@@ -151,7 +167,10 @@ export class DeploymentActionService {
         taskArn,
       };
     } catch (err) {
-      console.error('Error in triggerDeployment:', err);
+      this.examplePushLog(
+        deploymentVersionId,
+        `Error in triggerDeployment: ${err}`,
+      );
       throw err;
     }
   }
@@ -163,20 +182,28 @@ export class DeploymentActionService {
     });
 
     if (!res) {
-      throw new NotFoundException('No deployment found');
+      const errMsg = 'No deployment found';
+      this.examplePushLog(deploymentVersionId, errMsg);
+      throw new NotFoundException(errMsg);
     }
 
     if (!res.taskArn) {
-      throw new Error('Task ARN is missing. Cannot stop container.');
+      const errMsg = 'Task ARN is missing. Cannot stop container.';
+      this.examplePushLog(deploymentVersionId, errMsg);
+      throw new BadRequestException(errMsg);
     }
 
     await this.awsService.stopContainer(res?.taskArn);
-
     res.deploymentStatus = DeploymentStatus.STOPPED; // updating the status of the deployment
     await this.deploymentVersionRepo.save(res);
+
+    this.examplePushLog(
+      deploymentVersionId,
+      'Deployment stopped successfully.',
+    );
   }
 
-  // soft deleting the contianer
+  // soft deleting the container
   // stop the container, deregister the task definition, delete the image from ECR
   async cleanResources(deploymentVersionId: string) {
     const deployment = await this.deploymentVersionRepo.findOne({
@@ -184,7 +211,9 @@ export class DeploymentActionService {
     });
 
     if (!deployment) {
-      throw new NotFoundException('Deployment or version not found');
+      const errMsg = 'Deployment or version not found';
+      this.examplePushLog(deploymentVersionId, errMsg);
+      throw new NotFoundException(errMsg);
     }
 
     const { taskArn, taskDefinitionArn, imageUrl } = deployment;
@@ -193,16 +222,25 @@ export class DeploymentActionService {
       // stop the ecs task
       if (taskArn) {
         await this.awsService.stopContainer(taskArn); // halt the program until the task is actually deleted
+        this.examplePushLog(
+          deploymentVersionId,
+          `Stopped container ${taskArn}`,
+        );
       }
 
       // deregister the task definition
       if (taskDefinitionArn) {
         await this.awsService.deregisterTaskDefinition(taskDefinitionArn);
+        this.examplePushLog(
+          deploymentVersionId,
+          `Deregistered task definition ${taskDefinitionArn}`,
+        );
       }
 
       // deleting the image from the ECR
       if (imageUrl) {
         await this.awsService.deleteEcrImage(imageUrl);
+        this.examplePushLog(deploymentVersionId, `Deleted image ${imageUrl}`);
       }
 
       // update the DB
@@ -214,10 +252,15 @@ export class DeploymentActionService {
       deployment.runTimeLogsUrl = null;
 
       await this.deploymentVersionRepo.save(deployment);
-      return deployment; // since we are returning the deployment we can get the req.user from here but
+      this.examplePushLog(
+        deploymentVersionId,
+        'Resources cleaned successfully.',
+      );
+      return deployment;
     } catch (err) {
-      console.error(err);
-      throw new InternalServerErrorException('Failed to clean resources.');
+      const errMsg = `Failed to clean resources: ${err}`;
+      this.examplePushLog(deploymentVersionId, errMsg);
+      throw new InternalServerErrorException(errMsg);
     }
   }
 
@@ -228,23 +271,30 @@ export class DeploymentActionService {
         where: { id: deploymentVersionId },
       });
       if (!deployment || !deployment.taskDefinitionArn) {
-        throw new BadRequestException(
-          'Didnt find any deployment for this ID to restart',
-        );
+        const errMsg = "Didn't find any deployment for this ID to restart";
+        this.examplePushLog(deploymentVersionId, errMsg);
+        throw new BadRequestException(errMsg);
       }
 
       await this.awsService.restartTask(deployment.taskDefinitionArn);
+      this.examplePushLog(
+        deploymentVersionId,
+        'Deployment restarted successfully.',
+      );
 
       return {
         status: 'success',
         message: 'Deployment restarted successfully',
       };
     } catch (error) {
-      console.log(error);
+      this.examplePushLog(
+        deploymentVersionId,
+        `Error restarting deployment: ${error}`,
+      );
     }
   }
 
-  // to redeploy the new built
+  // to redeploy the new build
   async redeploy(deploymentVersionId: string) {
     const deploymentVersion = await this.deploymentVersionRepo.findOne({
       where: { id: deploymentVersionId },
@@ -258,11 +308,12 @@ export class DeploymentActionService {
     });
 
     if (!deploymentVersion) {
-      throw new BadRequestException('Deployment version not found');
+      const errMsg = 'Deployment version not found';
+      this.examplePushLog(deploymentVersionId, errMsg);
+      throw new BadRequestException(errMsg);
     }
 
     await this.cleanResources(deploymentVersionId);
-
     return this.buildDeployment(
       deploymentVersion.deployment.id, // correct deploymentId (blueprint)
       undefined, // no new userId needed
@@ -271,10 +322,12 @@ export class DeploymentActionService {
   }
 
   async handleJobResult(msg: MQResponseDTO) {
-    console.log('========================');
-    console.log('handleJobResult triggered');
-    console.log('Raw message received from queue:', msg);
-    console.log('Stringified message:', JSON.stringify(msg, null, 2));
+    this.examplePushLog(msg.deploymentId, '========================');
+    this.examplePushLog(msg.deploymentId, 'handleJobResult triggered');
+    this.examplePushLog(
+      msg.deploymentId,
+      `Raw message received from queue: ${JSON.stringify(msg)}`,
+    );
 
     // 1. Find the deployment version by deployment ID
     const depVersion = await this.deploymentVersionRepo.findOne({
@@ -283,50 +336,65 @@ export class DeploymentActionService {
     });
 
     if (!depVersion) {
-      console.error(`Deployment version not found for ID: ${msg.deploymentId}`);
+      this.examplePushLog(
+        msg.deploymentId,
+        `Deployment version not found for ID: ${msg.deploymentId}`,
+      );
       return;
     }
 
-    console.log('Found deployment version:', depVersion);
+    this.examplePushLog(
+      msg.deploymentId,
+      `Found deployment version: ${depVersion.id}`,
+    );
 
     // 2. Update status and image URL
     if (msg.success) {
-      console.log('Build succeeded, updating deployment version...');
       depVersion.deploymentStatus = DeploymentStatus.BUILT;
       depVersion.imageUrl = msg.imageUrl ?? null;
-      console.log(`Image URL set to: ${depVersion.imageUrl}`);
+      this.examplePushLog(
+        msg.deploymentId,
+        `Build succeeded. Image URL: ${depVersion.imageUrl}`,
+      );
     } else {
-      console.log('Build failed, marking deployment as FAILED');
       depVersion.deploymentStatus = DeploymentStatus.FAILED;
+      this.examplePushLog(
+        msg.deploymentId,
+        `Build failed: ${msg.error ?? 'Unknown error'}`,
+      );
     }
 
     // 3. Save logs
-    depVersion.buildLogsUrl = msg.logs || null;
-    if (!msg.success && msg.error) {
-      console.log('Build error received:', msg.error);
-      depVersion.buildLogsUrl = msg.error;
-    }
-    console.log('Build logs URL set to:', depVersion.buildLogsUrl);
+    depVersion.buildLogsUrl = msg.logs || msg.error || null;
+    this.examplePushLog(
+      msg.deploymentId,
+      `Build logs URL set to: ${depVersion.buildLogsUrl}`,
+    );
 
     // 4. Persist changes in DB
-    const savedVersion = await this.deploymentVersionRepo.save(depVersion);
-    console.log(`Deployment version ${savedVersion.id} updated in DB`);
+    await this.deploymentVersionRepo.save(depVersion);
+    this.examplePushLog(
+      msg.deploymentId,
+      `Deployment version ${depVersion.id} updated in DB`,
+    );
 
     // 5. Auto-trigger deployment if build succeeded
     if (msg.success) {
-      console.log('Attempting to trigger deployment...');
       try {
         const triggerResult = await this.triggerDeployment(depVersion.id);
-        console.log('Deployment triggered successfully:', triggerResult);
+        this.examplePushLog(
+          msg.deploymentId,
+          `Deployment triggered successfully: ${JSON.stringify(triggerResult)}`,
+        );
       } catch (err) {
-        console.error(
-          `Failed to trigger deployment for version ${depVersion.id}`,
-          err,
+        this.examplePushLog(
+          msg.deploymentId,
+          `Failed to trigger deployment: ${err}`,
         );
       }
     }
 
-    console.log('========================\n');
+    this.examplePushLog(msg.deploymentId, '========================\n');
   }
 
   private createDeploymnetVersion(deploymentId: string, userId: string) {
@@ -337,5 +405,10 @@ export class DeploymentActionService {
     });
 
     return this.deploymentVersionRepo.save(depVersion);
+  }
+
+  examplePushLog(deploymentId: string, logLine: string) {
+    // Send a log line to all clients subscribed to this deployment
+    void this.deploymentGateway.sendLogLine(deploymentId, logLine);
   }
 }

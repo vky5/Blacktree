@@ -174,6 +174,16 @@ export class DeploymentService {
     });
   }
 
+  getAllDeploymentVersionIDFromDeployment(
+    userId: string,
+    deploymentId: string,
+  ) {
+    return this.deploymentVersionRepo.find({
+      where: { deployment: { id: deploymentId }, user: { id: userId } },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
   async getAllLatestDeploymentVersionOfProject(userId: string) {
     // Fetch all deployment versions for this user including deployment relation
     const allVersions = await this.deploymentVersionRepo.find({

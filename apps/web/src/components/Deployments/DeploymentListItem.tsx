@@ -13,7 +13,7 @@ import {
   FolderOpen,
   Settings,
   Zap,
-  FileCode
+  FileCode,
 } from "lucide-react";
 import React from "react";
 
@@ -29,6 +29,7 @@ interface DeploymentListItemProps {
   visitUrl?: string | null;
   onRedeploy?: () => void;
   onDelete?: () => void;
+  onClick?: () => void; // <- added
   // New props to fill middle area
   repository?: string;
   contextDir?: string;
@@ -61,11 +62,13 @@ const CircularLoader = () => (
 
 const VisibilityBadge = ({ type }: { type: Visibility }) => {
   return (
-    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-      type === 'Public' 
-        ? 'bg-blue-900 text-blue-200 border border-blue-700' 
-        : 'bg-purple-900 text-purple-200 border border-purple-700'
-    }`}>
+    <span
+      className={`px-2 py-1 text-xs font-medium rounded-full ${
+        type === "Public"
+          ? "bg-blue-900 text-blue-200 border border-blue-700"
+          : "bg-purple-900 text-purple-200 border border-purple-700"
+      }`}
+    >
       {type}
     </span>
   );
@@ -80,6 +83,7 @@ export default function DeploymentListItem({
   visitUrl,
   onRedeploy,
   onDelete,
+  onClick, // <- added
   repository,
   contextDir,
   resourceVersion,
@@ -126,16 +130,24 @@ export default function DeploymentListItem({
   const config = statusConfig[finalStatus];
 
   return (
-    <div className="bg-[#0B0F19] rounded-xl border border-[#1a1f2e] p-4 w-full hover:border-[#2a2f3e] transition-colors">
+    <div
+      className="bg-[#0B0F19] rounded-xl border border-[#1a1f2e] p-4 w-full hover:border-[#2a2f3e] transition-colors cursor-pointer"
+      onClick={onClick} // <- added
+    >
       {/* Header Row */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
           <Container className="w-5 h-5 text-gray-400" />
           <h3 className="text-white font-medium text-lg">{name}</h3>
         </div>
-        
+
         <div className="flex items-center gap-2">
-          <span className={cn("px-2.5 py-1 text-xs font-semibold rounded-full flex items-center gap-1.5", config.className)}>
+          <span
+            className={cn(
+              "px-2.5 py-1 text-xs font-semibold rounded-full flex items-center gap-1.5",
+              config.className
+            )}
+          >
             {config.icon}
             {config.label}
           </span>
@@ -147,9 +159,11 @@ export default function DeploymentListItem({
       <div className="flex items-center gap-4 mb-3 text-sm">
         <div className="flex items-center gap-2 text-gray-300">
           <GitBranch className="w-4 h-4" />
-          <span>{repository || 'Unknown repo'}</span>
+          <span>{repository || "Unknown repo"}</span>
           <span className="text-gray-500">•</span>
-          <span className="px-2 py-0.5 bg-gray-800 rounded text-xs">{branch}</span>
+          <span className="px-2 py-0.5 bg-gray-800 rounded text-xs">
+            {branch}
+          </span>
         </div>
       </div>
 
@@ -159,33 +173,37 @@ export default function DeploymentListItem({
           <FolderOpen className="w-4 h-4 text-gray-400" />
           <div>
             <div className="text-gray-400 text-xs">Context</div>
-            <div className="text-gray-200">{contextDir || 'Root'}</div>
+            <div className="text-gray-200">{contextDir || "Root"}</div>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Settings className="w-4 h-4 text-gray-400" />
           <div>
             <div className="text-gray-400 text-xs">Resource</div>
-            <div className="text-gray-200 capitalize">{resourceVersion || 'Basic'}</div>
+            <div className="text-gray-200 capitalize">
+              {resourceVersion || "Basic"}
+            </div>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Zap className="w-4 h-4 text-gray-400" />
           <div>
             <div className="text-gray-400 text-xs">Auto Deploy</div>
-            <div className={autoDeploy ? 'text-green-400' : 'text-red-400'}>
-              {autoDeploy ? 'Enabled' : 'Disabled'}
+            <div className={autoDeploy ? "text-green-400" : "text-red-400"}>
+              {autoDeploy ? "Enabled" : "Disabled"}
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <FileCode className="w-4 h-4 text-gray-400" />
           <div>
             <div className="text-gray-400 text-xs">Dockerfile</div>
-            <div className="text-gray-200 text-xs truncate">{dockerFilePath || 'Default'}</div>
+            <div className="text-gray-200 text-xs truncate">
+              {dockerFilePath || "Default"}
+            </div>
           </div>
         </div>
       </div>

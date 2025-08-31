@@ -9,13 +9,14 @@ import DeploymentHeading from "@/components/Deployments/DeploymentPageHeading";
 import DeploymentListItem from "@/components/Deployments/DeploymentListItem";
 import axios from "axios";
 import BigLoader from "@/components/ui/BigLoader";
+import { useRouter } from "next/navigation"; 
 
 export default function DeploymentsPage() {
   useSyncUser();
   const { isLoaded } = useUser();
   const [deployments, setDeployments] = useState<DeploymentItem[]>([]);
-
   const [loading, setLoading] = useState(true);
+  const router = useRouter(); 
 
   useEffect(() => {
     const fetchDeployments = async () => {
@@ -92,6 +93,7 @@ export default function DeploymentsPage() {
                 // Call your delete API here
                 console.log("Delete", item.id);
               }}
+              onClick={() => router.push(`/deployments/${item.id}`)} 
             />
           );
         })}

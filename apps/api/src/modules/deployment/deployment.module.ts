@@ -16,6 +16,7 @@ import { WebhookController } from './controller/webhook.controller';
 import { WebhookService } from './service/webhook.service';
 import HostedDeploymentController from './controller/hosted-deployment.controller';
 import { ResourceServiceMapProvider } from 'src/guards/resource-service-map.provider';
+import { DeploymentsGateway } from './gateway/deployments.gateway';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { ResourceServiceMapProvider } from 'src/guards/resource-service-map.prov
     DeploymentActionService,
     WebhookService,
     ResourceServiceMapProvider,
+    DeploymentsGateway,
   ],
   exports: [DeploymentService, DeploymentActionService],
 })
