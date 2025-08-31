@@ -12,7 +12,7 @@ import { SubscribeLogsDto } from '../dto/subscribe-logs.dto';
 
 @WebSocketGateway({
   namespace: '/deployments', // ws://server/deployments
-  cors: { origin: '*' }, // adjust to your frontend
+  cors: { origin: '*' },
 })
 export class DeploymentsGateway
   implements OnGatewayConnection, OnGatewayDisconnect
@@ -21,11 +21,11 @@ export class DeploymentsGateway
   server: Server;
 
   handleConnection(client: Socket) {
-    console.log(`Client connected: ${client.id}`);
+    console.log(`[Gateway] Client connected: ${client.id}`);
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`Client disconnected: ${client.id}`);
+    console.log(`[Gateway] Client disconnected: ${client.id}`);
   }
 
   @SubscribeMessage('subscribeToLogs')
@@ -34,13 +34,25 @@ export class DeploymentsGateway
     @ConnectedSocket() client: Socket,
   ) {
     const { deploymentId } = payload;
-    console.log(`Client ${client.id} subscribed to deployment ${deploymentId}`);
-    void client.join(deploymentId); // add client to room
+    console.log(
+      `[Gateway] Client ${client.id} subscribed to deployment ${deploymentId}`,
+    );
+
+    // put client into that deployment's room
+    void client.join(deploymentId);
+
     return { message: `Subscribed to deployment ${deploymentId}` };
   }
 
+  // call this from your service when new log lines are available
   sendLogLine(deploymentId: string, logLine: string) {
-    console.log('logLine : ', logLine);
-    this.server.to(deploymentId).emit('newLogLine', logLine);
+    console.log(
+      `[Gateway] Emitting log to room ${deploymentId}: ${logLine}`,
+    );
+
+    this.server.to(deploymentId).emit('newLogLine', {
+      deploymentId,
+      logLine,
+    });
   }
 }
