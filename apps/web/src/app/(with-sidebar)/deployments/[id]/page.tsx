@@ -47,6 +47,7 @@ export default function DeploymentDetailsPage() {
     useState<DeploymentVersionCardProps | null>(null);
   const [logs, setLogs] = useState<string>("Loading logs...");
   const [loading, setLoading] = useState(true);
+  const [socketConnected, setSocketConnected] = useState(false);
   const logsRef = useRef<HTMLDivElement>(null);
 
   // Fetch deployment versions from backend
@@ -88,14 +89,45 @@ export default function DeploymentDetailsPage() {
     if (!selectedVersion) return;
 
     const socket = getSocket();
-    setLogs(""); // reset logs on version switch
+    
+    // Add connection debugging
+    const handleConnect = () => {
+      console.log("✅ Socket connected to /deployments");
+      setSocketConnected(true);
+    };
+    
+    const handleDisconnect = () => {
+      console.log("❌ Socket disconnected");
+      setSocketConnected(false);
+    };
+    
+    const handleError = (error: any) => {
+      console.error("🔥 Socket error:", error);
+    };
 
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+    socket.on("error", handleError);
+
+    // Check if already connected
+    if (socket.connected) {
+      setSocketConnected(true);
+    }
+
+    setLogs("Connecting to logs..."); // reset logs on version switch
+
+    console.log(`📡 Subscribing to logs for deployment: ${selectedVersion.id}`);
     socket.emit("subscribeToLogs", { deploymentId: selectedVersion.id });
 
     const handleNewLog = (data: { deploymentId: string; logLine: string }) => {
+      console.log("📝 Received log:", data); // Add debugging
       if (data.deploymentId === selectedVersion.id) {
         // prepend latest logs to top
-        setLogs((prev) => data.logLine + "\n" + prev);
+        setLogs((prev) => {
+          const newLogs = data.logLine + "\n" + prev;
+          console.log("📄 Updated logs length:", newLogs.length);
+          return newLogs;
+        });
 
         // Auto-scroll to top for latest logs
         if (logsRef.current) logsRef.current.scrollTop = 0;
@@ -104,8 +136,22 @@ export default function DeploymentDetailsPage() {
 
     socket.on("newLogLine", handleNewLog);
 
+    // Set timeout to show "no logs" message if nothing comes in
+    const timeoutId = setTimeout(() => {
+      setLogs(prev => {
+        if (prev === "Connecting to logs...") {
+          return "No logs available. Try triggering a deployment action to see logs.";
+        }
+        return prev;
+      });
+    }, 5000);
+
     return () => {
       socket.off("newLogLine", handleNewLog);
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+      socket.off("error", handleError);
+      clearTimeout(timeoutId);
     };
   }, [selectedVersion]);
 
@@ -133,6 +179,13 @@ export default function DeploymentDetailsPage() {
         ref={logsRef}
         className="w-2/3 bg-[#0B0F19] rounded-xl p-4 overflow-auto max-h-screen font-mono text-sm"
       >
+        {/* Connection status indicator */}
+        <div className="mb-2 text-xs opacity-60">
+          Socket: {socketConnected ? "🟢 Connected" : "🔴 Disconnected"} | 
+          {/* Version: {selectedVersion?.version} |  */}
+          ID: {selectedVersion?.id?.slice(0, 8)}...
+        </div>
+        
         {selectedVersion?.id === versions[0].id ? (
           // Latest version → show live logs
           <pre className="whitespace-pre-wrap">
