@@ -271,7 +271,12 @@ export class DeploymentActionService {
   }
 
   async handleJobResult(msg: MQResponseDTO) {
-    console.log('handleJobResult is triggered:', JSON.stringify(msg, null, 2));
+    console.log('========================');
+    console.log('handleJobResult triggered');
+    console.log('Raw message received from queue:', msg);
+    console.log('Stringified message:', JSON.stringify(msg, null, 2));
+    console.log('========================');
+
     // 1. Find the deployment version by deployment ID
     const depVersion = await this.deploymentVersionRepo.findOne({
       where: { id: msg.DeploymentID },
@@ -283,31 +288,36 @@ export class DeploymentActionService {
       return;
     }
 
-    // if (!msg.ImageURL) {
-    //   throw new InternalServerErrorException('Image URL is not present');
-    // }
+    console.log(`Found deployment version:`, depVersion);
 
     // 2. Update status based on success/failure
     if (msg.Success) {
       depVersion.deploymentStatus = DeploymentStatus.BUILT;
-      depVersion.imageUrl = msg.ImageURL; // save ECR image URL
+      depVersion.imageUrl = msg.ImageURL;
+      console.log(`Build succeeded. Image URL set to: ${msg.ImageURL}`);
     } else {
       depVersion.deploymentStatus = DeploymentStatus.FAILED;
+      console.log(`Build failed. Error: ${msg.Error}`);
     }
 
     // 3. Save logs
     depVersion.buildLogsUrl = msg.Logs || null;
 
+    console.log(`Build logs URL set to: ${depVersion.buildLogsUrl}`);
+
     // 4. Optionally save error message if failed
     if (!msg.Success && msg.Error) {
-      depVersion.buildLogsUrl = msg.Error; // you may need to add this field in entity
+      depVersion.buildLogsUrl = msg.Error;
+      console.log(`Error details saved to buildLogsUrl`);
     }
 
     await this.deploymentVersionRepo.save(depVersion);
+    console.log(`Deployment version ${depVersion.id} updated in DB`);
 
     // 5. Optional: auto-trigger deployment if build succeeded
     if (msg.Success) {
       try {
+        console.log(`Triggering deployment for version ${depVersion.id}...`);
         await this.triggerDeployment(depVersion.id);
       } catch (err) {
         console.error(
@@ -317,7 +327,9 @@ export class DeploymentActionService {
       }
     }
 
-    console.log(`Handled job result for deployment version ${depVersion.id}`);
+    console.log(
+      `handleJobResult finished for deployment version ${depVersion.id}`,
+    );
   }
 
   private createDeploymnetVersion(deploymentId: string, userId: string) {
