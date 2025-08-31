@@ -34,20 +34,19 @@ const mapStatus = (status?: string): DeploymentStatus => {
 
 interface BackendDeployment {
   id: string;
-  deploymentUrl: string | null;
+  deploymentUrl: string | null; // just a string for older versions
   autoDeploy: boolean;
   deploymentStatus?: string;
   createdAt: string;
 }
 
 export default function DeploymentDetailsPage() {
-  const { id } = useParams(); // deployment ID from URL
+  const { id } = useParams();
   const [versions, setVersions] = useState<DeploymentVersionCardProps[]>([]);
   const [selectedVersion, setSelectedVersion] =
     useState<DeploymentVersionCardProps | null>(null);
   const [logs, setLogs] = useState<string>("Loading logs...");
   const [loading, setLoading] = useState(true);
-
   const logsRef = useRef<HTMLDivElement>(null);
 
   // Fetch deployment versions from backend
@@ -60,7 +59,6 @@ export default function DeploymentDetailsPage() {
           { withCredentials: true }
         );
 
-        // Map backend deployments to DeploymentVersionCardProps
         const mappedVersions: DeploymentVersionCardProps[] = res.data.map(
           (d, index) => ({
             id: d.id,
@@ -85,25 +83,22 @@ export default function DeploymentDetailsPage() {
     fetchVersions();
   }, [id]);
 
-  // WebSocket: subscribe to logs for selected deployment version
+  // WebSocket: subscribe to logs for selected version
   useEffect(() => {
     if (!selectedVersion) return;
 
     const socket = getSocket();
+    setLogs(""); // reset logs on version switch
 
-    // Reset logs when switching versions
-    setLogs("");
-
-    // Subscribe to logs for this deployment version
     socket.emit("subscribeToLogs", { deploymentId: selectedVersion.id });
 
-    // Handler for incoming log lines
-    const handleNewLog = (logLine: string) => {
-      setLogs((prev) => prev + logLine + "\n");
+    const handleNewLog = (data: { deploymentId: string; logLine: string }) => {
+      if (data.deploymentId === selectedVersion.id) {
+        // prepend latest logs to top
+        setLogs((prev) => data.logLine + "\n" + prev);
 
-      // Auto-scroll logs
-      if (logsRef.current) {
-        logsRef.current.scrollTop = logsRef.current.scrollHeight;
+        // Auto-scroll to top for latest logs
+        if (logsRef.current) logsRef.current.scrollTop = 0;
       }
     };
 
@@ -121,10 +116,7 @@ export default function DeploymentDetailsPage() {
       {/* Left pane: deployment versions */}
       <div
         className="w-1/3 space-y-4 max-h-screen overflow-y-auto"
-        style={{
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-        }}
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {versions.map((v) => (
           <DeploymentVersionCard
@@ -136,15 +128,23 @@ export default function DeploymentDetailsPage() {
         ))}
       </div>
 
-      {/* Right pane: live logs */}
+      {/* Right pane: live logs or build URL */}
       <div
         ref={logsRef}
         className="w-2/3 bg-[#0B0F19] rounded-xl p-4 overflow-auto max-h-screen font-mono text-sm"
       >
-        <h3 className="text-lg font-medium mb-2">
-          {/* Logs for {selectedVersion?.version || "N/A"} */}
-        </h3>
-        <pre className="whitespace-pre-wrap">{logs}</pre>
+        {selectedVersion?.id === versions[0].id ? (
+          // Latest version → show live logs
+          <pre className="whitespace-pre-wrap">
+            {logs || "Waiting for logs..."}
+          </pre>
+        ) : (
+          // Older versions → show deploymentUrl string
+          <div>
+            <span className="font-semibold">Build Log Reference:</span>{" "}
+            {selectedVersion?.deploymentUrl || "N/A"}
+          </div>
+        )}
       </div>
     </div>
   );
