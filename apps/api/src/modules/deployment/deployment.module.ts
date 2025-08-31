@@ -38,6 +38,6 @@ import { ResourceServiceMapProvider } from 'src/guards/resource-service-map.prov
     WebhookService,
     ResourceServiceMapProvider,
   ],
-  exports: [DeploymentService],
+  exports: [DeploymentService, DeploymentActionService],
 })
 export class DeploymentModule {}
