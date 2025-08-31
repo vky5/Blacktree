@@ -18,9 +18,27 @@ export const getSocket = (): Socket => {
       console.log("❌ Socket disconnected");
     });
 
-    socket.on("error", (error) => {
+    socket.on("error", (error: unknown) => {
       console.error("🔥 Socket error:", error);
     });
+
+    // Listen to ALL log events regardless of room
+    socket.onAny((eventName: string, ...args: unknown[]) => {
+      console.log(`🌐 Global event received: ${eventName}`, args);
+
+      // Specifically log newLogLine events
+      if (eventName === "newLogLine") {
+        console.log("📝 GLOBAL LOG RECEIVED:", args[0]);
+      }
+    });
+
+    // Also listen directly to newLogLine (this should catch all rooms)
+    socket.on(
+      "newLogLine",
+      (data: { deploymentId: string; logLine: string }) => {
+        console.log("📝 DIRECT LOG RECEIVED (any room):", data);
+      }
+    );
   }
   return socket;
 };
