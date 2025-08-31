@@ -82,6 +82,7 @@ export class DeploymentActionService {
   }
 
   async triggerDeployment(deploymentVersionId: string) {
+    console.log('Triggering Deployment for : ', deploymentVersionId);
     try {
       // 1. Fetch deployment along with the latest version
       const deploymentHosted = await this.deploymentVersionRepo.findOne({
@@ -270,6 +271,7 @@ export class DeploymentActionService {
   }
 
   async handleJobResult(msg: MQResponseDTO) {
+    console.log('handleJobResult is triggered:', JSON.stringify(msg, null, 2));
     // 1. Find the deployment version by deployment ID
     const depVersion = await this.deploymentVersionRepo.findOne({
       where: { id: msg.DeploymentID },
