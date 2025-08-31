@@ -13,7 +13,8 @@ import BigLoader from "@/components/ui/BigLoader";
 export default function DeploymentsPage() {
   useSyncUser();
   const { isLoaded } = useUser();
-  const [deployments, setDeployments] = useState([]);
+  const [deployments, setDeployments] = useState<DeploymentItem[]>([]);
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -54,7 +55,7 @@ export default function DeploymentsPage() {
 
       {/* Fixed container width to prevent excessive stretching */}
       <div className="max-w-8xl mx-auto space-y-4">
-        {deployments.map((item: any, idx: number) => {
+        {deployments.map((item: DeploymentItem, idx: number) => {
           const d = item.deployment;
 
           return (
@@ -82,7 +83,7 @@ export default function DeploymentsPage() {
               resourceVersion={d?.resourceVersion}
               autoDeploy={item.autoDeploy}
               dockerFilePath={d?.dockerFilePath}
-              description={d?.description}
+              description={d?.description || undefined}
               onRedeploy={() => {
                 // Call your redeploy API here
                 console.log("Redeploy", item.id);
@@ -110,3 +111,37 @@ hm kisi bhi user ke sari deployversion dundenge aur uska status print kr denge..
 and jb koi user kisi deployment pr click krega tb use logs mei show kr denge ki kya chl rha hai...
 
 */
+
+// Define types for the deployment object
+interface Deployment {
+  id: string;
+  name: string;
+  repository: string;
+  branch: string;
+  dockerFilePath: string;
+  contextDir: string;
+  userId: string;
+  portNumber: number | null;
+  envVars: Record<string, string> | null; // instead of any
+  resourceVersion: string;
+  description: string | null;
+  tags: string[] | null; // instead of any
+  private: boolean;
+  webhookid: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface DeploymentItem {
+  id: string;
+  deployment: Deployment;
+  imageUrl: string | null;
+  taskDefinitionArn: string | null;
+  taskArn: string | null;
+  autoDeploy: boolean;
+  deploymentUrl: string | null;
+  deploymentStatus: "pending" | "running" | "failed" | string;
+  createdAt: string;
+  buildLogsUrl: string | null;
+  runTimeLogsUrl: string | null;
+}
