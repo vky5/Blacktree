@@ -269,15 +269,19 @@ export default function DeploymentDetailsPage() {
     socket.on("disconnect", handleDisconnect);
     socket.on("error", handleError);
 
-    if (socket.connected) {
-      setSocketConnected(true);
-    }
-
     // Reset logs when switching versions (stored logs will be loaded by separate useEffect)
     setLogEntries([]);
 
     console.log(`📡 Subscribing to logs for deployment: ${selectedVersion.id}`);
     socket.emit("subscribeToLogs", { deploymentId: selectedVersion.id });
+
+    socket.on("reconnect", () => {
+      console.log(
+        "🔄 Reconnected, re-subscribing to version",
+        selectedVersion.id
+      );
+      socket.emit("subscribeToLogs", { deploymentId: selectedVersion.id });
+    });
 
     const handleNewLog = (data: { deploymentId: string; logLine: string }) => {
       console.log("📝 Received log:", data);
