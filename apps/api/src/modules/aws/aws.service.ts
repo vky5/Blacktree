@@ -1,11 +1,12 @@
 import {
   ECSClient,
   RegisterTaskDefinitionCommand,
+  RegisterTaskDefinitionCommandOutput,
   RunTaskCommand,
   RunTaskCommandOutput,
   StopTaskCommand,
-  DeregisterTaskDefinitionCommand,
   StopTaskCommandOutput,
+  DeregisterTaskDefinitionCommand,
   AssignPublicIp,
 } from '@aws-sdk/client-ecs';
 import { BatchDeleteImageCommand, ECRClient } from '@aws-sdk/client-ecr';
@@ -14,8 +15,8 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AwsService {
-  private readonly ecsClient: ECSClient;
-  private readonly ecrClient: ECRClient;
+  private readonly ecsClient = new ECSClient({ region: 'us-east-1' });
+  private readonly ecrClient = new ECRClient({ region: 'us-east-1' });
 
   private executionRoleArn: string;
   private clusterName: string;
@@ -31,28 +32,23 @@ export class AwsService {
   constructor(private readonly configService: ConfigService) {
     this.executionRoleArn = this.configService.get<string>('EXECUTIONROLEARN')!;
     this.clusterName = this.configService.get<string>('CLUSTERNAME')!;
-    this.subnets = JSON.parse(this.configService.get<string>('SUBNET') ?? '[]');
-    this.securityGroups = JSON.parse(
-      this.configService.get<string>('SECURITY_GROUP') ?? '[]',
-    );
 
-    this.ecsClient = new ECSClient({
-      region: process.env.AWS_REGION,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-      },
-    });
+    const rawSubnets = this.configService.get<string>('SUBNET');
+    try {
+      this.subnets = JSON.parse(rawSubnets ?? '[]') as string[];
+    } catch {
+      throw new Error('Invalid JSON in SUBNET env var');
+    }
 
-    this.ecrClient = new ECRClient({
-      region: process.env.AWS_REGION,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-      },
-    });
+    const rawSgs = this.configService.get<string>('SECURITY_GROUP');
+    try {
+      this.securityGroups = JSON.parse(rawSgs ?? '[]') as string[];
+    } catch {
+      throw new Error('Invalid JSON in SECURITY_GROUP env var');
+    }
   }
 
+  // Register ECS Task Definition
   async registerTaskDefinition(
     imageUrl: string,
     envVars: Record<string, string>,
@@ -71,24 +67,34 @@ export class AwsService {
       containerDefinitions: [
         {
           name: 'runner',
-          image: imageUrl, // MUST include UUID tag
+          image: imageUrl,
           essential: true,
-          portMappings: [{ containerPort: portNumber, protocol: 'tcp' }],
-          environment: Object.entries(envVars).map(([name, value]) => ({
-            name,
+          portMappings: [
+            {
+              containerPort: portNumber,
+              protocol: 'tcp',
+            },
+          ],
+          environment: Object.entries(envVars).map(([key, value]) => ({
+            name: key,
             value,
           })),
         },
       ],
     });
 
-    const response = await this.ecsClient.send(registerCmd);
-    if (!response.taskDefinition?.taskDefinitionArn)
-      throw new Error('Task registration failed');
+    const response: RegisterTaskDefinitionCommandOutput =
+      await this.ecsClient.send(registerCmd);
 
-    return response.taskDefinition.taskDefinitionArn;
+    const taskDefArn: string | undefined =
+      response.taskDefinition?.taskDefinitionArn;
+
+    if (!taskDefArn) throw new Error('Task Definition registration failed.');
+
+    return taskDefArn;
   }
 
+  // Run container
   async runContainer(taskDefArn: string): Promise<string> {
     const runCmd = new RunTaskCommand({
       cluster: this.clusterName,
@@ -105,35 +111,66 @@ export class AwsService {
     });
 
     const response: RunTaskCommandOutput = await this.ecsClient.send(runCmd);
-    if (!response.tasks?.[0]?.taskArn)
-      throw new Error('Failed to run ECS task');
+
+    if (!response.tasks?.length || !response.tasks[0].taskArn) {
+      console.error('ECS task failures:', response.failures);
+      throw new Error(
+        'ECS failed to launch task: ' + JSON.stringify(response.failures),
+      );
+    }
+
     return response.tasks[0].taskArn;
   }
 
+  // Stop container
   stopContainer(taskArn: string): Promise<StopTaskCommandOutput> {
-    return this.ecsClient.send(
-      new StopTaskCommand({
-        cluster: this.clusterName,
-        task: taskArn,
-        reason: 'stopping from Blacktree',
-      }),
-    );
+    const stopCommand = new StopTaskCommand({
+      cluster: this.clusterName,
+      task: taskArn,
+      reason: 'stopping from Blacktree',
+    });
+    return this.ecsClient.send(stopCommand);
   }
 
+  // Deregister task definition
   deregisterTaskDefinition(taskDefinitionArn: string) {
-    return this.ecsClient.send(
-      new DeregisterTaskDefinitionCommand({
-        taskDefinition: taskDefinitionArn,
-      }),
-    );
+    const cmd = new DeregisterTaskDefinitionCommand({
+      taskDefinition: taskDefinitionArn,
+    });
+    return this.ecsClient.send(cmd);
   }
 
+  // Delete ECR image
   deleteEcrImage(imageUrl: string) {
     const match = imageUrl.match(/^.+\.amazonaws\.com\/(.+):(.+)$/);
     if (!match) return;
+
     const [, repositoryName, imageTag] = match;
-    return this.ecrClient.send(
-      new BatchDeleteImageCommand({ repositoryName, imageIds: [{ imageTag }] }),
-    );
+
+    const cmd = new BatchDeleteImageCommand({
+      repositoryName,
+      imageIds: [{ imageTag }],
+    });
+
+    return this.ecrClient.send(cmd);
+  }
+
+  // Restart ECS task (this is the method your NestJS code needs)
+  async restartTask(taskDefinitionArn: string): Promise<RunTaskCommandOutput> {
+    const runCmd = new RunTaskCommand({
+      cluster: this.clusterName,
+      taskDefinition: taskDefinitionArn,
+      launchType: 'FARGATE',
+      count: 1,
+      networkConfiguration: {
+        awsvpcConfiguration: {
+          subnets: this.subnets,
+          assignPublicIp: 'ENABLED',
+          securityGroups: this.securityGroups,
+        },
+      },
+    });
+
+    return this.ecsClient.send(runCmd);
   }
 }
