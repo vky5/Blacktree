@@ -16,8 +16,8 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AwsService {
-  private readonly ecsClient = new ECSClient({ region: 'us-east-1' });
-  private readonly ecrClient = new ECRClient({ region: 'us-east-1' });
+  private readonly ecsClient: ECSClient;
+  private readonly ecrClient: ECRClient;
 
   private executionRoleArn: string;
   private clusterName: string;
@@ -48,6 +48,23 @@ export class AwsService {
     } catch {
       throw new Error('Invalid JSON in SUBNET env var');
     }
+
+    // AWS Clients with credentials from env variables only
+    this.ecsClient = new ECSClient({
+      region: process.env.AWS_REGION,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+      },
+    });
+
+    this.ecrClient = new ECRClient({
+      region: process.env.AWS_REGION,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+      },
+    });
   }
 
   // Register ECS Task Definition
