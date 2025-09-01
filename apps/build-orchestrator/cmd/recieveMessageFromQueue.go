@@ -37,7 +37,8 @@ func messageFromQueue(ctx context.Context, sendMessageToWorker chan *queue.Deplo
 				continue
 			}
 
-			log.Printf("📩 Received message: %s", string(msg.Body))
+			// log.Printf("📩 Received message: %s", string(msg.Body))
+			// log.Printf("📩 Received message: %s", string(msg.Body.DeploymentID))
 
 			var singleMessageFromQueue queue.DeploymentMessage
 
@@ -84,7 +85,7 @@ func drainAllMessages(consumer queue.Consumer) error {
 		}
 
 		// Optional: display the message
-		fmt.Printf("📩 %s\n", string(msg.Body))
+		// fmt.Printf("📩 %s\n", string(msg.Body))
 
 		// Acknowledge the message to remove it from the queue
 		if err := msg.Ack(false); err != nil {
