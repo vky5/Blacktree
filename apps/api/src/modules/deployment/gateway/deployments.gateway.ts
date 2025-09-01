@@ -46,9 +46,7 @@ export class DeploymentsGateway
 
   // call this from your service when new log lines are available
   sendLogLine(deploymentId: string, logLine: string) {
-    console.log(
-      `[Gateway] Emitting log to room ${deploymentId}: ${logLine}`,
-    );
+    console.log(`[Gateway] Emitting log to room ${deploymentId}: ${logLine}`);
 
     this.server.to(deploymentId).emit('newLogLine', {
       deploymentId,

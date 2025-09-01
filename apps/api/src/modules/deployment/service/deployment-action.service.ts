@@ -14,6 +14,7 @@ import { DeploymentStatus } from 'src/utils/enums/deployment-status.enum';
 import { MessagingQueueService } from 'src/modules/messaging-queue/messaging-queue.service';
 import { AwsService } from 'src/modules/aws/aws.service';
 import { DeploymentsGateway } from '../gateway/deployments.gateway';
+import { DeploymentService } from './deployment.service';
 
 @Injectable()
 export class DeploymentActionService {
@@ -25,6 +26,7 @@ export class DeploymentActionService {
     private readonly deploymentVersionRepo: Repository<DeploymentVersion>,
 
     private readonly messagingQueueService: MessagingQueueService,
+    private readonly deploymentService: DeploymentService,
     private readonly awsService: AwsService,
     private readonly deploymentGateway: DeploymentsGateway,
   ) {}

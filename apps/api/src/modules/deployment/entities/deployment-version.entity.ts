@@ -50,9 +50,9 @@ deploymentVersion.user;   // full User entity (if relation loaded)
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'text', nullable: true })
   buildLogsUrl: string | null;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'text', nullable: true })
   runTimeLogsUrl: string | null;
 }

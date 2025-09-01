@@ -184,6 +184,7 @@ export class DeploymentService {
     });
   }
 
+  // latest deployemnet version for all projects
   async getAllLatestDeploymentVersionOfProject(userId: string) {
     // Fetch all deployment versions for this user including deployment relation
     const allVersions = await this.deploymentVersionRepo.find({
@@ -214,5 +215,25 @@ export class DeploymentService {
     return this.deploymentRepo.find({
       where: { private: false },
     });
+  }
+
+  async updateBuildLogs(deploymentVersionId: string, log: string) {
+    const deplversion = await this.deploymentVersionRepo.findOne({
+      where: { id: deploymentVersionId },
+    });
+
+    if (!deplversion) {
+      throw new Error(`DeploymentVersion ${deploymentVersionId} not found`);
+    }
+
+    // Append the new log line with a newline separator
+    let buildLogs = deplversion.buildLogsUrl || '';
+    buildLogs += (buildLogs ? '\n' : '') + log;
+
+    // Save back into DB
+    deplversion.buildLogsUrl = buildLogs;
+    await this.deploymentVersionRepo.save(deplversion);
+
+    return deplversion;
   }
 }

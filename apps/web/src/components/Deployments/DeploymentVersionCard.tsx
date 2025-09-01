@@ -21,6 +21,7 @@ export interface DeploymentVersionCardProps {
   onSelect?: () => void;
   deploymentUrl?: string | null;
   index: number; // for version numbering
+  buildLogsUrl: string | null | undefined;
 }
 
 const CircularLoader = () => (

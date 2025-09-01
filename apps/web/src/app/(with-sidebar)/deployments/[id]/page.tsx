@@ -11,6 +11,17 @@ import {
 } from "@/components/Deployments/DeploymentVersionCard";
 import { getSocket } from "@/utils/socket";
 
+// Utility to fetch logs from a URL and split by lines
+const fetchBuildLogs = async (url: string): Promise<string[]> => {
+  try {
+    const res = await axios.get<string>(url);
+    return res.data.split("\n").filter((line) => line.trim() !== "");
+  } catch (err) {
+    console.error("Failed to fetch build logs from URL:", err);
+    return [`Failed to fetch logs from ${url}`];
+  }
+};
+
 // Map backend status string to frontend DeploymentStatus
 const mapStatus = (status?: string): DeploymentStatus => {
   if (!status) return "pending";
@@ -38,6 +49,7 @@ interface BackendDeployment {
   autoDeploy: boolean;
   deploymentStatus?: string;
   createdAt: string;
+  buildLogsUrl?: string | null;  
 }
 
 interface LogEntry {
@@ -202,6 +214,7 @@ export default function DeploymentDetailsPage() {
             autoDeploy: d.autoDeploy,
             deploymentUrl: d.deploymentUrl,
             index,
+            buildLogsUrl: d.buildLogsUrl, // preserve for fallback
           })
         );
 
@@ -228,9 +241,32 @@ export default function DeploymentDetailsPage() {
       setSocketConnected(true);
     };
 
-    const handleDisconnect = () => {
+    const handleDisconnect = async () => {
       console.log("❌ Socket disconnected");
       setSocketConnected(false);
+
+      // If disconnected and buildLogsUrl exists → fetch logs from URL
+      const versionWithUrl = versions.find((v) => v.id === selectedVersion.id);
+      if (versionWithUrl?.buildLogsUrl) {
+        const lines = await fetchBuildLogs(versionWithUrl.buildLogsUrl);
+        setLogEntries(
+          lines.map((msg) => ({
+            id: `log-${++logIdCounter.current}`,
+            message: msg,
+            timestamp: new Date(),
+            level: getLogLevel(msg),
+          }))
+        );
+
+        // Also mark status as failed if previously pending
+        setVersions((prev) =>
+          prev.map((v) =>
+            v.id === selectedVersion.id && v.status === "pending"
+              ? { ...v, status: "failed" }
+              : v
+          )
+        );
+      }
     };
 
     const handleError = (error: unknown) => {
@@ -282,7 +318,7 @@ export default function DeploymentDetailsPage() {
       socket.off("disconnect", handleDisconnect);
       socket.off("error", handleError);
     };
-  }, [selectedVersion]);
+  }, [selectedVersion, versions]);
 
   if (loading) return <BigLoader />;
 
@@ -368,17 +404,31 @@ export default function DeploymentDetailsPage() {
               </div>
             )
           ) : (
-            // Older versions → show deployment URL reference
+            // Older versions or fallback → show buildLogsUrl
             <div className="flex flex-col items-center justify-center h-64">
               <div className="text-4xl mb-4">📋</div>
               <div className="text-center">
                 <p className="text-lg mb-2 text-gray-300">
                   Build Log Reference
                 </p>
-                <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                  <code className="text-blue-400 break-all">
-                    {selectedVersion?.deploymentUrl || "No URL available"}
-                  </code>
+                <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 max-h-64 overflow-auto">
+                  {logEntries.length > 0 ? (
+                    logEntries.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="text-sm font-mono break-words mb-1"
+                        dangerouslySetInnerHTML={{
+                          __html: formatLogMessage(entry.message),
+                        }}
+                      />
+                    ))
+                  ) : (
+                    <code className="text-blue-400 break-all">
+                      {selectedVersion?.buildLogsUrl ||
+                        selectedVersion?.deploymentUrl ||
+                        "No URL available"}
+                    </code>
+                  )}
                 </div>
                 <p className="text-sm text-gray-500 mt-2">
                   Historical logs for version {selectedVersion?.id}
