@@ -1,7 +1,3 @@
-// this package is responsible for pushing the docker image to the correct repository
-
-// the repository is decied based on tag
-
 package builder
 
 import (
@@ -18,49 +14,68 @@ import (
 	"github.com/docker/docker/client"
 )
 
-func TagAndPushImage(ctx context.Context, dockerCli *client.Client, imageName string, credentials registry.AuthConfig) error {
-	// compose the full ECR tag by prepending the registry URL from credentials
-	// AWS ECR only allows one level of repo, so "blacktree" must exist and imageName will be the tag
-	repoName := "blacktree"                            // existing repo in ECR
-	tag := strings.TrimPrefix(imageName, "blacktree/") // remove "blacktree/" if it exists
-	fullECRTag := fmt.Sprintf("%s/%s:%s", strings.TrimSuffix(credentials.ServerAddress, "/"), repoName, tag)
+// TagAndPushImage tags and pushes Docker image to ECR with UUID tag and :latest
+func TagAndPushImage(ctx context.Context, dockerCli *client.Client, imageName string, uuidTag string, credentials registry.AuthConfig) error {
+	repoName := "blacktree"
+	registryURL := strings.TrimSuffix(credentials.ServerAddress, "/")
+	fullTag := fmt.Sprintf("%s/%s:%s", registryURL, repoName, uuidTag)
+	latestTag := fmt.Sprintf("%s/%s:latest", registryURL, repoName)
 
-	// tag the image
-	if err := dockerCli.ImageTag(ctx, imageName, fullECRTag); err != nil {
-		return fmt.Errorf("failed to tag image: %w", err)
+	tagImage := func(src, dst string) error {
+		if err := dockerCli.ImageTag(ctx, src, dst); err != nil {
+			trimmedSrc := strings.TrimPrefix(src, "blacktree/")
+			if trimmedSrc != src {
+				if err2 := dockerCli.ImageTag(ctx, trimmedSrc, dst); err2 == nil {
+					return nil
+				}
+			}
+			return fmt.Errorf("failed to tag image from %s to %s: %w", src, dst, err)
+		}
+		return nil
 	}
 
-	// build the base64 encoded auth config
+	// Tag both
+	if err := tagImage(imageName, fullTag); err != nil {
+		return err
+	}
+	if err := tagImage(imageName, latestTag); err != nil {
+		return err
+	}
+
+	// Prepare base64 auth
 	authConfig := registry.AuthConfig{
 		Username:      credentials.Username,
 		Password:      credentials.Password,
 		ServerAddress: credentials.ServerAddress,
 	}
-
 	encodedJSON, err := json.Marshal(authConfig)
 	if err != nil {
 		return fmt.Errorf("failed to marshal auth config: %w", err)
 	}
 	encodedAuth := base64.StdEncoding.EncodeToString(encodedJSON)
 
-	// push the image
-	pushResp, err := dockerCli.ImagePush(ctx, fullECRTag, image.PushOptions{
-		RegistryAuth: encodedAuth, // base64'd auth JSON string
-	})
-	if err != nil {
-		return fmt.Errorf("failed to push image: %w", err)
-	}
-	defer pushResp.Close()
+	// Push function with streaming logs
+	pushImage := func(tagToPush string) error {
+		pushResp, err := dockerCli.ImagePush(ctx, tagToPush, image.PushOptions{
+			RegistryAuth: encodedAuth,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to push image %s: %w", tagToPush, err)
+		}
+		defer pushResp.Close()
 
-	// stream the push logs to stdout
-	_, err = io.Copy(os.Stdout, pushResp)
-	if err != nil {
-		return fmt.Errorf("failed to stream push logs: %w", err)
+		if _, err := io.Copy(os.Stdout, pushResp); err != nil {
+			return fmt.Errorf("failed to stream push logs for %s: %w", tagToPush, err)
+		}
+		return nil
 	}
 
+	for _, t := range []string{fullTag, latestTag} {
+		if err := pushImage(t); err != nil {
+			return err
+		}
+	}
+
+	fmt.Println("✅ Successfully pushed:", fullTag, "and", latestTag)
 	return nil
 }
-
-// when we do docker push from terminal it uses ~/.docker/config.json
-// but the docker sdk client of go doesnt have the luxuary to access the config.json that's why for every such kind of operation we need to give it the access to the
-// credentials and serveraddresss as ewll
