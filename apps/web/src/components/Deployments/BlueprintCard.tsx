@@ -51,7 +51,7 @@ export default function BlueprintCard({
         <div className="flex items-center gap-3">
           <FaCube className="text-emerald-500 text-xl" />
           <h3 className="text-white font-medium text-lg">{name}</h3>
-          <h3 className="text-white font-medium text-lg">{id}</h3>
+          <h3 className="text-white font-medium text-lg hidden">{id}</h3>
         </div>
         <div className="flex items-center gap-2">
           {isPrivate ? (
