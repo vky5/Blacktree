@@ -11,17 +11,6 @@ import {
 } from "@/components/Deployments/DeploymentVersionCard";
 import { getSocket } from "@/utils/socket";
 
-// Utility to fetch logs from a URL and split by lines
-const fetchBuildLogs = async (url: string): Promise<string[]> => {
-  try {
-    const res = await axios.get<string>(url);
-    return res.data.split("\n").filter((line) => line.trim() !== "");
-  } catch (err) {
-    console.error("Failed to fetch build logs from URL:", err);
-    return [`Failed to fetch logs from ${url}`];
-  }
-};
-
 // Map backend status string to frontend DeploymentStatus
 const mapStatus = (status?: string): DeploymentStatus => {
   if (!status) return "pending";
@@ -49,7 +38,6 @@ interface BackendDeployment {
   autoDeploy: boolean;
   deploymentStatus?: string;
   createdAt: string;
-  buildLogsUrl?: string | null;  
 }
 
 interface LogEntry {
@@ -179,6 +167,34 @@ export default function DeploymentDetailsPage() {
   const logsRef = useRef<HTMLDivElement>(null);
   const logIdCounter = useRef(0);
 
+  // Load stored logs when version changes or when socket disconnects
+  useEffect(() => {
+    if (!selectedVersion) return;
+
+    // Check if this is not the latest version OR socket is disconnected
+    const isLatestVersion = selectedVersion.id === versions[0]?.id;
+    const shouldLoadStoredLogs = !isLatestVersion || !socketConnected;
+
+    if (shouldLoadStoredLogs && selectedVersion.buildLogsUrl) {
+      console.log(`📚 Loading stored logs for version: ${selectedVersion.id}`);
+      const storedLogLines = selectedVersion.buildLogsUrl
+        .split("\n")
+        .filter((line) => line.trim() !== "");
+
+      const storedLogEntries: LogEntry[] = storedLogLines.map(
+        (line, index) => ({
+          id: `stored-log-${selectedVersion.id}-${index}`,
+          message: line,
+          timestamp: new Date(selectedVersion.createdAt), // Use creation time for stored logs
+          level: getLogLevel(line),
+        })
+      );
+
+      setLogEntries(storedLogEntries);
+      console.log(`📖 Loaded ${storedLogEntries.length} stored log entries`);
+    }
+  }, [selectedVersion, socketConnected, versions]);
+
   // Auto-scroll to bottom when new logs arrive
   useEffect(() => {
     if (autoScroll && logsRef.current) {
@@ -214,7 +230,6 @@ export default function DeploymentDetailsPage() {
             autoDeploy: d.autoDeploy,
             deploymentUrl: d.deploymentUrl,
             index,
-            buildLogsUrl: d.buildLogsUrl, // preserve for fallback
           })
         );
 
@@ -241,32 +256,9 @@ export default function DeploymentDetailsPage() {
       setSocketConnected(true);
     };
 
-    const handleDisconnect = async () => {
+    const handleDisconnect = () => {
       console.log("❌ Socket disconnected");
       setSocketConnected(false);
-
-      // If disconnected and buildLogsUrl exists → fetch logs from URL
-      const versionWithUrl = versions.find((v) => v.id === selectedVersion.id);
-      if (versionWithUrl?.buildLogsUrl) {
-        const lines = await fetchBuildLogs(versionWithUrl.buildLogsUrl);
-        setLogEntries(
-          lines.map((msg) => ({
-            id: `log-${++logIdCounter.current}`,
-            message: msg,
-            timestamp: new Date(),
-            level: getLogLevel(msg),
-          }))
-        );
-
-        // Also mark status as failed if previously pending
-        setVersions((prev) =>
-          prev.map((v) =>
-            v.id === selectedVersion.id && v.status === "pending"
-              ? { ...v, status: "failed" }
-              : v
-          )
-        );
-      }
     };
 
     const handleError = (error: unknown) => {
@@ -281,7 +273,7 @@ export default function DeploymentDetailsPage() {
       setSocketConnected(true);
     }
 
-    // Reset logs when switching versions
+    // Reset logs when switching versions (stored logs will be loaded by separate useEffect)
     setLogEntries([]);
 
     console.log(`📡 Subscribing to logs for deployment: ${selectedVersion.id}`);
@@ -318,7 +310,7 @@ export default function DeploymentDetailsPage() {
       socket.off("disconnect", handleDisconnect);
       socket.off("error", handleError);
     };
-  }, [selectedVersion, versions]);
+  }, [selectedVersion]);
 
   if (loading) return <BigLoader />;
 
@@ -404,31 +396,17 @@ export default function DeploymentDetailsPage() {
               </div>
             )
           ) : (
-            // Older versions or fallback → show buildLogsUrl
+            // Older versions → show deployment URL reference
             <div className="flex flex-col items-center justify-center h-64">
               <div className="text-4xl mb-4">📋</div>
               <div className="text-center">
                 <p className="text-lg mb-2 text-gray-300">
                   Build Log Reference
                 </p>
-                <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 max-h-64 overflow-auto">
-                  {logEntries.length > 0 ? (
-                    logEntries.map((entry) => (
-                      <div
-                        key={entry.id}
-                        className="text-sm font-mono break-words mb-1"
-                        dangerouslySetInnerHTML={{
-                          __html: formatLogMessage(entry.message),
-                        }}
-                      />
-                    ))
-                  ) : (
-                    <code className="text-blue-400 break-all">
-                      {selectedVersion?.buildLogsUrl ||
-                        selectedVersion?.deploymentUrl ||
-                        "No URL available"}
-                    </code>
-                  )}
+                <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                  <code className="text-blue-400 break-all">
+                    {selectedVersion?.deploymentUrl || "No URL available"}
+                  </code>
                 </div>
                 <p className="text-sm text-gray-500 mt-2">
                   Historical logs for version {selectedVersion?.id}
